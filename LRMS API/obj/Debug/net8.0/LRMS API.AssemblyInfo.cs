@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("LRMS API")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0d603079eeb2cfe856d7b2f9ad004fe6670092be")]
 [assembly: System.Reflection.AssemblyProductAttribute("LRMS API")]
 [assembly: System.Reflection.AssemblyTitleAttribute("LRMS API")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
