@@ -1,12 +1,13 @@
 {
   "version": 2,
-  "dgSpecHash": "DtQAs/1INZg=",
+  "dgSpecHash": "tqDCOLpMEKo=",
   "success": true,
   "projectFilePath": "G:\\SEP490\\LRMS API\\Service\\Service.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\23030\\.nuget\\packages\\automapper\\13.0.1\\automapper.13.0.1.nupkg.sha512",
     "C:\\Users\\23030\\.nuget\\packages\\azure.core\\1.38.0\\azure.core.1.38.0.nupkg.sha512",
     "C:\\Users\\23030\\.nuget\\packages\\azure.identity\\1.11.4\\azure.identity.1.11.4.nupkg.sha512",
+    "C:\\Users\\23030\\.nuget\\packages\\bcrypt.net-next\\4.0.3\\bcrypt.net-next.4.0.3.nupkg.sha512",
     "C:\\Users\\23030\\.nuget\\packages\\cloudinarydotnet\\1.27.2\\cloudinarydotnet.1.27.2.nupkg.sha512",
     "C:\\Users\\23030\\.nuget\\packages\\microsoft.aspnetcore.authentication.jwtbearer\\8.0.11\\microsoft.aspnetcore.authentication.jwtbearer.8.0.11.nupkg.sha512",
     "C:\\Users\\23030\\.nuget\\packages\\microsoft.bcl.asyncinterfaces\\1.1.1\\microsoft.bcl.asyncinterfaces.1.1.1.nupkg.sha512",

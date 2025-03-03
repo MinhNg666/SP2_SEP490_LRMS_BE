@@ -1,0 +1,15 @@
+G:\SEP490\LRMS API\Domain\bin\Debug\net8.0\Domain.deps.json
+G:\SEP490\LRMS API\Domain\bin\Debug\net8.0\Domain.runtimeconfig.json
+G:\SEP490\LRMS API\Domain\bin\Debug\net8.0\Domain.dll
+G:\SEP490\LRMS API\Domain\bin\Debug\net8.0\Domain.pdb
+G:\SEP490\LRMS API\Domain\obj\Debug\net8.0\Domain.csproj.AssemblyReference.cache
+G:\SEP490\LRMS API\Domain\obj\Debug\net8.0\Domain.GeneratedMSBuildEditorConfig.editorconfig
+G:\SEP490\LRMS API\Domain\obj\Debug\net8.0\Domain.AssemblyInfoInputs.cache
+G:\SEP490\LRMS API\Domain\obj\Debug\net8.0\Domain.AssemblyInfo.cs
+G:\SEP490\LRMS API\Domain\obj\Debug\net8.0\Domain.csproj.CoreCompileInputs.cache
+G:\SEP490\LRMS API\Domain\obj\Debug\net8.0\Domain.sourcelink.json
+G:\SEP490\LRMS API\Domain\obj\Debug\net8.0\Domain.dll
+G:\SEP490\LRMS API\Domain\obj\Debug\net8.0\refint\Domain.dll
+G:\SEP490\LRMS API\Domain\obj\Debug\net8.0\Domain.pdb
+G:\SEP490\LRMS API\Domain\obj\Debug\net8.0\Domain.genruntimeconfig.cache
+G:\SEP490\LRMS API\Domain\obj\Debug\net8.0\ref\Domain.dll

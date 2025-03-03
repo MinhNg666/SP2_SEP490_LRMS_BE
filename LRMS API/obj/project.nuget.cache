@@ -1,12 +1,13 @@
 {
   "version": 2,
-  "dgSpecHash": "NqtM88YQ96I=",
+  "dgSpecHash": "R7VuM5n0fiI=",
   "success": true,
   "projectFilePath": "G:\\SEP490\\LRMS API\\LRMS API\\LRMS API.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\23030\\.nuget\\packages\\automapper\\13.0.1\\automapper.13.0.1.nupkg.sha512",
     "C:\\Users\\23030\\.nuget\\packages\\azure.core\\1.38.0\\azure.core.1.38.0.nupkg.sha512",
     "C:\\Users\\23030\\.nuget\\packages\\azure.identity\\1.11.4\\azure.identity.1.11.4.nupkg.sha512",
+    "C:\\Users\\23030\\.nuget\\packages\\bcrypt.net-next\\4.0.3\\bcrypt.net-next.4.0.3.nupkg.sha512",
     "C:\\Users\\23030\\.nuget\\packages\\cloudinarydotnet\\1.27.2\\cloudinarydotnet.1.27.2.nupkg.sha512",
     "C:\\Users\\23030\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
     "C:\\Users\\23030\\.nuget\\packages\\microsoft.aspnetcore.authentication.jwtbearer\\8.0.11\\microsoft.aspnetcore.authentication.jwtbearer.8.0.11.nupkg.sha512",
@@ -25,6 +26,7 @@
     "C:\\Users\\23030\\.nuget\\packages\\microsoft.entityframeworkcore.design\\8.0.11\\microsoft.entityframeworkcore.design.8.0.11.nupkg.sha512",
     "C:\\Users\\23030\\.nuget\\packages\\microsoft.entityframeworkcore.relational\\8.0.11\\microsoft.entityframeworkcore.relational.8.0.11.nupkg.sha512",
     "C:\\Users\\23030\\.nuget\\packages\\microsoft.entityframeworkcore.sqlserver\\8.0.11\\microsoft.entityframeworkcore.sqlserver.8.0.11.nupkg.sha512",
+    "C:\\Users\\23030\\.nuget\\packages\\microsoft.entityframeworkcore.tools\\8.0.11\\microsoft.entityframeworkcore.tools.8.0.11.nupkg.sha512",
     "C:\\Users\\23030\\.nuget\\packages\\microsoft.extensions.apidescription.server\\6.0.5\\microsoft.extensions.apidescription.server.6.0.5.nupkg.sha512",
     "C:\\Users\\23030\\.nuget\\packages\\microsoft.extensions.caching.abstractions\\8.0.0\\microsoft.extensions.caching.abstractions.8.0.0.nupkg.sha512",
     "C:\\Users\\23030\\.nuget\\packages\\microsoft.extensions.caching.memory\\8.0.1\\microsoft.extensions.caching.memory.8.0.1.nupkg.sha512",
