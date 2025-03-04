@@ -8,6 +8,8 @@ using System.Security.Claims;
 using Service.Settings;
 using Microsoft.Extensions.Options;
 using Domain.Constants;
+using LRMS_API;
+using CloudinaryDotNet;
 
 namespace Service.Implementations
 {
@@ -48,13 +50,17 @@ namespace Service.Implementations
             try
             {
                 var existingUser = await _userRepository.GetUserByEmail(request.Email);
+                if (existingUser == null)
+                {
+                    throw new ServiceException(MessageConstants.NOT_FOUND);
+                }
                 if (BCrypt.Net.BCrypt.Verify(request.Password, existingUser.Password))
                 {
                     claims.Add(new Claim("UserID", existingUser.UserId.ToString()));
                     claims.Add(new Claim(ClaimTypes.Role,
-                        existingUser.RoleId == (int)RoleEnum.Lecturer
-                            ? RoleEnum.Lecturer.ToString()
-                            : RoleEnum.Admin.ToString()));
+                        existingUser.RoleId == (int)RoleEnum.Student
+                            ? RoleEnum.Student.ToString()
+                            : RoleEnum.Lecturer.ToString()));
 
                     var loginResponse = _mapper.Map<LoginResponse>(existingUser);
                     loginResponse.AccessToken = _tokenService.GenerateAccessToken(claims);
@@ -89,6 +95,82 @@ namespace Service.Implementations
                     throw new ServiceException(MessageConstants.NOT_FOUND);
 
                 return _mapper.Map<UserResponse>(result);
+            }
+            catch (Exception e)
+            {
+                throw new ServiceException(e.Message);
+            }
+        }
+        public async Task CreateUser(CreateUserRequest request)
+        {
+
+            try
+            {
+                var user = _mapper.Map<User>(request);
+                await _userRepository.AddAsync(user);
+            }
+            catch (Exception e)
+            {
+                throw new ServiceException(e.Message);
+            }
+        }
+        public async Task<UserResponse> UpdateUser(int userId, UpdateUserRequest request)
+        {
+            try
+            {
+                var existingUser = await _userRepository.GetByIdAsync(userId);
+                if (existingUser == null)
+                    throw new ServiceException(MessageConstants.NOT_FOUND);
+
+                _mapper.Map(request, existingUser);
+                await _userRepository.UpdateAsync(existingUser);
+                return _mapper.Map<UserResponse>(existingUser);
+            }
+            catch (Exception e)
+            {
+                throw new ServiceException(e.Message);
+            }
+        }
+        public async Task<bool> DeleteUser(int userId)
+        {
+            try
+            {
+                var existingUser = await _userRepository.GetByIdAsync(userId);
+                if (existingUser == null)
+                    throw new ServiceException(MessageConstants.NOT_FOUND);
+
+                await _userRepository.DeleteAsync(existingUser);
+                return true;
+            }
+            catch (Exception e)
+            {
+                throw new ServiceException(e.Message);
+            }
+        }
+        public async Task<StudentProfileResponse> GetStudentProfile(int userId)
+        {
+            try
+            {
+                var result = await _userRepository.GetByIdAsync(userId);
+                if (result == null)
+                    throw new ServiceException(MessageConstants.NOT_FOUND);
+                return _mapper.Map<StudentProfileResponse>(result);
+            }
+            catch (Exception e)
+            {
+                throw new ServiceException(e.Message);
+            }
+        }
+        public async Task<StudentProfileResponse> UpdateStudentProfile(int userId, UpdateStudentRequest request)
+        {
+            try
+            {
+                var existingUser = await _userRepository.GetByIdAsync(userId);
+                if (existingUser == null)
+                    throw new ServiceException(MessageConstants.NOT_FOUND);
+                _mapper.Map(request, existingUser);
+                await _userRepository.UpdateAsync(existingUser);
+                return _mapper.Map<StudentProfileResponse>(existingUser);
             }
             catch (Exception e)
             {

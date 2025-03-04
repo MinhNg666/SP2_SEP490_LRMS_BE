@@ -3,6 +3,7 @@ using Service.Exceptions;
 using Service.Interfaces;
 using Domain.DTO.Common;
 using Domain.Constants;
+using Domain.DTO.Requests;
 
 namespace LRMS_API.Controllers;
 [ApiController]
@@ -34,6 +35,71 @@ public class UserController : ApiBaseController
         try
         {
             var result = await _userService.GetUserById(userId);
+            return Ok(new ApiResponse(StatusCodes.Status200OK, MessageConstants.SUCCESSFUL, result));
+        }
+        catch (ServiceException e)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, e.Message));
+        }
+    }
+    [HttpPut("accounts/{userId}")]
+    public async Task<IActionResult> UpdateUser(int userId, UpdateUserRequest request)
+    {
+        try
+        {
+            var result = await _userService.UpdateUser(userId, request);
+            return Ok(new ApiResponse(StatusCodes.Status200OK, MessageConstants.SUCCESSFUL, result));
+        }
+        catch (ServiceException e)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, e.Message));
+        }
+    }
+    [HttpPost("accounts")]
+    public async Task<IActionResult> CreateUser(CreateUserRequest request)
+    {
+        try
+        {
+            await _userService.CreateUser(request);
+            return Ok(new ApiResponse(StatusCodes.Status200OK, MessageConstants.SUCCESSFUL));
+        }
+        catch (ServiceException e)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, e.Message));
+        }
+    }
+    [HttpDelete("accounts/{userId}")]
+    public async Task<IActionResult> DeleteUser(int userId)
+    {
+        try
+        {
+            var result = await _userService.DeleteUser(userId);
+            return Ok(new ApiResponse(StatusCodes.Status200OK, MessageConstants.SUCCESSFUL, result));
+        }
+        catch (ServiceException e)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, e.Message));
+        }
+    }
+    [HttpGet("accounts/{userId}/profile")]
+    public async Task<IActionResult> GetStudentProfile(int userId)
+    {
+        try
+        {
+            var result = await _userService.GetStudentProfile(userId);
+            return Ok(new ApiResponse(StatusCodes.Status200OK, MessageConstants.SUCCESSFUL, result));
+        }
+        catch (ServiceException e)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, e.Message));
+        }
+    }
+    [HttpPut("accounts/{userId}/profile")]
+    public async Task<IActionResult> UpdateStudentProfile(int userId, UpdateStudentRequest request)
+    {
+        try
+        {
+            var result = await _userService.UpdateStudentProfile(userId, request);
             return Ok(new ApiResponse(StatusCodes.Status200OK, MessageConstants.SUCCESSFUL, result));
         }
         catch (ServiceException e)

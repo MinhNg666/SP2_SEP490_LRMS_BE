@@ -13,5 +13,11 @@ namespace Service.Interfaces
         Task<LoginResponse> Login(LoginRequest request);
         Task<IEnumerable<UserResponse>> GetAllUsers();
         Task<UserResponse> GetUserById(int userId);
+        Task CreateUser(CreateUserRequest request);
+        Task<UserResponse> UpdateUser(int userId, UpdateUserRequest request);
+        Task<bool> DeleteUser(int userId);
+        Task<StudentProfileResponse> GetStudentProfile(int userId);
+        Task<StudentProfileResponse> UpdateStudentProfile (int userId, UpdateStudentRequest request);
+
     }
 }
