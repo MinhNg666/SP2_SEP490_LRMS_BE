@@ -161,6 +161,28 @@
         }
       }
     },
+    "/api/accounts/level/{level}": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "parameters": [
+          {
+            "name": "level",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/LevelEnum"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/accounts/{userId}/profile": {
       "get": {
         "tags": [
@@ -229,7 +251,64 @@
     "schemas": {
       "CreateUserRequest": {
         "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "nullable": true
+          },
+          "password": {
+            "type": "string",
+            "nullable": true
+          },
+          "fullName": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "roleId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "departmentId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "groupId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "level": {
+            "type": "string",
+            "nullable": true
+          }
+        },
         "additionalProperties": false
+      },
+      "LevelEnum": {
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "type": "integer",
+        "format": "int32"
       },
       "LoginRequest": {
         "type": "object",
@@ -278,6 +357,52 @@
       },
       "UpdateUserRequest": {
         "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "nullable": true
+          },
+          "password": {
+            "type": "string",
+            "nullable": true
+          },
+          "fullName": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "roleId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "departmentId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "groupId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "level": {
+            "type": "string",
+            "nullable": true
+          }
+        },
         "additionalProperties": false
       }
     }

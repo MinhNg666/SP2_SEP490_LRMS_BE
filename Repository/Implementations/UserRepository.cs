@@ -15,6 +15,6 @@ public class UserRepository : GenericRepository<User>, IUserRepository
     {
         return await _context.Users
             .AsSplitQuery()
-            .SingleOrDefaultAsync(x => x.Email.Equals(email.ToLower()) && x.RoleId != (int)RoleEnum.Lecturer);
+            .SingleOrDefaultAsync(x => x.Email.Equals(email.ToLower()));
     }
 }

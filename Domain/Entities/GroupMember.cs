@@ -13,7 +13,7 @@ public partial class GroupMember
 
     public string? MemberEmail { get; set; }
 
-    public string? Role { get; set; }
+    public int? Role { get; set; }
 
     public int? UserId { get; set; }
 

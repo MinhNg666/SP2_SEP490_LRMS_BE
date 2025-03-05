@@ -42,6 +42,19 @@ public class UserController : ApiBaseController
             return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, e.Message));
         }
     }
+    [HttpGet("accounts/level/{level}")]
+    public async Task<IActionResult> GetUsersByLevel(LevelEnum level)
+    {
+        try
+        {
+            var result = await _userService.GetUsersByLevel(level);
+            return Ok(new ApiResponse(StatusCodes.Status200OK, MessageConstants.SUCCESSFUL, result));
+        }
+        catch (ServiceException e)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, e.Message));
+        }
+    }
     [HttpPut("accounts/{userId}")]
     public async Task<IActionResult> UpdateUser(int userId, UpdateUserRequest request)
     {

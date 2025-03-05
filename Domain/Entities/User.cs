@@ -17,7 +17,7 @@ public partial class User
 
     public string? Phone { get; set; }
 
-    public int? RoleId { get; set; }
+    public int? Role { get; set; }
 
     public int? DepartmentId { get; set; }
 
@@ -29,7 +29,7 @@ public partial class User
 
     public int? GroupId { get; set; }
 
-    public string? Level { get; set; }
+    public int? Level { get; set; }
 
     public virtual ICollection<Author> Authors { get; set; } = new List<Author>();
 

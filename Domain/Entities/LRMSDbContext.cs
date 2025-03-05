@@ -66,9 +66,7 @@ public partial class LRMSDbContext : DbContext
                 .HasMaxLength(200)
                 .HasColumnName("email");
             entity.Property(e => e.ProjectId).HasColumnName("project_id");
-            entity.Property(e => e.Role)
-                .HasMaxLength(100)
-                .HasColumnName("role");
+            entity.Property(e => e.Role).HasColumnName("role");
             entity.Property(e => e.UserId).HasColumnName("user_id");
 
             entity.HasOne(d => d.Project).WithMany(p => p.Authors)
@@ -251,9 +249,7 @@ public partial class LRMSDbContext : DbContext
             entity.Property(e => e.MemberName)
                 .HasMaxLength(200)
                 .HasColumnName("member_name");
-            entity.Property(e => e.Role)
-                .HasMaxLength(100)
-                .HasColumnName("role");
+            entity.Property(e => e.Role).HasColumnName("role");
             entity.Property(e => e.Status).HasColumnName("status");
             entity.Property(e => e.UserId).HasColumnName("user_id");
 
@@ -428,9 +424,7 @@ public partial class LRMSDbContext : DbContext
             entity.Property(e => e.Title)
                 .HasMaxLength(255)
                 .HasColumnName("title");
-            entity.Property(e => e.Type)
-                .HasMaxLength(100)
-                .HasColumnName("type");
+            entity.Property(e => e.Type).HasColumnName("type");
             entity.Property(e => e.UpdatedAt)
                 .HasColumnType("datetime")
                 .HasColumnName("updated_at");
@@ -536,16 +530,14 @@ public partial class LRMSDbContext : DbContext
                 .HasMaxLength(200)
                 .HasColumnName("full_name");
             entity.Property(e => e.GroupId).HasColumnName("group_id");
-            entity.Property(e => e.Level)
-                .HasMaxLength(50)
-                .HasColumnName("level");
+            entity.Property(e => e.Level).HasColumnName("level");
             entity.Property(e => e.Password)
                 .HasMaxLength(255)
                 .HasColumnName("password");
             entity.Property(e => e.Phone)
                 .HasMaxLength(20)
                 .HasColumnName("phone");
-            entity.Property(e => e.RoleId).HasColumnName("role_id");
+            entity.Property(e => e.Role).HasColumnName("role");
             entity.Property(e => e.Status).HasColumnName("status");
             entity.Property(e => e.UpdatedAt)
                 .HasColumnType("datetime")

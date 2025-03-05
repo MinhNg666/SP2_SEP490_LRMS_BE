@@ -32,14 +32,14 @@ namespace Service.Implementations
         public async Task<LoginResponse> Login(LoginRequest request)
         {
             var claims = new List<Claim>
-        {
-            new Claim(ClaimTypes.Email, request.Email)
-        };
-            if (request.Email.ToLower().Equals(_adminAccount.Email.ToLower()) &&
-            request.Password.Equals(_adminAccount.Password))
             {
-                claims.Add(new Claim(ClaimTypes.Role, RoleEnum.Admin.ToString()));
-                return new LoginResponse
+                new Claim(ClaimTypes.Email, request.Email)
+            };
+                if (request.Email.ToLower().Equals(_adminAccount.Email.ToLower()) &&
+                request.Password.Equals(_adminAccount.Password))
+                {
+                    claims.Add(new Claim(ClaimTypes.Role, RoleEnum.Admin.ToString()));
+                    return new LoginResponse
                 {
                     Email = _adminAccount.Email,
                     Status = (int)AccountStatusEnum.Active,
@@ -58,7 +58,7 @@ namespace Service.Implementations
                 {
                     claims.Add(new Claim("UserID", existingUser.UserId.ToString()));
                     claims.Add(new Claim(ClaimTypes.Role,
-                        existingUser.RoleId == (int)RoleEnum.Student
+                        existingUser.Role == (int)RoleEnum.Student
                             ? RoleEnum.Student.ToString()
                             : RoleEnum.Lecturer.ToString()));
 
@@ -95,6 +95,19 @@ namespace Service.Implementations
                     throw new ServiceException(MessageConstants.NOT_FOUND);
 
                 return _mapper.Map<UserResponse>(result);
+            }
+            catch (Exception e)
+            {
+                throw new ServiceException(e.Message);
+            }
+        }
+        public async Task<IEnumerable<UserResponse>> GetUsersByLevel(LevelEnum level)
+        {
+            try
+            {
+                var users = await _userRepository.GetAllAsync();
+                var filteredUsers = users.Where(u => u.Level == (int)level);
+                return _mapper.Map<IEnumerable<UserResponse>>(filteredUsers);
             }
             catch (Exception e)
             {

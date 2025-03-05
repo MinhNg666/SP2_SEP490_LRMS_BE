@@ -116,6 +116,22 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "LRMS_API.Controllers.UserController",
+    "Method": "GetUsersByLevel",
+    "RelativePath": "api/accounts/level/{level}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "level",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "LRMS_API.Controllers.AuthController",
     "Method": "Login",
     "RelativePath": "api/auth/login",

@@ -20,13 +20,13 @@ CREATE TABLE [Users] (
 	[full_name] NVARCHAR(200),
 	[email] NVARCHAR(200),
 	[phone] NVARCHAR(20),
-	[role_id] INTEGER,
+	[role] INTEGER,
 	[department_id] INTEGER,
 	[status] INTEGER,
 	[created_at] DATETIME,
 	[updated_at] DATETIME,
 	[group_id] INTEGER,
-	[level] NVARCHAR(50),
+	[level] INTEGER,
 	PRIMARY KEY([user_id])
 );
 GO
@@ -48,7 +48,7 @@ CREATE TABLE [Group_Member] (
 	[group_id] INTEGER,
 	[member_name] NVARCHAR(200),
 	[member_email] NVARCHAR(200),
-	[role] NVARCHAR(100),
+	[role] INTEGER,
 	[user_id] INTEGER,
 	[status] INTEGER,
 	[join_date] DATETIME,
@@ -71,7 +71,7 @@ CREATE TABLE [Projects] (
 	[approved_by] INTEGER,
 	[objective] NVARCHAR(MAX),
 	[methodology] NVARCHAR(MAX),
-	[type] NVARCHAR(100),
+	[type] INTEGER,
 	[approved_budget] DECIMAL(18,2),
 	[spent_budget] DECIMAL(18,2),
 	PRIMARY KEY([project_id])
@@ -195,7 +195,7 @@ CREATE TABLE [Author] (
 	[author_id] INTEGER NOT NULL IDENTITY(1,1),
 	[project_id] INTEGER,
 	[user_id] INTEGER,
-	[role] NVARCHAR(100),
+	[role] INTEGER,
 	[email] NVARCHAR(200),
 	PRIMARY KEY([author_id])
 );
@@ -434,14 +434,14 @@ ON UPDATE NO ACTION ON DELETE NO ACTION;
 GO
 
 -- Dữ liệu mẫu cho bảng Users
-INSERT INTO [Users] ([username], [password], [full_name], [email], [phone], [role_id], [department_id], [status], [created_at], [updated_at], [group_id], [level])
+INSERT INTO [Users] ([username], [password], [full_name], [email], [phone], [role], [department_id], [status], [created_at], [updated_at], [group_id], [level])
 VALUES 
-('user1', 'password1', 'Nguyễn Văn A', 'user1@example.com', '0123456789', 1, 1, 1, GETDATE(), GETDATE(), 1, 'Level 1'),
-('user2', 'password2', 'Trần Thị B', 'user2@example.com', '0123456788', 2, 1, 1, GETDATE(), GETDATE(), 1, 'Level 2'),
-('user3', 'password3', 'Lê Văn C', 'user3@example.com', '0123456787', 1, 2, 1, GETDATE(), GETDATE(), 2, 'Level 1'),
-('user4', 'password4', 'Phạm Thị D', 'user4@example.com', '0123456786', 2, 2, 1, GETDATE(), GETDATE(), 2, 'Level 2'),
-('user5', 'password5', 'Nguyễn Văn E', 'user5@example.com', '0123456785', 1, 1, 1, GETDATE(), GETDATE(), 1, 'Level 1'),
-('user6', 'password6', 'Trần Thị F', 'user6@example.com', '0123456784', 2, 1, 1, GETDATE(), GETDATE(), 1, 'Level 2');
+('user1', 'password1', 'Nguyễn Văn A', 'user1@example.com', '0123456789', 1, 1, 1, GETDATE(), GETDATE(), 1, 0),
+('user2', 'password2', 'Trần Thị B', 'user2@example.com', '0123456788', 2, 1, 1, GETDATE(), GETDATE(), 1, 1),
+('user3', 'password3', 'Lê Văn C', 'user3@example.com', '0123456787', 1, 2, 1, GETDATE(), GETDATE(), 2, 2),
+('user4', 'password4', 'Phạm Thị D', 'user4@example.com', '0123456786', 2, 2, 1, GETDATE(), GETDATE(), 2, 3),
+('user5', 'password5', 'Nguyễn Văn E', 'user5@example.com', '0123456785', 1, 1, 1, GETDATE(), GETDATE(), 1, 4),
+('user6', 'password6', 'Trần Thị F', 'user6@example.com', '0123456784', 2, 1, 1, GETDATE(), GETDATE(), 1, 2);
 
 -- Dữ liệu mẫu cho bảng Groups
 INSERT INTO [Groups] ([group_name], [max_member], [current_member], [status], [created_at], [group_type])
@@ -453,22 +453,22 @@ VALUES
 -- Dữ liệu mẫu cho bảng Group_Member
 INSERT INTO [Group_Member] ([group_id], [member_name], [member_email], [role], [user_id], [status], [join_date])
 VALUES 
-(1, 'Nguyễn Văn A', 'user1@example.com', 'Member', 1, 1, GETDATE()),
-(1, 'Trần Thị B', 'user2@example.com', 'Member', 2, 1, GETDATE()),
-(2, 'Lê Văn C', 'user3@example.com', 'Member', 3, 1, GETDATE()),
-(2, 'Phạm Thị D', 'user4@example.com', 'Member', 4, 1, GETDATE()),
-(3, 'Nguyễn Văn E', 'user5@example.com', 'Member', 5, 1, GETDATE()),
-(3, 'Trần Thị F', 'user6@example.com', 'Member', 6, 1, GETDATE());
+(1, 'Nguyễn Văn A', 'user1@example.com', 0, 1, 1, GETDATE()),
+(1, 'Trần Thị B', 'user2@example.com', 1, 2, 1, GETDATE()),
+(2, 'Lê Văn C', 'user3@example.com', 1, 3, 1, GETDATE()),
+(2, 'Phạm Thị D', 'user4@example.com', 1, 4, 1, GETDATE()),
+(3, 'Nguyễn Văn E', 'user5@example.com', 1, 5, 1, GETDATE()),
+(3, 'Trần Thị F', 'user6@example.com', 1, 6, 1, GETDATE());
 
 -- Dữ liệu mẫu cho bảng Projects
 INSERT INTO [Projects] ([title], [description], [user_id], [start_date], [end_date], [status], [created_at], [updated_at], [group_id], [project_type], [approved_by], [objective], [methodology], [type], [approved_budget], [spent_budget])
 VALUES 
-('Project 1', 'Mô tả dự án 1', 1, GETDATE(), DATEADD(MONTH, 1, GETDATE()), 1, GETDATE(), GETDATE(), 1, 1, 1, 'Mục tiêu 1', 'Phương pháp 1', 'Loại 1', 10000.00, 5000.00),
-('Project 2', 'Mô tả dự án 2', 2, GETDATE(), DATEADD(MONTH, 2, GETDATE()), 1, GETDATE(), GETDATE(), 1, 1, 1, 'Mục tiêu 2', 'Phương pháp 2', 'Loại 2', 20000.00, 10000.00),
-('Project 3', 'Mô tả dự án 3', 3, GETDATE(), DATEADD(MONTH, 3, GETDATE()), 1, GETDATE(), GETDATE(), 2, 2, 1, 'Mục tiêu 3', 'Phương pháp 3', 'Loại 3', 15000.00, 7000.00),
-('Project 4', 'Mô tả dự án 4', 4, GETDATE(), DATEADD(MONTH, 4, GETDATE()), 1, GETDATE(), GETDATE(), 2, 2, 1, 'Mục tiêu 4', 'Phương pháp 4', 'Loại 4', 25000.00, 12000.00),
-('Project 5', 'Mô tả dự án 5', 5, GETDATE(), DATEADD(MONTH, 5, GETDATE()), 1, GETDATE(), GETDATE(), 1, 1, 1, 'Mục tiêu 5', 'Phương pháp 5', 'Loại 5', 30000.00, 15000.00),
-('Project 6', 'Mô tả dự án 6', 6, GETDATE(), DATEADD(MONTH, 6, GETDATE()), 1, GETDATE(), GETDATE(), 1, 1, 1, 'Mục tiêu 6', 'Phương pháp 6', 'Loại 6', 18000.00, 9000.00);
+('Project 1', 'Mô tả dự án 1', 1, GETDATE(), DATEADD(MONTH, 1, GETDATE()), 1, GETDATE(), GETDATE(), 1, 1, 1, 'Mục tiêu 1', 'Phương pháp 1', 0, 10000.00, 5000.00),
+('Project 2', 'Mô tả dự án 2', 2, GETDATE(), DATEADD(MONTH, 2, GETDATE()), 1, GETDATE(), GETDATE(), 1, 1, 1, 'Mục tiêu 2', 'Phương pháp 2', 0, 20000.00, 10000.00),
+('Project 3', 'Mô tả dự án 3', 3, GETDATE(), DATEADD(MONTH, 3, GETDATE()), 1, GETDATE(), GETDATE(), 2, 2, 1, 'Mục tiêu 3', 'Phương pháp 3', 1, 15000.00, 7000.00),
+('Project 4', 'Mô tả dự án 4', 4, GETDATE(), DATEADD(MONTH, 4, GETDATE()), 1, GETDATE(), GETDATE(), 2, 2, 1, 'Mục tiêu 4', 'Phương pháp 4', 1, 25000.00, 12000.00),
+('Project 5', 'Mô tả dự án 5', 5, GETDATE(), DATEADD(MONTH, 5, GETDATE()), 1, GETDATE(), GETDATE(), 1, 1, 1, 'Mục tiêu 5', 'Phương pháp 5', 2, 30000.00, 15000.00),
+('Project 6', 'Mô tả dự án 6', 6, GETDATE(), DATEADD(MONTH, 6, GETDATE()), 1, GETDATE(), GETDATE(), 1, 1, 1, 'Mục tiêu 6', 'Phương pháp 6', 3, 18000.00, 9000.00);
 
 -- Dữ liệu mẫu cho bảng Quotas
 INSERT INTO [Quotas] ([quota_amount], [allocated_by], [allocated_at], [project_id], [limit_value], [current_value])
@@ -563,12 +563,12 @@ VALUES
 -- Dữ liệu mẫu cho bảng Author
 INSERT INTO [Author] ([project_id], [user_id], [role], [email])
 VALUES 
-(1, 1, 'Author', 'author1@example.com'),
-(2, 2, 'Author', 'author2@example.com'),
-(3, 3, 'Author', 'author3@example.com'),
-(4, 4, 'Author', 'author4@example.com'),
-(5, 5, 'Author', 'author5@example.com'),
-(6, 6, 'Author', 'author6@example.com');
+(1, 1, 0, 'author1@example.com'),
+(2, 2, 0, 'author2@example.com'),
+(3, 3, 0, 'author3@example.com'),
+(4, 4, 0, 'author4@example.com'),
+(5, 5, 0, 'author5@example.com'),
+(6, 6, 0, 'author6@example.com');
 
 -- Dữ liệu mẫu cho bảng Department
 INSERT INTO [Department] ([department_name], [project_id], [user_id])

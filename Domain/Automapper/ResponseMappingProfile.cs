@@ -11,6 +11,9 @@ public class ResponseMappingProfile : Profile
     public ResponseMappingProfile()
         {
         CreateMap<User, UserResponse>().ReverseMap();
-
-        } 
+        CreateMap<User, LoginResponse>()
+            .ForMember(dest => dest.UserId, opt =>
+                opt.MapFrom(src => src.UserId))
+            .ReverseMap();
+    } 
 }
