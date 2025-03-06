@@ -5,11 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Domain.Constants;
-public enum LevelEnum
+
+public enum GroupTypeEnum
 {
-    Professor = 0,
-    Associate_Professor = 1,
-    PhD = 2,
-    Master = 3,
-    Bachelor =4
+    Student = 0,
+    Council = 1
 }
