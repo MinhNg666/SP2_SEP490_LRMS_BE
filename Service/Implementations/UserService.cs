@@ -68,11 +68,30 @@ namespace Service.Implementations
                     return loginResponse;
                 }
             }
-            catch (Exception e)
+            catch (BCrypt.Net.SaltParseException)
             {
-                throw new ServiceException(MessageConstants.NOT_FOUND);
+                throw new ServiceException(MessageConstants.INVALID_ACCOUNT_CREDENTIALS);
             }
             return null;
+        }
+        public async Task RegisterStudent(RegisterStudentRequest request) 
+        {
+            try
+            {
+                var existingUser = await _userRepository.GetUserByEmail(request.Email);
+                if (existingUser != null)
+                    throw new ServiceException(MessageConstants.DUPLICATE);
+
+                var user = _mapper.Map<User>(request);
+                user.Role = (int)RoleEnum.Student;
+                user.Status = (int)AccountStatusEnum.Active;
+                user.CreatedAt = DateTime.Now;
+                await _userRepository.AddAsync(user);
+            }
+            catch (Exception e)
+            {
+                throw new ServiceException(e.Message);
+            }
         }
         public async Task<IEnumerable<UserResponse>> GetAllUsers()
         {

@@ -3,80 +3,56 @@
   "WorkspaceRootPath": "G:\\SEP490\\LRMS API\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|g:\\sep490\\lrms api\\domain\\constants\\groupmemberroleenum.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|solutionrelative:domain\\constants\\groupmemberroleenum.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{E077F4BC-2B25-421A-BFE3-55F3FB58EEEE}|LRMS API\\LRMS API.csproj|g:\\sep490\\lrms api\\lrms api\\extensions\\serviceextension.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E077F4BC-2B25-421A-BFE3-55F3FB58EEEE}|LRMS API\\LRMS API.csproj|solutionrelative:lrms api\\extensions\\serviceextension.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|g:\\sep490\\lrms api\\domain\\constants\\projecttypeenum.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|solutionrelative:domain\\constants\\projecttypeenum.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|g:\\sep490\\lrms api\\domain\\constants\\authorroleenum.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|solutionrelative:domain\\constants\\authorroleenum.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|g:\\sep490\\lrms api\\domain\\constants\\levelenum.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|solutionrelative:domain\\constants\\levelenum.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|g:\\sep490\\lrms api\\domain\\constants\\messageconstants.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|solutionrelative:domain\\constants\\messageconstants.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|g:\\sep490\\lrms api\\domain\\constants\\roleenum.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|solutionrelative:domain\\constants\\roleenum.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{E077F4BC-2B25-421A-BFE3-55F3FB58EEEE}|LRMS API\\LRMS API.csproj|g:\\sep490\\lrms api\\lrms api\\controllers\\bcryptpasswordconvertercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E077F4BC-2B25-421A-BFE3-55F3FB58EEEE}|LRMS API\\LRMS API.csproj|solutionrelative:lrms api\\controllers\\bcryptpasswordconvertercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{E077F4BC-2B25-421A-BFE3-55F3FB58EEEE}|LRMS API\\LRMS API.csproj|g:\\sep490\\lrms api\\lrms api\\controllers\\usercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{E077F4BC-2B25-421A-BFE3-55F3FB58EEEE}|LRMS API\\LRMS API.csproj|solutionrelative:lrms api\\controllers\\usercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
+      "AbsoluteMoniker": "D:0:0:{DD7C16A9-4773-466B-ABE6-DCE8E2D648D2}|Service\\Service.csproj|g:\\sep490\\lrms api\\service\\interfaces\\ibcryptpasswordservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{DD7C16A9-4773-466B-ABE6-DCE8E2D648D2}|Service\\Service.csproj|solutionrelative:service\\interfaces\\ibcryptpasswordservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{DD7C16A9-4773-466B-ABE6-DCE8E2D648D2}|Service\\Service.csproj|g:\\sep490\\lrms api\\service\\implementations\\bcryptpasswordservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{DD7C16A9-4773-466B-ABE6-DCE8E2D648D2}|Service\\Service.csproj|solutionrelative:service\\implementations\\bcryptpasswordservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{DD7C16A9-4773-466B-ABE6-DCE8E2D648D2}|Service\\Service.csproj|g:\\sep490\\lrms api\\service\\implementations\\userservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{DD7C16A9-4773-466B-ABE6-DCE8E2D648D2}|Service\\Service.csproj|solutionrelative:service\\implementations\\userservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|g:\\sep490\\lrms api\\domain\\dto\\requests\\convertbcryptpasswordrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|solutionrelative:domain\\dto\\requests\\convertbcryptpasswordrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{DD7C16A9-4773-466B-ABE6-DCE8E2D648D2}|Service\\Service.csproj|g:\\sep490\\lrms api\\service\\interfaces\\iuserservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{DD7C16A9-4773-466B-ABE6-DCE8E2D648D2}|Service\\Service.csproj|solutionrelative:service\\interfaces\\iuserservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{CC0520B0-55D6-4AC0-862F-201AEEBAF24E}|Repository\\Repository.csproj|g:\\sep490\\lrms api\\repository\\interfaces\\iuserrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{CC0520B0-55D6-4AC0-862F-201AEEBAF24E}|Repository\\Repository.csproj|solutionrelative:repository\\interfaces\\iuserrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|g:\\sep490\\lrms api\\domain\\entities\\lrmsdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|solutionrelative:domain\\entities\\lrmsdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|g:\\sep490\\lrms api\\domain\\entities\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|solutionrelative:domain\\entities\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|g:\\sep490\\lrms api\\domain\\entities\\author.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|solutionrelative:domain\\entities\\author.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{E077F4BC-2B25-421A-BFE3-55F3FB58EEEE}|LRMS API\\LRMS API.csproj|g:\\sep490\\lrms api\\lrms api\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E077F4BC-2B25-421A-BFE3-55F3FB58EEEE}|LRMS API\\LRMS API.csproj|solutionrelative:lrms api\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|g:\\sep490\\lrms api\\domain\\entities\\groupmember.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|solutionrelative:domain\\entities\\groupmember.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|g:\\sep490\\lrms api\\domain\\entities\\group.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|solutionrelative:domain\\entities\\group.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|g:\\sep490\\lrms api\\domain\\dto\\requests\\loginrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|solutionrelative:domain\\dto\\requests\\loginrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|g:\\sep490\\lrms api\\domain\\dto\\requests\\registerstudentrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|solutionrelative:domain\\dto\\requests\\registerstudentrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{E077F4BC-2B25-421A-BFE3-55F3FB58EEEE}|LRMS API\\LRMS API.csproj|g:\\sep490\\lrms api\\lrms api\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{E077F4BC-2B25-421A-BFE3-55F3FB58EEEE}|LRMS API\\LRMS API.csproj|solutionrelative:lrms api\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|g:\\sep490\\lrms api\\domain\\automapper\\responsemappingprofile.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|solutionrelative:domain\\automapper\\responsemappingprofile.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{CC0520B0-55D6-4AC0-862F-201AEEBAF24E}|Repository\\Repository.csproj|g:\\sep490\\lrms api\\repository\\implementations\\userrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{CC0520B0-55D6-4AC0-862F-201AEEBAF24E}|Repository\\Repository.csproj|solutionrelative:repository\\implementations\\userrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|g:\\sep490\\lrms api\\domain\\constants\\roleenum.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|solutionrelative:domain\\constants\\roleenum.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -86,7 +62,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 197,
-          "SelectedChildIndex": 19,
+          "SelectedChildIndex": 12,
           "Children": [
             {
               "$type": "Bookmark",
@@ -138,232 +114,172 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "MessageConstants.cs",
-              "DocumentMoniker": "G:\\SEP490\\LRMS API\\Domain\\Constants\\MessageConstants.cs",
-              "RelativeDocumentMoniker": "Domain\\Constants\\MessageConstants.cs",
-              "ToolTip": "G:\\SEP490\\LRMS API\\Domain\\Constants\\MessageConstants.cs",
-              "RelativeToolTip": "Domain\\Constants\\MessageConstants.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "DocumentIndex": 0,
+              "Title": "ServiceExtension.cs",
+              "DocumentMoniker": "G:\\SEP490\\LRMS API\\LRMS API\\Extensions\\ServiceExtension.cs",
+              "RelativeDocumentMoniker": "LRMS API\\Extensions\\ServiceExtension.cs",
+              "ToolTip": "G:\\SEP490\\LRMS API\\LRMS API\\Extensions\\ServiceExtension.cs",
+              "RelativeToolTip": "LRMS API\\Extensions\\ServiceExtension.cs",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAABIAAAA4AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-05T10:26:39.992Z"
+              "WhenOpened": "2025-03-06T14:59:14.685Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 2,
-              "Title": "AuthorRoleEnum.cs",
-              "DocumentMoniker": "G:\\SEP490\\LRMS API\\Domain\\Constants\\AuthorRoleEnum.cs",
-              "RelativeDocumentMoniker": "Domain\\Constants\\AuthorRoleEnum.cs",
-              "ToolTip": "G:\\SEP490\\LRMS API\\Domain\\Constants\\AuthorRoleEnum.cs",
-              "RelativeToolTip": "Domain\\Constants\\AuthorRoleEnum.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-05T10:17:19.361Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 6,
               "Title": "UserController.cs",
               "DocumentMoniker": "G:\\SEP490\\LRMS API\\LRMS API\\Controllers\\UserController.cs",
               "RelativeDocumentMoniker": "LRMS API\\Controllers\\UserController.cs",
               "ToolTip": "G:\\SEP490\\LRMS API\\LRMS API\\Controllers\\UserController.cs",
               "RelativeToolTip": "LRMS API\\Controllers\\UserController.cs",
-              "ViewState": "AgIAABoAAAAAAAAAAAAmwDgAAAAFAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-05T10:11:08.395Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 9,
-              "Title": "IUserRepository.cs",
-              "DocumentMoniker": "G:\\SEP490\\LRMS API\\Repository\\Interfaces\\IUserRepository.cs",
-              "RelativeDocumentMoniker": "Repository\\Interfaces\\IUserRepository.cs",
-              "ToolTip": "G:\\SEP490\\LRMS API\\Repository\\Interfaces\\IUserRepository.cs",
-              "RelativeToolTip": "Repository\\Interfaces\\IUserRepository.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-05T10:09:27.804Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 10,
-              "Title": "LRMSDbContext.cs",
-              "DocumentMoniker": "G:\\SEP490\\LRMS API\\Domain\\Entities\\LRMSDbContext.cs",
-              "RelativeDocumentMoniker": "Domain\\Entities\\LRMSDbContext.cs",
-              "ToolTip": "G:\\SEP490\\LRMS API\\Domain\\Entities\\LRMSDbContext.cs",
-              "RelativeToolTip": "Domain\\Entities\\LRMSDbContext.cs",
-              "ViewState": "AgIAAAQAAAAAAAAAAAAAACMCAAALAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-05T09:53:26.131Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 12,
-              "Title": "Author.cs",
-              "DocumentMoniker": "G:\\SEP490\\LRMS API\\Domain\\Entities\\Author.cs",
-              "RelativeDocumentMoniker": "Domain\\Entities\\Author.cs",
-              "ToolTip": "G:\\SEP490\\LRMS API\\Domain\\Entities\\Author.cs",
-              "RelativeToolTip": "Domain\\Entities\\Author.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAmAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-05T09:52:33.193Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "ProjectTypeEnum.cs",
-              "DocumentMoniker": "G:\\SEP490\\LRMS API\\Domain\\Constants\\ProjectTypeEnum.cs",
-              "RelativeDocumentMoniker": "Domain\\Constants\\ProjectTypeEnum.cs",
-              "ToolTip": "G:\\SEP490\\LRMS API\\Domain\\Constants\\ProjectTypeEnum.cs",
-              "RelativeToolTip": "Domain\\Constants\\ProjectTypeEnum.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-05T09:51:34.768Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "GroupMemberRoleEnum.cs",
-              "DocumentMoniker": "G:\\SEP490\\LRMS API\\Domain\\Constants\\GroupMemberRoleEnum.cs",
-              "RelativeDocumentMoniker": "Domain\\Constants\\GroupMemberRoleEnum.cs",
-              "ToolTip": "G:\\SEP490\\LRMS API\\Domain\\Constants\\GroupMemberRoleEnum.cs",
-              "RelativeToolTip": "Domain\\Constants\\GroupMemberRoleEnum.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-05T09:51:03.323Z",
+              "WhenOpened": "2025-03-06T14:55:15.993Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 13,
-              "Title": "GroupMember.cs",
-              "DocumentMoniker": "G:\\SEP490\\LRMS API\\Domain\\Entities\\GroupMember.cs",
-              "RelativeDocumentMoniker": "Domain\\Entities\\GroupMember.cs",
-              "ToolTip": "G:\\SEP490\\LRMS API\\Domain\\Entities\\GroupMember.cs",
-              "RelativeToolTip": "Domain\\Entities\\GroupMember.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAA==",
+              "DocumentIndex": 1,
+              "Title": "BcryptPasswordConverterController.cs",
+              "DocumentMoniker": "G:\\SEP490\\LRMS API\\LRMS API\\Controllers\\BcryptPasswordConverterController.cs",
+              "RelativeDocumentMoniker": "LRMS API\\Controllers\\BcryptPasswordConverterController.cs",
+              "ToolTip": "G:\\SEP490\\LRMS API\\LRMS API\\Controllers\\BcryptPasswordConverterController.cs",
+              "RelativeToolTip": "LRMS API\\Controllers\\BcryptPasswordConverterController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABYAAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-05T09:49:38.759Z"
+              "WhenOpened": "2025-03-06T14:55:07.346Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 14,
-              "Title": "Group.cs",
-              "DocumentMoniker": "G:\\SEP490\\LRMS API\\Domain\\Entities\\Group.cs",
-              "RelativeDocumentMoniker": "Domain\\Entities\\Group.cs",
-              "ToolTip": "G:\\SEP490\\LRMS API\\Domain\\Entities\\Group.cs",
-              "RelativeToolTip": "Domain\\Entities\\Group.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "DocumentIndex": 4,
+              "Title": "BcryptPasswordService.cs",
+              "DocumentMoniker": "G:\\SEP490\\LRMS API\\Service\\Implementations\\BcryptPasswordService.cs",
+              "RelativeDocumentMoniker": "Service\\Implementations\\BcryptPasswordService.cs",
+              "ToolTip": "G:\\SEP490\\LRMS API\\Service\\Implementations\\BcryptPasswordService.cs",
+              "RelativeToolTip": "Service\\Implementations\\BcryptPasswordService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAbAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-05T09:49:28.166Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 11,
-              "Title": "User.cs",
-              "DocumentMoniker": "G:\\SEP490\\LRMS API\\Domain\\Entities\\User.cs",
-              "RelativeDocumentMoniker": "Domain\\Entities\\User.cs",
-              "ToolTip": "G:\\SEP490\\LRMS API\\Domain\\Entities\\User.cs",
-              "RelativeToolTip": "Domain\\Entities\\User.cs",
-              "ViewState": "AgIAAAMAAAAAAAAAAAAAABMAAAAUAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-05T09:48:47.713Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "RoleEnum.cs",
-              "DocumentMoniker": "G:\\SEP490\\LRMS API\\Domain\\Constants\\RoleEnum.cs",
-              "RelativeDocumentMoniker": "Domain\\Constants\\RoleEnum.cs",
-              "ToolTip": "G:\\SEP490\\LRMS API\\Domain\\Constants\\RoleEnum.cs",
-              "RelativeToolTip": "Domain\\Constants\\RoleEnum.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-05T09:47:45.976Z"
+              "WhenOpened": "2025-03-06T14:52:32.821Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 3,
-              "Title": "LevelEnum.cs",
-              "DocumentMoniker": "G:\\SEP490\\LRMS API\\Domain\\Constants\\LevelEnum.cs",
-              "RelativeDocumentMoniker": "Domain\\Constants\\LevelEnum.cs",
-              "ToolTip": "G:\\SEP490\\LRMS API\\Domain\\Constants\\LevelEnum.cs",
-              "RelativeToolTip": "Domain\\Constants\\LevelEnum.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAAPAAAAAAAAAA==",
+              "Title": "IBcryptPasswordService.cs",
+              "DocumentMoniker": "G:\\SEP490\\LRMS API\\Service\\Interfaces\\IBcryptPasswordService.cs",
+              "RelativeDocumentMoniker": "Service\\Interfaces\\IBcryptPasswordService.cs",
+              "ToolTip": "G:\\SEP490\\LRMS API\\Service\\Interfaces\\IBcryptPasswordService.cs",
+              "RelativeToolTip": "Service\\Interfaces\\IBcryptPasswordService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAnAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-05T09:47:34.105Z"
+              "WhenOpened": "2025-03-06T14:51:50.882Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 18,
-              "Title": "UserRepository.cs",
-              "DocumentMoniker": "G:\\SEP490\\LRMS API\\Repository\\Implementations\\UserRepository.cs",
-              "RelativeDocumentMoniker": "Repository\\Implementations\\UserRepository.cs",
-              "ToolTip": "G:\\SEP490\\LRMS API\\Repository\\Implementations\\UserRepository.cs",
-              "RelativeToolTip": "Repository\\Implementations\\UserRepository.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAAAFAAAAAAAAAA==",
+              "DocumentIndex": 6,
+              "Title": "ConvertBcryptPasswordRequest.cs",
+              "DocumentMoniker": "G:\\SEP490\\LRMS API\\Domain\\DTO\\Requests\\ConvertBcryptPasswordRequest.cs",
+              "RelativeDocumentMoniker": "Domain\\DTO\\Requests\\ConvertBcryptPasswordRequest.cs",
+              "ToolTip": "G:\\SEP490\\LRMS API\\Domain\\DTO\\Requests\\ConvertBcryptPasswordRequest.cs",
+              "RelativeToolTip": "Domain\\DTO\\Requests\\ConvertBcryptPasswordRequest.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAoAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-04T06:33:24.713Z"
+              "WhenOpened": "2025-03-06T04:22:57.837Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 15,
-              "Title": "LoginRequest.cs",
-              "DocumentMoniker": "G:\\SEP490\\LRMS API\\Domain\\DTO\\Requests\\LoginRequest.cs",
-              "RelativeDocumentMoniker": "Domain\\DTO\\Requests\\LoginRequest.cs",
-              "ToolTip": "G:\\SEP490\\LRMS API\\Domain\\DTO\\Requests\\LoginRequest.cs",
-              "RelativeToolTip": "Domain\\DTO\\Requests\\LoginRequest.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-04T06:29:43.092Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 17,
-              "Title": "ResponseMappingProfile.cs",
-              "DocumentMoniker": "G:\\SEP490\\LRMS API\\Domain\\Automapper\\ResponseMappingProfile.cs",
-              "RelativeDocumentMoniker": "Domain\\Automapper\\ResponseMappingProfile.cs",
-              "ToolTip": "G:\\SEP490\\LRMS API\\Domain\\Automapper\\ResponseMappingProfile.cs",
-              "RelativeToolTip": "Domain\\Automapper\\ResponseMappingProfile.cs",
-              "ViewState": "AgIAAAUAAAAAAAAAAAAowBMAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-04T06:22:54.637Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 7,
               "Title": "IUserService.cs",
               "DocumentMoniker": "G:\\SEP490\\LRMS API\\Service\\Interfaces\\IUserService.cs",
               "RelativeDocumentMoniker": "Service\\Interfaces\\IUserService.cs",
               "ToolTip": "G:\\SEP490\\LRMS API\\Service\\Interfaces\\IUserService.cs",
               "RelativeToolTip": "Service\\Interfaces\\IUserService.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAABJAAAAAAAAAA==",
+              "ViewState": "AgIAAAoAAAAAAAAAAAAAAA4AAAAIAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-04T06:21:23.541Z"
+              "WhenOpened": "2025-03-06T03:08:38.28Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
-              "Title": "UserService.cs",
-              "DocumentMoniker": "G:\\SEP490\\LRMS API\\Service\\Implementations\\UserService.cs",
-              "RelativeDocumentMoniker": "Service\\Implementations\\UserService.cs",
-              "ToolTip": "G:\\SEP490\\LRMS API\\Service\\Implementations\\UserService.cs",
-              "RelativeToolTip": "Service\\Implementations\\UserService.cs",
-              "ViewState": "AgIAAFAAAAAAAAAAAAAUwGsAAABAAAAAAAAAAA==",
+              "DocumentIndex": 8,
+              "Title": "User.cs",
+              "DocumentMoniker": "G:\\SEP490\\LRMS API\\Domain\\Entities\\User.cs",
+              "RelativeDocumentMoniker": "Domain\\Entities\\User.cs",
+              "ToolTip": "G:\\SEP490\\LRMS API\\Domain\\Entities\\User.cs",
+              "RelativeToolTip": "Domain\\Entities\\User.cs",
+              "ViewState": "AgIAABEAAAAAAAAAAAAAAB8AAAAjAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-04T06:21:22.744Z"
+              "WhenOpened": "2025-03-06T03:04:16.809Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 16,
+              "DocumentIndex": 10,
+              "Title": "RegisterStudentRequest.cs",
+              "DocumentMoniker": "G:\\SEP490\\LRMS API\\Domain\\DTO\\Requests\\RegisterStudentRequest.cs",
+              "RelativeDocumentMoniker": "Domain\\DTO\\Requests\\RegisterStudentRequest.cs",
+              "ToolTip": "G:\\SEP490\\LRMS API\\Domain\\DTO\\Requests\\RegisterStudentRequest.cs",
+              "RelativeToolTip": "Domain\\DTO\\Requests\\RegisterStudentRequest.cs",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAAABQAAAAiAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-03-06T03:02:13.154Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "Program.cs",
+              "DocumentMoniker": "G:\\SEP490\\LRMS API\\LRMS API\\Program.cs",
+              "RelativeDocumentMoniker": "LRMS API\\Program.cs",
+              "ToolTip": "G:\\SEP490\\LRMS API\\LRMS API\\Program.cs",
+              "RelativeToolTip": "LRMS API\\Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACMAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-03-06T02:11:48.17Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
               "Title": "AuthController.cs",
               "DocumentMoniker": "G:\\SEP490\\LRMS API\\LRMS API\\Controllers\\AuthController.cs",
               "RelativeDocumentMoniker": "LRMS API\\Controllers\\AuthController.cs",
               "ToolTip": "G:\\SEP490\\LRMS API\\LRMS API\\Controllers\\AuthController.cs",
               "RelativeToolTip": "LRMS API\\Controllers\\AuthController.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAAAcAAAAAAAAAA==",
+              "ViewState": "AgIAAAkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-04T06:21:15.53Z"
+              "WhenOpened": "2025-03-06T02:11:39.06Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "RoleEnum.cs",
+              "DocumentMoniker": "G:\\SEP490\\LRMS API\\Domain\\Constants\\RoleEnum.cs",
+              "RelativeDocumentMoniker": "Domain\\Constants\\RoleEnum.cs",
+              "ToolTip": "G:\\SEP490\\LRMS API\\Domain\\Constants\\RoleEnum.cs",
+              "RelativeToolTip": "Domain\\Constants\\RoleEnum.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAMAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-03-06T01:52:37.686Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "UserService.cs",
+              "DocumentMoniker": "G:\\SEP490\\LRMS API\\Service\\Implementations\\UserService.cs",
+              "RelativeDocumentMoniker": "Service\\Implementations\\UserService.cs",
+              "ToolTip": "G:\\SEP490\\LRMS API\\Service\\Implementations\\UserService.cs",
+              "RelativeToolTip": "Service\\Implementations\\UserService.cs",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAAFgAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-03-06T01:14:00.898Z",
+              "EditorCaption": ""
             }
           ]
         }

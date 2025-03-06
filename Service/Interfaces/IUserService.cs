@@ -12,6 +12,7 @@ namespace Service.Interfaces
     public interface IUserService
     {
         Task<LoginResponse> Login(LoginRequest request);
+        Task RegisterStudent(RegisterStudentRequest request);
         Task<IEnumerable<UserResponse>> GetAllUsers();
         Task<UserResponse> GetUserById(int userId);
         Task<IEnumerable<UserResponse>> GetUsersByLevel(LevelEnum level);

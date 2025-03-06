@@ -14,7 +14,7 @@ public static class ServiceExtension
         services.Configure<AdminAccount>(config.GetSection("AdminAccount"));
         services.Configure<JwtSettings>(config.GetSection("JwtSettings"));
         services.AddScoped<ITokenService, TokenService>();
-
+        services.AddScoped<IBcryptPasswordService, BcryptPasswordService>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IUserService, UserService>();
 

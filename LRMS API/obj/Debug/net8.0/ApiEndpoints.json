@@ -146,5 +146,21 @@
       }
     ],
     "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LRMS_API.Controllers.BcryptPasswordConverterController",
+    "Method": "ChangePassword",
+    "RelativePath": "api/change-password",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "Domain.DTO.Requests.ConvertBcryptPasswordRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
   }
 ]
