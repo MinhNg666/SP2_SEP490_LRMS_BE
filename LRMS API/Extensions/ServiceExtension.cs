@@ -17,6 +17,8 @@ public static class ServiceExtension
         services.AddScoped<IBcryptPasswordService, BcryptPasswordService>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IUserService, UserService>();
+        services.AddScoped<IGroupService, GroupService>();
+        services.AddScoped<IGroupRepository, GroupRepository>();
 
         return services;
     }

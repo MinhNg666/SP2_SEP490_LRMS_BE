@@ -9,7 +9,6 @@ namespace Domain.DTO.Requests;
 public class CreateCouncilGroupRequest
 {
     public string GroupName { get; set; }
-    public int MaxMember { get; set; }
     public List<MemberRequest> Members { get; set; }
 }
 public class MemberRequest

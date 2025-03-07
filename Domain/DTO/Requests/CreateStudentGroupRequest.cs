@@ -10,10 +10,6 @@ public class CreateStudentGroupRequest
 {
     public string GroupName { get; set; }
     public int MaxMember { get; set; }
-    public int? CurrentMember { get; set; }
-    public int? Status { get; set; }
-    public DateTime? CreatedAt { get; set; }
-    public int? GroupType { get; set; }
     public List<StudentMemberRequest> Members { get; set; }
 
 }

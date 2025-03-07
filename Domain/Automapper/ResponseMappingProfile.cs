@@ -15,5 +15,7 @@ public class ResponseMappingProfile : Profile
             .ForMember(dest => dest.UserId, opt =>
                 opt.MapFrom(src => src.UserId))
             .ReverseMap();
+        CreateMap<Group, GroupResponse>().ReverseMap();
+        CreateMap<GroupMember, GroupMemberResponse>().ReverseMap();
     } 
 }

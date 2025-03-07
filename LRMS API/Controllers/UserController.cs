@@ -4,6 +4,7 @@ using Service.Interfaces;
 using Domain.DTO.Common;
 using Domain.Constants;
 using Domain.DTO.Requests;
+using Microsoft.AspNetCore.Authorization;
 
 namespace LRMS_API.Controllers;
 [ApiController]

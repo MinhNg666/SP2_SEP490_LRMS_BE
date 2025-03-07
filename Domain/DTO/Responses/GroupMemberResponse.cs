@@ -12,5 +12,6 @@ public class GroupMemberResponse
     public string MemberName { get; set; }
     public string MemberEmail { get; set; }
     public int Role { get; set; }
+    public int? Status { get; set; }
     public DateTime JoinDate { get; set; }
 }

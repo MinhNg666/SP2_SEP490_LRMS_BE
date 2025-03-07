@@ -6,5 +6,6 @@ public enum RoleEnum
     Student = 2,
     Accounting_Department = 3,
     Office_of_Scientific_Management = 4,
+    Secretary = 5,
     Admin = 0
 }

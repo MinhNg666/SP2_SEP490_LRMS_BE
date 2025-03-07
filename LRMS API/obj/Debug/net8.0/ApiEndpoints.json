@@ -162,5 +162,63 @@
       }
     ],
     "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LRMS_API.Controllers.GroupController",
+    "Method": "CreateCouncilGroup",
+    "RelativePath": "api/council-groups",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "Domain.DTO.Requests.CreateCouncilGroupRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LRMS_API.Controllers.GroupController",
+    "Method": "GetAllGroups",
+    "RelativePath": "api/groups",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LRMS_API.Controllers.GroupController",
+    "Method": "GetGroupById",
+    "RelativePath": "api/groups/{groupid}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "groupid",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LRMS_API.Controllers.GroupController",
+    "Method": "CreateStudentGroup",
+    "RelativePath": "api/student-groups",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "Domain.DTO.Requests.CreateStudentGroupRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
   }
 ]

@@ -84,7 +84,6 @@ public class GroupService : IGroupService
                     Role = member.Role,
                     UserId = user.UserId,
                     Status = 1,
-                    JoinDate = DateTime.Now
                 };
                 await _groupRepository.AddMemberAsync(groupMember);
             }
@@ -95,7 +94,7 @@ public class GroupService : IGroupService
         var group = new Group
         {
             GroupName = request.GroupName,
-            MaxMember = request.MaxMember,
+            MaxMember = 5,
             CurrentMember = 0,
             Status = 1,
             CreatedAt = DateTime.Now,
@@ -119,7 +118,6 @@ public class GroupService : IGroupService
                     Role = member.Role,
                     UserId = user.UserId,
                     Status = 1,
-                    JoinDate = DateTime.Now
                 };
 
                 await _groupRepository.AddMemberAsync(groupMember);
