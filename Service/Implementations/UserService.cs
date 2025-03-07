@@ -38,12 +38,12 @@ namespace Service.Implementations
                 if (request.Email.ToLower().Equals(_adminAccount.Email.ToLower()) &&
                 request.Password.Equals(_adminAccount.Password))
                 {
-                    claims.Add(new Claim(ClaimTypes.Role, RoleEnum.Admin.ToString()));
+                    claims.Add(new Claim(ClaimTypes.Role, SystemRoleEnum.Admin.ToString()));
                     return new LoginResponse
                 {
                     Email = _adminAccount.Email,
                     Status = (int)AccountStatusEnum.Active,
-                    Role = (int)RoleEnum.Admin,
+                    Role = (int)SystemRoleEnum.Admin,
                     AccessToken = _tokenService.GenerateAccessToken(claims)
                 };
             }
@@ -58,9 +58,9 @@ namespace Service.Implementations
                 {
                     claims.Add(new Claim("UserID", existingUser.UserId.ToString()));
                     claims.Add(new Claim(ClaimTypes.Role,
-                        existingUser.Role == (int)RoleEnum.Student
-                            ? RoleEnum.Student.ToString()
-                            : RoleEnum.Lecturer.ToString()));
+                        existingUser.Role == (int)SystemRoleEnum.Student
+                            ? SystemRoleEnum.Student.ToString()
+                            : SystemRoleEnum.Lecturer.ToString()));
 
                     var loginResponse = _mapper.Map<LoginResponse>(existingUser);
                     loginResponse.AccessToken = _tokenService.GenerateAccessToken(claims);
@@ -83,7 +83,7 @@ namespace Service.Implementations
                     throw new ServiceException(MessageConstants.DUPLICATE);
 
                 var user = _mapper.Map<User>(request);
-                user.Role = (int)RoleEnum.Student;
+                user.Role = (int)SystemRoleEnum.Student;
                 user.Status = (int)AccountStatusEnum.Active;
                 user.CreatedAt = DateTime.Now;
                 await _userRepository.AddAsync(user);
