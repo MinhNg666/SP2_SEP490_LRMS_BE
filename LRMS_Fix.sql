@@ -363,13 +363,6 @@ FOREIGN KEY([project_id]) REFERENCES [Projects]([project_id])
 ON UPDATE NO ACTION ON DELETE NO ACTION;
 GO
 
--- 19. Department references Users
-ALTER TABLE [Department]
-ADD CONSTRAINT FK_Department_Users
-FOREIGN KEY([user_id]) REFERENCES [Users]([user_id])
-ON UPDATE NO ACTION ON DELETE NO ACTION;
-GO
-
 -- 20. Timeline references Users
 ALTER TABLE [Timeline]
 ADD CONSTRAINT FK_Timeline_Users
@@ -436,12 +429,12 @@ GO
 -- Dữ liệu mẫu cho bảng Users
 INSERT INTO [Users] ([username], [password], [full_name], [email], [phone], [role], [department_id], [status], [created_at], [updated_at], [group_id], [level])
 VALUES 
-('user1', 'password1', 'Nguyễn Văn A', 'user1@example.com', '0123456789', 1, 1, 1, GETDATE(), GETDATE(), 1, 0),
-('user2', 'password2', 'Trần Thị B', 'user2@example.com', '0123456788', 2, 1, 1, GETDATE(), GETDATE(), 1, 1),
-('user3', 'password3', 'Lê Văn C', 'user3@example.com', '0123456787', 1, 2, 1, GETDATE(), GETDATE(), 2, 2),
-('user4', 'password4', 'Phạm Thị D', 'user4@example.com', '0123456786', 2, 2, 1, GETDATE(), GETDATE(), 2, 3),
-('user5', 'password5', 'Nguyễn Văn E', 'user5@example.com', '0123456785', 1, 1, 1, GETDATE(), GETDATE(), 1, 4),
-('user6', 'password6', 'Trần Thị F', 'user6@example.com', '0123456784', 2, 1, 1, GETDATE(), GETDATE(), 1, 2);
+('user1', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Nguyễn Văn A', 'user1@example.com', '0123456789', 1, 1, 1, GETDATE(), GETDATE(), 1, 0),
+('user2', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Trần Thị B', 'user2@example.com', '0123456788', 2, 1, 1, GETDATE(), GETDATE(), 1, 1),
+('user3', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Lê Văn C', 'user3@example.com', '0123456787', 1, 2, 1, GETDATE(), GETDATE(), 2, 2),
+('user4', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Phạm Thị D', 'user4@example.com', '0123456786', 2, 2, 1, GETDATE(), GETDATE(), 2, 3),
+('user5', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Nguyễn Văn E', 'user5@example.com', '0123456785', 1, 1, 1, GETDATE(), GETDATE(), 1, 4),
+('user6', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Trần Thị F', 'user6@example.com', '0123456784', 2, 1, 1, GETDATE(), GETDATE(), 1, 2);
 
 -- Dữ liệu mẫu cho bảng Groups
 INSERT INTO [Groups] ([group_name], [max_member], [current_member], [status], [created_at], [group_type])
