@@ -172,15 +172,10 @@ public partial class LRMSDbContext : DbContext
                 .HasMaxLength(200)
                 .HasColumnName("department_name");
             entity.Property(e => e.ProjectId).HasColumnName("project_id");
-            entity.Property(e => e.UserId).HasColumnName("user_id");
 
             entity.HasOne(d => d.Project).WithMany(p => p.Departments)
                 .HasForeignKey(d => d.ProjectId)
                 .HasConstraintName("FK_Department_Projects");
-
-            entity.HasOne(d => d.User).WithMany(p => p.Departments)
-                .HasForeignKey(d => d.UserId)
-                .HasConstraintName("FK_Department_Users");
         });
 
         modelBuilder.Entity<Document>(entity =>

@@ -571,14 +571,14 @@ VALUES
 (6, 6, 0, 'author6@example.com');
 
 -- Dữ liệu mẫu cho bảng Department
-INSERT INTO [Department] ([department_name], [project_id], [user_id])
+INSERT INTO [Department] ([department_name], [project_id])
 VALUES 
-('Department 1', 1, 1),
-('Department 2', 2, 2),
-('Department 3', 3, 3),
-('Department 4', 4, 4),
-('Department 5', 5, 5),
-('Department 6', 6, 6);
+('Department 1', 1),
+('Department 2', 2),
+('Department 3', 3),
+('Department 4', 4),
+('Department 5', 5),
+('Department 6', 6);
 
 -- Dữ liệu mẫu cho bảng Timeline
 INSERT INTO [Timeline] ([start_date], [end_date], [created_by], [created_at], [timeline_type])
