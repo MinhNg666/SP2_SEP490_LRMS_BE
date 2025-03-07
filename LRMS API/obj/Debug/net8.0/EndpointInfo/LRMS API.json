@@ -2,7 +2,7 @@
   "openapi": "3.0.1",
   "info": {
     "title": "LRMS API",
-    "version": "1.0"
+    "version": "v1"
   },
   "paths": {
     "/api/auth/login": {
@@ -617,6 +617,19 @@
         },
         "additionalProperties": false
       }
+    },
+    "securitySchemes": {
+      "Bearer": {
+        "type": "http",
+        "description": "Please enter valid JWT token",
+        "scheme": "Bearer",
+        "bearerFormat": "JWT"
+      }
     }
-  }
+  },
+  "security": [
+    {
+      "Bearer": [ ]
+    }
+  ]
 }
