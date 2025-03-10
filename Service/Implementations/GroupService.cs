@@ -7,6 +7,7 @@ using AutoMapper;
 using Domain.DTO.Requests;
 using Domain.DTO.Responses;
 using LRMS_API;
+using Repository.Implementations;
 using Repository.Interfaces;
 using Service.Exceptions;
 using Service.Interfaces;
@@ -17,13 +18,14 @@ public class GroupService : IGroupService
     private readonly IUserRepository _userRepository;
     private readonly IGroupRepository _groupRepository;
     private readonly IMapper _mapper;
+    private readonly IInvitationService _invitationService;
 
-
-    public GroupService(IUserRepository userRepository, IGroupRepository groupRepository, IMapper mapper)
+    public GroupService(IUserRepository userRepository, IGroupRepository groupRepository, IMapper mapper, IInvitationService invitationService)
     {
         _userRepository = userRepository;
         _groupRepository = groupRepository;
         _mapper = mapper;
+        _invitationService = invitationService;
     }
     public async Task<IEnumerable<GroupResponse>> GetAllGroups() 
     {
@@ -89,7 +91,7 @@ public class GroupService : IGroupService
             }
         }
     }
-    public async Task CreateCouncilGroup(CreateCouncilGroupRequest request)
+    public async Task CreateCouncilGroup(CreateCouncilGroupRequest request, int currentUserId)
     {
         var group = new Group
         {
@@ -121,6 +123,17 @@ public class GroupService : IGroupService
                 };
 
                 await _groupRepository.AddMemberAsync(groupMember);
+
+                // Gửi lời mời đến Invitation
+                var invitationRequest = new SendInvitationRequest
+                {
+                    Content = $"You have been invited to join the group '{group.GroupName}'.",
+                    InvitedUserId = user.UserId,
+                    InvitedBy = currentUserId,
+                    GroupId = group.GroupId // Thêm GroupId vào đây
+                };
+
+                await _invitationService.SendInvitation(invitationRequest);
             }
         }
     }

@@ -1,4 +1,5 @@
-﻿using Domain.Constants;
+﻿using System.Security.Claims;
+using Domain.Constants;
 using Domain.DTO.Common;
 using Domain.DTO.Requests;
 using Domain.DTO.Responses;
@@ -49,7 +50,8 @@ public class GroupController : ApiBaseController
     {
         try
         {
-            await _groupService.CreateCouncilGroup(request);
+            var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value); // Lấy ID người dùng từ Claims
+            await _groupService.CreateCouncilGroup(request, currentUserId);
             return Ok(new ApiResponse(StatusCodes.Status200OK, MessageConstants.SUCCESSFUL));
         }
         catch (ServiceException e)
