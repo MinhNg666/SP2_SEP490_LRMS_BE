@@ -3,48 +3,56 @@
   "WorkspaceRootPath": "G:\\SEP490\\LRMS API\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|g:\\sep490\\lrms api\\domain\\constants\\systemroleenum.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|solutionrelative:domain\\constants\\systemroleenum.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{E077F4BC-2B25-421A-BFE3-55F3FB58EEEE}|LRMS API\\LRMS API.csproj|g:\\sep490\\lrms api\\lrms api\\controllers\\groupcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E077F4BC-2B25-421A-BFE3-55F3FB58EEEE}|LRMS API\\LRMS API.csproj|solutionrelative:lrms api\\controllers\\groupcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|g:\\sep490\\lrms api\\domain\\constants\\groupmemberroleenum.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|solutionrelative:domain\\constants\\groupmemberroleenum.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{E077F4BC-2B25-421A-BFE3-55F3FB58EEEE}|LRMS API\\LRMS API.csproj|g:\\sep490\\lrms api\\lrms api\\controllers\\invitationcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E077F4BC-2B25-421A-BFE3-55F3FB58EEEE}|LRMS API\\LRMS API.csproj|solutionrelative:lrms api\\controllers\\invitationcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|g:\\sep490\\lrms api\\domain\\constants\\levelenum.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|solutionrelative:domain\\constants\\levelenum.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{DD7C16A9-4773-466B-ABE6-DCE8E2D648D2}|Service\\Service.csproj|g:\\sep490\\lrms api\\service\\implementations\\invitationservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{DD7C16A9-4773-466B-ABE6-DCE8E2D648D2}|Service\\Service.csproj|solutionrelative:service\\implementations\\invitationservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|g:\\sep490\\lrms api\\domain\\constants\\messageconstants.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|solutionrelative:domain\\constants\\messageconstants.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|g:\\sep490\\lrms api\\domain\\constants\\projecttypeenum.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|solutionrelative:domain\\constants\\projecttypeenum.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|g:\\sep490\\lrms api\\domain\\constants\\grouptypeenum.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|solutionrelative:domain\\constants\\grouptypeenum.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{E077F4BC-2B25-421A-BFE3-55F3FB58EEEE}|LRMS API\\LRMS API.csproj|g:\\sep490\\lrms api\\lrms api\\controllers\\usercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{E077F4BC-2B25-421A-BFE3-55F3FB58EEEE}|LRMS API\\LRMS API.csproj|solutionrelative:lrms api\\controllers\\usercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{DD7C16A9-4773-466B-ABE6-DCE8E2D648D2}|Service\\Service.csproj|g:\\sep490\\lrms api\\service\\interfaces\\iinvitationservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{DD7C16A9-4773-466B-ABE6-DCE8E2D648D2}|Service\\Service.csproj|solutionrelative:service\\interfaces\\iinvitationservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{E077F4BC-2B25-421A-BFE3-55F3FB58EEEE}|LRMS API\\LRMS API.csproj|g:\\sep490\\lrms api\\lrms api\\extensions\\serviceextension.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{E077F4BC-2B25-421A-BFE3-55F3FB58EEEE}|LRMS API\\LRMS API.csproj|solutionrelative:lrms api\\extensions\\serviceextension.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
+      "AbsoluteMoniker": "D:0:0:{DD7C16A9-4773-466B-ABE6-DCE8E2D648D2}|Service\\Service.csproj|g:\\sep490\\lrms api\\service\\interfaces\\igroupservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{DD7C16A9-4773-466B-ABE6-DCE8E2D648D2}|Service\\Service.csproj|solutionrelative:service\\interfaces\\igroupservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{DD7C16A9-4773-466B-ABE6-DCE8E2D648D2}|Service\\Service.csproj|g:\\sep490\\lrms api\\service\\implementations\\groupservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{DD7C16A9-4773-466B-ABE6-DCE8E2D648D2}|Service\\Service.csproj|solutionrelative:service\\implementations\\groupservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{E077F4BC-2B25-421A-BFE3-55F3FB58EEEE}|LRMS API\\LRMS API.csproj|g:\\sep490\\lrms api\\lrms api\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
-      "RelativeMoniker": "D:0:0:{E077F4BC-2B25-421A-BFE3-55F3FB58EEEE}|LRMS API\\LRMS API.csproj|solutionrelative:lrms api\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+      "AbsoluteMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|g:\\sep490\\lrms api\\domain\\dto\\requests\\sendinvitationrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|solutionrelative:domain\\dto\\requests\\sendinvitationrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{E077F4BC-2B25-421A-BFE3-55F3FB58EEEE}|LRMS API\\LRMS API.csproj|g:\\sep490\\lrms api\\lrms api\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{E077F4BC-2B25-421A-BFE3-55F3FB58EEEE}|LRMS API\\LRMS API.csproj|solutionrelative:lrms api\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|g:\\sep490\\lrms api\\domain\\entities\\invitation.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|solutionrelative:domain\\entities\\invitation.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CC0520B0-55D6-4AC0-862F-201AEEBAF24E}|Repository\\Repository.csproj|g:\\sep490\\lrms api\\repository\\implementations\\grouprepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CC0520B0-55D6-4AC0-862F-201AEEBAF24E}|Repository\\Repository.csproj|solutionrelative:repository\\implementations\\grouprepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CC0520B0-55D6-4AC0-862F-201AEEBAF24E}|Repository\\Repository.csproj|g:\\sep490\\lrms api\\repository\\implementations\\invitationrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CC0520B0-55D6-4AC0-862F-201AEEBAF24E}|Repository\\Repository.csproj|solutionrelative:repository\\implementations\\invitationrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CC0520B0-55D6-4AC0-862F-201AEEBAF24E}|Repository\\Repository.csproj|g:\\sep490\\lrms api\\repository\\interfaces\\iinvitationrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CC0520B0-55D6-4AC0-862F-201AEEBAF24E}|Repository\\Repository.csproj|solutionrelative:repository\\interfaces\\iinvitationrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|g:\\sep490\\lrms api\\domain\\dto\\responses\\invitationresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{10B8C613-5707-46B2-A20C-F181EA908E7B}|Domain\\Domain.csproj|solutionrelative:domain\\dto\\responses\\invitationresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -54,7 +62,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 197,
-          "SelectedChildIndex": 17,
+          "SelectedChildIndex": 14,
           "Children": [
             {
               "$type": "Bookmark",
@@ -106,142 +114,167 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "LevelEnum.cs",
-              "DocumentMoniker": "G:\\SEP490\\LRMS API\\Domain\\Constants\\LevelEnum.cs",
-              "RelativeDocumentMoniker": "Domain\\Constants\\LevelEnum.cs",
-              "ToolTip": "G:\\SEP490\\LRMS API\\Domain\\Constants\\LevelEnum.cs",
-              "RelativeToolTip": "Domain\\Constants\\LevelEnum.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAAAAAAAAAAAA==",
+              "DocumentIndex": 9,
+              "Title": "GroupRepository.cs",
+              "DocumentMoniker": "G:\\SEP490\\LRMS API\\Repository\\Implementations\\GroupRepository.cs",
+              "RelativeDocumentMoniker": "Repository\\Implementations\\GroupRepository.cs",
+              "ToolTip": "G:\\SEP490\\LRMS API\\Repository\\Implementations\\GroupRepository.cs",
+              "RelativeToolTip": "Repository\\Implementations\\GroupRepository.cs",
+              "ViewState": "AgIAAAkAAAAAAAAAAADgvxUAAAAWAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-07T08:10:26.591Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "MessageConstants.cs",
-              "DocumentMoniker": "G:\\SEP490\\LRMS API\\Domain\\Constants\\MessageConstants.cs",
-              "RelativeDocumentMoniker": "Domain\\Constants\\MessageConstants.cs",
-              "ToolTip": "G:\\SEP490\\LRMS API\\Domain\\Constants\\MessageConstants.cs",
-              "RelativeToolTip": "Domain\\Constants\\MessageConstants.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-07T08:10:25.428Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "ProjectTypeEnum.cs",
-              "DocumentMoniker": "G:\\SEP490\\LRMS API\\Domain\\Constants\\ProjectTypeEnum.cs",
-              "RelativeDocumentMoniker": "Domain\\Constants\\ProjectTypeEnum.cs",
-              "ToolTip": "G:\\SEP490\\LRMS API\\Domain\\Constants\\ProjectTypeEnum.cs",
-              "RelativeToolTip": "Domain\\Constants\\ProjectTypeEnum.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-07T08:10:24.07Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-03-10T01:40:31.104Z"
             },
             {
               "$type": "Document",
               "DocumentIndex": 1,
-              "Title": "GroupMemberRoleEnum.cs",
-              "DocumentMoniker": "G:\\SEP490\\LRMS API\\Domain\\Constants\\GroupMemberRoleEnum.cs",
-              "RelativeDocumentMoniker": "Domain\\Constants\\GroupMemberRoleEnum.cs",
-              "ToolTip": "G:\\SEP490\\LRMS API\\Domain\\Constants\\GroupMemberRoleEnum.cs",
-              "RelativeToolTip": "Domain\\Constants\\GroupMemberRoleEnum.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAWAAAAAAAAAA==",
+              "Title": "InvitationController.cs",
+              "DocumentMoniker": "G:\\SEP490\\LRMS API\\LRMS API\\Controllers\\InvitationController.cs",
+              "RelativeDocumentMoniker": "LRMS API\\Controllers\\InvitationController.cs",
+              "ToolTip": "G:\\SEP490\\LRMS API\\LRMS API\\Controllers\\InvitationController.cs",
+              "RelativeToolTip": "LRMS API\\Controllers\\InvitationController.cs",
+              "ViewState": "AgIAAAQAAAAAAAAAAAAowCQAAABhAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-07T08:09:53.318Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "GroupTypeEnum.cs",
-              "DocumentMoniker": "G:\\SEP490\\LRMS API\\Domain\\Constants\\GroupTypeEnum.cs",
-              "RelativeDocumentMoniker": "Domain\\Constants\\GroupTypeEnum.cs",
-              "ToolTip": "G:\\SEP490\\LRMS API\\Domain\\Constants\\GroupTypeEnum.cs",
-              "RelativeToolTip": "Domain\\Constants\\GroupTypeEnum.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-07T08:09:51.644Z",
+              "WhenOpened": "2025-03-10T01:17:37.348Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "SystemRoleEnum.cs",
-              "DocumentMoniker": "G:\\SEP490\\LRMS API\\Domain\\Constants\\SystemRoleEnum.cs",
-              "RelativeDocumentMoniker": "Domain\\Constants\\SystemRoleEnum.cs",
-              "ToolTip": "G:\\SEP490\\LRMS API\\Domain\\Constants\\SystemRoleEnum.cs",
-              "RelativeToolTip": "Domain\\Constants\\SystemRoleEnum.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAPAAAAAAAAAA==",
+              "Title": "GroupController.cs",
+              "DocumentMoniker": "G:\\SEP490\\LRMS API\\LRMS API\\Controllers\\GroupController.cs",
+              "RelativeDocumentMoniker": "LRMS API\\Controllers\\GroupController.cs",
+              "ToolTip": "G:\\SEP490\\LRMS API\\LRMS API\\Controllers\\GroupController.cs",
+              "RelativeToolTip": "LRMS API\\Controllers\\GroupController.cs",
+              "ViewState": "AgIAACoAAAAAAAAAAAAIwEIAAABcAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-07T08:02:55.357Z",
+              "WhenOpened": "2025-03-10T01:15:43.41Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
-              "Title": "appsettings.json",
-              "DocumentMoniker": "G:\\SEP490\\LRMS API\\LRMS API\\appsettings.json",
-              "RelativeDocumentMoniker": "LRMS API\\appsettings.json",
-              "ToolTip": "G:\\SEP490\\LRMS API\\LRMS API\\appsettings.json",
-              "RelativeToolTip": "LRMS API\\appsettings.json",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2025-03-07T07:38:15.084Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 8,
-              "Title": "GroupService.cs",
-              "DocumentMoniker": "G:\\SEP490\\LRMS API\\Service\\Implementations\\GroupService.cs",
-              "RelativeDocumentMoniker": "Service\\Implementations\\GroupService.cs",
-              "ToolTip": "G:\\SEP490\\LRMS API\\Service\\Implementations\\GroupService.cs",
-              "RelativeToolTip": "Service\\Implementations\\GroupService.cs",
-              "ViewState": "AgIAAC8AAAAAAAAAAAAgwFUAAAAfAAAAAAAAAA==",
+              "DocumentIndex": 5,
+              "Title": "IGroupService.cs",
+              "DocumentMoniker": "G:\\SEP490\\LRMS API\\Service\\Interfaces\\IGroupService.cs",
+              "RelativeDocumentMoniker": "Service\\Interfaces\\IGroupService.cs",
+              "ToolTip": "G:\\SEP490\\LRMS API\\Service\\Interfaces\\IGroupService.cs",
+              "RelativeToolTip": "Service\\Interfaces\\IGroupService.cs",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAAAA0AAABQAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-07T07:30:40.82Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 6,
-              "Title": "UserController.cs",
-              "DocumentMoniker": "G:\\SEP490\\LRMS API\\LRMS API\\Controllers\\UserController.cs",
-              "RelativeDocumentMoniker": "LRMS API\\Controllers\\UserController.cs",
-              "ToolTip": "G:\\SEP490\\LRMS API\\LRMS API\\Controllers\\UserController.cs",
-              "RelativeToolTip": "LRMS API\\Controllers\\UserController.cs",
-              "ViewState": "AgIAAA8AAAAAAAAAAAAgwBQAAAAzAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-07T07:29:08.198Z",
+              "WhenOpened": "2025-03-10T01:14:48.459Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 4,
               "Title": "ServiceExtension.cs",
               "DocumentMoniker": "G:\\SEP490\\LRMS API\\LRMS API\\Extensions\\ServiceExtension.cs",
               "RelativeDocumentMoniker": "LRMS API\\Extensions\\ServiceExtension.cs",
               "ToolTip": "G:\\SEP490\\LRMS API\\LRMS API\\Extensions\\ServiceExtension.cs",
               "RelativeToolTip": "LRMS API\\Extensions\\ServiceExtension.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAA6AAAAAAAAAA==",
+              "ViewState": "AgIAAAgAAAAAAAAAAAAAwBYAAABEAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-07T07:20:24.647Z"
+              "WhenOpened": "2025-03-10T01:09:27.57Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "GroupService.cs",
+              "DocumentMoniker": "G:\\SEP490\\LRMS API\\Service\\Implementations\\GroupService.cs",
+              "RelativeDocumentMoniker": "Service\\Implementations\\GroupService.cs",
+              "ToolTip": "G:\\SEP490\\LRMS API\\Service\\Implementations\\GroupService.cs",
+              "RelativeToolTip": "Service\\Implementations\\GroupService.cs",
+              "ViewState": "AgIAAGAAAAAAAAAAAAASwF4AAAAtAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-03-10T01:08:07.503Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "InvitationResponse.cs",
+              "DocumentMoniker": "G:\\SEP490\\LRMS API\\Domain\\DTO\\Responses\\InvitationResponse.cs",
+              "RelativeDocumentMoniker": "Domain\\DTO\\Responses\\InvitationResponse.cs",
+              "ToolTip": "G:\\SEP490\\LRMS API\\Domain\\DTO\\Responses\\InvitationResponse.cs",
+              "RelativeToolTip": "Domain\\DTO\\Responses\\InvitationResponse.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAADwvwcAAAAfAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-03-10T01:05:33.717Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "Invitation.cs",
+              "DocumentMoniker": "G:\\SEP490\\LRMS API\\Domain\\Entities\\Invitation.cs",
+              "RelativeDocumentMoniker": "Domain\\Entities\\Invitation.cs",
+              "ToolTip": "G:\\SEP490\\LRMS API\\Domain\\Entities\\Invitation.cs",
+              "RelativeToolTip": "Domain\\Entities\\Invitation.cs",
+              "ViewState": "AgIAAAkAAAAAAAAAAAAwwBEAAAAQAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-03-10T01:04:05.614Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "SendInvitationRequest.cs",
+              "DocumentMoniker": "G:\\SEP490\\LRMS API\\Domain\\DTO\\Requests\\SendInvitationRequest.cs",
+              "RelativeDocumentMoniker": "Domain\\DTO\\Requests\\SendInvitationRequest.cs",
+              "ToolTip": "G:\\SEP490\\LRMS API\\Domain\\DTO\\Requests\\SendInvitationRequest.cs",
+              "RelativeToolTip": "Domain\\DTO\\Requests\\SendInvitationRequest.cs",
+              "ViewState": "AgIAAAwAAAAAAAAAAAA1wBYAAAAnAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-03-10T01:03:43.058Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "InvitationService.cs",
+              "DocumentMoniker": "G:\\SEP490\\LRMS API\\Service\\Implementations\\InvitationService.cs",
+              "RelativeDocumentMoniker": "Service\\Implementations\\InvitationService.cs",
+              "ToolTip": "G:\\SEP490\\LRMS API\\Service\\Implementations\\InvitationService.cs",
+              "RelativeToolTip": "Service\\Implementations\\InvitationService.cs",
+              "ViewState": "AgIAACQAAAAAAAAAAAAYwC8AAAAcAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-03-10T01:03:20.276Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "IInvitationService.cs",
+              "DocumentMoniker": "G:\\SEP490\\LRMS API\\Service\\Interfaces\\IInvitationService.cs",
+              "RelativeDocumentMoniker": "Service\\Interfaces\\IInvitationService.cs",
+              "ToolTip": "G:\\SEP490\\LRMS API\\Service\\Interfaces\\IInvitationService.cs",
+              "RelativeToolTip": "Service\\Interfaces\\IInvitationService.cs",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAIwAwAAABNAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-03-10T01:02:36.826Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 10,
-              "Title": "Program.cs",
-              "DocumentMoniker": "G:\\SEP490\\LRMS API\\LRMS API\\Program.cs",
-              "RelativeDocumentMoniker": "LRMS API\\Program.cs",
-              "ToolTip": "G:\\SEP490\\LRMS API\\LRMS API\\Program.cs",
-              "RelativeToolTip": "LRMS API\\Program.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAACYAAAAVAAAAAAAAAA==",
+              "Title": "InvitationRepository.cs",
+              "DocumentMoniker": "G:\\SEP490\\LRMS API\\Repository\\Implementations\\InvitationRepository.cs",
+              "RelativeDocumentMoniker": "Repository\\Implementations\\InvitationRepository.cs",
+              "ToolTip": "G:\\SEP490\\LRMS API\\Repository\\Implementations\\InvitationRepository.cs",
+              "RelativeToolTip": "Repository\\Implementations\\InvitationRepository.cs",
+              "ViewState": "AgIAABMAAAAAAAAAAAAQwCAAAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-07T07:20:23.554Z"
+              "WhenOpened": "2025-03-10T01:01:33.072Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "IInvitationRepository.cs",
+              "DocumentMoniker": "G:\\SEP490\\LRMS API\\Repository\\Interfaces\\IInvitationRepository.cs",
+              "RelativeDocumentMoniker": "Repository\\Interfaces\\IInvitationRepository.cs",
+              "ToolTip": "G:\\SEP490\\LRMS API\\Repository\\Interfaces\\IInvitationRepository.cs",
+              "RelativeToolTip": "Repository\\Interfaces\\IInvitationRepository.cs",
+              "ViewState": "AgIAAAQAAAAAAAAAAAAiwA4AAAAxAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-03-10T01:00:56.71Z"
             }
           ]
         }
