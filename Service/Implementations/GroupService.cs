@@ -59,7 +59,7 @@ public class GroupService : IGroupService
             throw new ServiceException(e.Message);
         }
     }
-    public async Task CreateStudentGroup(CreateStudentGroupRequest request)
+    public async Task CreateStudentGroup(CreateStudentGroupRequest request, int currentUserId)
     {
         var group = new Group
         {
@@ -88,6 +88,16 @@ public class GroupService : IGroupService
                     Status = 1,
                 };
                 await _groupRepository.AddMemberAsync(groupMember);
+                var invitationRequest = new SendInvitationRequest
+                {
+                    Content = $"You have been invited to join the student group '{group.GroupName}'.",
+                    InvitedUserId = user.UserId,
+                    InvitedBy = currentUserId,
+                    GroupId = group.GroupId, // Thêm GroupId vào đây
+                    InvitedRole = member.Role // Thêm vai trò
+                };
+
+                await _invitationService.SendInvitation(invitationRequest);
             }
         }
     }

@@ -64,7 +64,8 @@ public class GroupController : ApiBaseController
     {
         try 
         {
-            await _groupService.CreateStudentGroup(request);
+            var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            await _groupService.CreateStudentGroup(request, currentUserId);
             return Ok(new ApiResponse(StatusCodes.Status200OK, MessageConstants.SUCCESSFUL));
         }
         catch (ServiceException e)
