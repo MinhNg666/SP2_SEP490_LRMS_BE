@@ -31,6 +31,9 @@ public class PublicationController : ApiBaseController
         }
     }
 
+
+
+
     [HttpGet("publications/{id}")]
     public async Task<IActionResult> GetPublicationById(int id)
     {
