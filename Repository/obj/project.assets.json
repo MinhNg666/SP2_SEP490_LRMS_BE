@@ -4190,23 +4190,23 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\23030\\.nuget\\packages\\": {},
+    "C:\\Users\\84366\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "G:\\SEP490\\LRMS API\\Repository\\Repository.csproj",
+      "projectUniqueName": "D:\\SPRING-25\\LRMS_BE_2\\Repository\\Repository.csproj",
       "projectName": "Repository",
-      "projectPath": "G:\\SEP490\\LRMS API\\Repository\\Repository.csproj",
-      "packagesPath": "C:\\Users\\23030\\.nuget\\packages\\",
-      "outputPath": "G:\\SEP490\\LRMS API\\Repository\\obj\\",
+      "projectPath": "D:\\SPRING-25\\LRMS_BE_2\\Repository\\Repository.csproj",
+      "packagesPath": "C:\\Users\\84366\\.nuget\\packages\\",
+      "outputPath": "D:\\SPRING-25\\LRMS_BE_2\\Repository\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\23030\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\84366\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -4221,8 +4221,8 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "projectReferences": {
-            "G:\\SEP490\\LRMS API\\Domain\\Domain.csproj": {
-              "projectPath": "G:\\SEP490\\LRMS API\\Domain\\Domain.csproj"
+            "D:\\SPRING-25\\LRMS_BE_2\\Domain\\Domain.csproj": {
+              "projectPath": "D:\\SPRING-25\\LRMS_BE_2\\Domain\\Domain.csproj"
             }
           }
         }

@@ -3,6 +3,11 @@ using LRMS_API.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Service.Implementations;
+using Service.Interfaces;
+using Microsoft.EntityFrameworkCore;
+using LRMS_API;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,7 +19,6 @@ builder.Services.AddApplicationServices(builder.Configuration);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-
 builder.Services.AddAuthentication(opt =>
 {
     opt.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -64,7 +68,12 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+builder.Services.AddDbContext<LRMSDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("LRMSDB")));
+
+builder.Services.AddScoped<IPublicationService, PublicationService>();
 builder.Services.AddAuthorization();
+
 
 var app = builder.Build();
 
