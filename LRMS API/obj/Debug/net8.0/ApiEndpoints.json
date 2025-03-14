@@ -1,5 +1,37 @@
 [
   {
+    "ContainingType": "LRMS_API.Controllers.InvitationController",
+    "Method": "GetInvitations",
+    "RelativePath": "api/{userId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LRMS_API.Controllers.InvitationController",
+    "Method": "AcceptInvitation",
+    "RelativePath": "api/accept/{invitationId}",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "invitationId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "LRMS_API.Controllers.UserController",
     "Method": "GetAllUsers",
     "RelativePath": "api/accounts",
@@ -225,6 +257,22 @@
     "Parameters": [
       {
         "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LRMS_API.Controllers.InvitationController",
+    "Method": "RejectInvitation",
+    "RelativePath": "api/reject/{invitationId}",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "invitationId",
         "Type": "System.Int32",
         "IsRequired": true
       }
