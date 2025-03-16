@@ -27,6 +27,8 @@ public partial class LRMSDbContext : DbContext
 
     public virtual DbSet<Document> Documents { get; set; }
 
+    public virtual DbSet<FundDisbursement> FundDisbursements { get; set; }
+
     public virtual DbSet<Group> Groups { get; set; }
 
     public virtual DbSet<GroupMember> GroupMembers { get; set; }
@@ -49,28 +51,22 @@ public partial class LRMSDbContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("server=(local);database=LRMSDB;uid=sa;pwd=12345;TrustServerCertificate=True");
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Author>(entity =>
         {
-            entity.HasKey(e => e.AuthorId).HasName("PK__Author__86516BCF8720C4AA");
+            entity.HasKey(e => e.AuthorId).HasName("PK__Author__86516BCFD3E29AFB");
 
             entity.ToTable("Author");
 
             entity.Property(e => e.AuthorId).HasColumnName("author_id");
-            entity.Property(e => e.Email)
-                .HasMaxLength(200)
-                .HasColumnName("email");
             entity.Property(e => e.ProjectId).HasColumnName("project_id");
             entity.Property(e => e.Role).HasColumnName("role");
             entity.Property(e => e.UserId).HasColumnName("user_id");
 
             entity.HasOne(d => d.Project).WithMany(p => p.Authors)
                 .HasForeignKey(d => d.ProjectId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Author_Projects");
 
             entity.HasOne(d => d.User).WithMany(p => p.Authors)
@@ -80,7 +76,7 @@ public partial class LRMSDbContext : DbContext
 
         modelBuilder.Entity<Category>(entity =>
         {
-            entity.HasKey(e => e.CategoryId).HasName("PK__Category__D54EE9B45C495105");
+            entity.HasKey(e => e.CategoryId).HasName("PK__Category__D54EE9B45213372A");
 
             entity.ToTable("Category");
 
@@ -89,6 +85,7 @@ public partial class LRMSDbContext : DbContext
                 .HasMaxLength(200)
                 .HasColumnName("category_name");
             entity.Property(e => e.ProjectId).HasColumnName("project_id");
+            entity.Property(e => e.Status).HasColumnName("status");
 
             entity.HasOne(d => d.Project).WithMany(p => p.Categories)
                 .HasForeignKey(d => d.ProjectId)
@@ -97,7 +94,7 @@ public partial class LRMSDbContext : DbContext
 
         modelBuilder.Entity<Conference>(entity =>
         {
-            entity.HasKey(e => e.ConferenceId).HasName("PK__Conferen__DC9203083BF2142E");
+            entity.HasKey(e => e.ConferenceId).HasName("PK__Conferen__DC92030881F39E56");
 
             entity.ToTable("Conference");
 
@@ -107,20 +104,10 @@ public partial class LRMSDbContext : DbContext
                 .HasColumnName("acceptance_date");
             entity.Property(e => e.ConferenceName)
                 .HasMaxLength(255)
-                .IsUnicode(false)
                 .HasColumnName("conference_name");
-            entity.Property(e => e.ConferenceProceedings)
-                .HasMaxLength(500)
-                .IsUnicode(false)
-                .HasColumnName("conference_proceedings");
             entity.Property(e => e.ConferenceRanking).HasColumnName("conference_ranking");
-            entity.Property(e => e.ConferenceUrl)
-                .HasMaxLength(500)
-                .IsUnicode(false)
-                .HasColumnName("conference_url");
             entity.Property(e => e.Location)
                 .HasMaxLength(255)
-                .IsUnicode(false)
                 .HasColumnName("location");
             entity.Property(e => e.PresentationDate)
                 .HasColumnType("datetime")
@@ -135,35 +122,33 @@ public partial class LRMSDbContext : DbContext
 
         modelBuilder.Entity<ConferenceExpense>(entity =>
         {
-            entity.HasKey(e => e.ExpenseId).HasName("PK__Conferen__404B6A6B1B43C464");
+            entity.HasKey(e => e.ExpenseId).HasName("PK__Conferen__404B6A6BE00ED890");
 
             entity.ToTable("Conference_expense");
 
             entity.Property(e => e.ExpenseId).HasColumnName("expense_id");
             entity.Property(e => e.Accomodation)
-                .HasMaxLength(100)
-                .IsUnicode(false)
+                .HasMaxLength(255)
                 .HasColumnName("accomodation");
-            entity.Property(e => e.ConferenceId).HasColumnName("conference_id");
-            entity.Property(e => e.Transportation)
-                .HasMaxLength(100)
-                .IsUnicode(false)
-                .HasColumnName("transportation");
-            entity.Property(e => e.TransportationExpense)
+            entity.Property(e => e.AccomodationExpense)
                 .HasColumnType("decimal(18, 2)")
-                .HasColumnName("transportation_expense");
+                .HasColumnName("accomodation_expense");
+            entity.Property(e => e.ConferenceId).HasColumnName("conference_id");
+            entity.Property(e => e.Travel)
+                .HasMaxLength(255)
+                .HasColumnName("travel");
             entity.Property(e => e.TravelExpense)
                 .HasColumnType("decimal(18, 2)")
                 .HasColumnName("travel_expense");
 
             entity.HasOne(d => d.Conference).WithMany(p => p.ConferenceExpenses)
                 .HasForeignKey(d => d.ConferenceId)
-                .HasConstraintName("FK_Expense_Conference");
+                .HasConstraintName("FK_ConferenceExpense_Conference");
         });
 
         modelBuilder.Entity<Department>(entity =>
         {
-            entity.HasKey(e => e.DepartmentId).HasName("PK__Departme__C22324227A1FB6EF");
+            entity.HasKey(e => e.DepartmentId).HasName("PK__Departme__C2232422ADB9B56B");
 
             entity.ToTable("Department");
 
@@ -171,18 +156,16 @@ public partial class LRMSDbContext : DbContext
             entity.Property(e => e.DepartmentName)
                 .HasMaxLength(200)
                 .HasColumnName("department_name");
-            entity.Property(e => e.ProjectId).HasColumnName("project_id");
-
-            entity.HasOne(d => d.Project).WithMany(p => p.Departments)
-                .HasForeignKey(d => d.ProjectId)
-                .HasConstraintName("FK_Department_Projects");
         });
 
         modelBuilder.Entity<Document>(entity =>
         {
-            entity.HasKey(e => e.DocumentId).HasName("PK__Document__9666E8ACC4E1E9EC");
+            entity.HasKey(e => e.DocumentId).HasName("PK__Document__9666E8ACE9AEE755");
+
+            entity.HasIndex(e => e.DocumentType, "IDX_Documents_Type");
 
             entity.Property(e => e.DocumentId).HasColumnName("document_id");
+            entity.Property(e => e.ConferenceExpenseId).HasColumnName("conference_expense_id");
             entity.Property(e => e.DocumentType).HasColumnName("document_type");
             entity.Property(e => e.DocumentUrl)
                 .HasMaxLength(500)
@@ -190,12 +173,23 @@ public partial class LRMSDbContext : DbContext
             entity.Property(e => e.FileName)
                 .HasMaxLength(255)
                 .HasColumnName("file_name");
+            entity.Property(e => e.FundDisbursementId).HasColumnName("fund_disbursement_id");
             entity.Property(e => e.MilestoneId).HasColumnName("milestone_id");
             entity.Property(e => e.ProjectId).HasColumnName("project_id");
+            entity.Property(e => e.ProjectResourceId).HasColumnName("project_resource_id");
             entity.Property(e => e.UploadAt)
                 .HasColumnType("datetime")
                 .HasColumnName("upload_at");
-            entity.Property(e => e.UploadBy).HasColumnName("upload_by");
+            entity.Property(e => e.UploadedBy).HasColumnName("uploaded_by");
+
+            entity.HasOne(d => d.ConferenceExpense).WithMany(p => p.Documents)
+                .HasForeignKey(d => d.ConferenceExpenseId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Documents_ConferenceExpense");
+
+            entity.HasOne(d => d.FundDisbursement).WithMany(p => p.Documents)
+                .HasForeignKey(d => d.FundDisbursementId)
+                .HasConstraintName("FK_Documents_FundDisbursement");
 
             entity.HasOne(d => d.Milestone).WithMany(p => p.Documents)
                 .HasForeignKey(d => d.MilestoneId)
@@ -205,31 +199,96 @@ public partial class LRMSDbContext : DbContext
                 .HasForeignKey(d => d.ProjectId)
                 .HasConstraintName("FK_Documents_Projects");
 
-            entity.HasOne(d => d.UploadByNavigation).WithMany(p => p.Documents)
-                .HasForeignKey(d => d.UploadBy)
+            entity.HasOne(d => d.ProjectResource).WithMany(p => p.Documents)
+                .HasForeignKey(d => d.ProjectResourceId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Documents_ProjectResources");
+
+            entity.HasOne(d => d.UploadedByNavigation).WithMany(p => p.Documents)
+                .HasForeignKey(d => d.UploadedBy)
                 .HasConstraintName("FK_Documents_Users");
+        });
+
+        modelBuilder.Entity<FundDisbursement>(entity =>
+        {
+            entity.HasKey(e => e.FundDisbursementId).HasName("PK__Fund_Dis__7FED8C5489F7F33D");
+
+            entity.ToTable("Fund_Disbursement");
+
+            entity.Property(e => e.FundDisbursementId).HasColumnName("fund_disbursement_id");
+            entity.Property(e => e.AppovedBy).HasColumnName("appoved_by");
+            entity.Property(e => e.AuthorRequest).HasColumnName("author_request");
+            entity.Property(e => e.CreatedAt)
+                .HasColumnType("datetime")
+                .HasColumnName("created_at");
+            entity.Property(e => e.Description).HasColumnName("description");
+            entity.Property(e => e.DisburseBy).HasColumnName("disburse_by");
+            entity.Property(e => e.FundRequest)
+                .HasColumnType("decimal(18, 2)")
+                .HasColumnName("fund_request");
+            entity.Property(e => e.ProjectId).HasColumnName("project_id");
+            entity.Property(e => e.Status).HasColumnName("status");
+            entity.Property(e => e.SupervisorRequest).HasColumnName("supervisor_request");
+            entity.Property(e => e.UpdateAt)
+                .HasColumnType("datetime")
+                .HasColumnName("update_at");
+
+            entity.HasOne(d => d.AppovedByNavigation).WithMany(p => p.FundDisbursementAppovedByNavigations)
+                .HasForeignKey(d => d.AppovedBy)
+                .HasConstraintName("FK_FundDisbursement_GroupMember_Approved");
+
+            entity.HasOne(d => d.AuthorRequestNavigation).WithMany(p => p.FundDisbursements)
+                .HasForeignKey(d => d.AuthorRequest)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_FundDisbursement_Author");
+
+            entity.HasOne(d => d.DisburseByNavigation).WithMany(p => p.FundDisbursements)
+                .HasForeignKey(d => d.DisburseBy)
+                .HasConstraintName("FK_FundDisbursement_Users");
+
+            entity.HasOne(d => d.Project).WithMany(p => p.FundDisbursements)
+                .HasForeignKey(d => d.ProjectId)
+                .HasConstraintName("FK_FundDisbursement_Projects");
+
+            entity.HasOne(d => d.SupervisorRequestNavigation).WithMany(p => p.FundDisbursementSupervisorRequestNavigations)
+                .HasForeignKey(d => d.SupervisorRequest)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_FundDisbursement_GroupMember");
         });
 
         modelBuilder.Entity<Group>(entity =>
         {
-            entity.HasKey(e => e.GroupId).HasName("PK__Groups__D57795A08B306820");
+            entity.HasKey(e => e.GroupId).HasName("PK__Groups__D57795A03A6C1236");
 
             entity.Property(e => e.GroupId).HasColumnName("group_id");
             entity.Property(e => e.CreatedAt)
                 .HasColumnType("datetime")
                 .HasColumnName("created_at");
+            entity.Property(e => e.CreatedBy).HasColumnName("created_by");
             entity.Property(e => e.CurrentMember).HasColumnName("current_member");
+            entity.Property(e => e.GroupDepartment).HasColumnName("group_department");
             entity.Property(e => e.GroupName)
                 .HasMaxLength(200)
                 .HasColumnName("group_name");
             entity.Property(e => e.GroupType).HasColumnName("group_type");
             entity.Property(e => e.MaxMember).HasColumnName("max_member");
             entity.Property(e => e.Status).HasColumnName("status");
+            entity.Property(e => e.UpdatedAt)
+                .HasColumnType("datetime")
+                .HasColumnName("updated_at");
+
+            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.Groups)
+                .HasForeignKey(d => d.CreatedBy)
+                .HasConstraintName("FK_Groups_Users");
+
+            entity.HasOne(d => d.GroupDepartmentNavigation).WithMany(p => p.Groups)
+                .HasForeignKey(d => d.GroupDepartment)
+                .HasConstraintName("FK_Groups_Department");
         });
 
         modelBuilder.Entity<GroupMember>(entity =>
         {
-            entity.HasKey(e => e.GroupMemberId).HasName("PK__Group_Me__F3C66B8C5D072371");
+            entity.HasKey(e => e.GroupMemberId).HasName("PK__Group_Me__F3C66B8CE62B0790");
 
             entity.ToTable("Group_Member");
 
@@ -238,12 +297,6 @@ public partial class LRMSDbContext : DbContext
             entity.Property(e => e.JoinDate)
                 .HasColumnType("datetime")
                 .HasColumnName("join_date");
-            entity.Property(e => e.MemberEmail)
-                .HasMaxLength(200)
-                .HasColumnName("member_email");
-            entity.Property(e => e.MemberName)
-                .HasMaxLength(200)
-                .HasColumnName("member_name");
             entity.Property(e => e.Role).HasColumnName("role");
             entity.Property(e => e.Status).HasColumnName("status");
             entity.Property(e => e.UserId).HasColumnName("user_id");
@@ -259,38 +312,41 @@ public partial class LRMSDbContext : DbContext
 
         modelBuilder.Entity<Invitation>(entity =>
         {
-            entity.HasKey(e => e.InvitationId).HasName("PK__Invitati__94B74D7C682CB14D");
+            entity.HasKey(e => e.InvitationId).HasName("PK__Invitati__94B74D7C436FE83E");
 
             entity.Property(e => e.InvitationId).HasColumnName("invitation_id");
-            entity.Property(e => e.Content).HasColumnName("content");
             entity.Property(e => e.CreatedAt)
                 .HasColumnType("datetime")
                 .HasColumnName("created_at");
             entity.Property(e => e.GroupId).HasColumnName("group_id");
-            entity.Property(e => e.InvitedBy).HasColumnName("invited_by");
             entity.Property(e => e.InvitedRole).HasColumnName("invited_role");
-            entity.Property(e => e.InvitedUserId).HasColumnName("invited_user_id");
+            entity.Property(e => e.Message).HasColumnName("message");
+            entity.Property(e => e.RecieveBy).HasColumnName("recieve_by");
             entity.Property(e => e.RespondDate)
                 .HasColumnType("datetime")
                 .HasColumnName("respond_date");
+            entity.Property(e => e.SentBy).HasColumnName("sent_by");
             entity.Property(e => e.Status).HasColumnName("status");
+            entity.Property(e => e.UpdatedAt)
+                .HasColumnType("datetime")
+                .HasColumnName("updated_at");
 
             entity.HasOne(d => d.Group).WithMany(p => p.Invitations)
                 .HasForeignKey(d => d.GroupId)
                 .HasConstraintName("FK_Invitations_Groups");
 
-            entity.HasOne(d => d.InvitedByNavigation).WithMany(p => p.InvitationInvitedByNavigations)
-                .HasForeignKey(d => d.InvitedBy)
-                .HasConstraintName("FK_Invitations_InvitedBy");
+            entity.HasOne(d => d.RecieveByNavigation).WithMany(p => p.InvitationRecieveByNavigations)
+                .HasForeignKey(d => d.RecieveBy)
+                .HasConstraintName("FK_Invitations_Users_Receive");
 
-            entity.HasOne(d => d.InvitedUser).WithMany(p => p.InvitationInvitedUsers)
-                .HasForeignKey(d => d.InvitedUserId)
-                .HasConstraintName("FK_Invitations_InvitedUser");
+            entity.HasOne(d => d.SentByNavigation).WithMany(p => p.InvitationSentByNavigations)
+                .HasForeignKey(d => d.SentBy)
+                .HasConstraintName("FK_Invitations_Users_Sent");
         });
 
         modelBuilder.Entity<Journal>(entity =>
         {
-            entity.HasKey(e => e.JournalId).HasName("PK__Journal__9894D298CBAEA3E4");
+            entity.HasKey(e => e.JournalId).HasName("PK__Journal__9894D298AFDA5EC3");
 
             entity.ToTable("Journal");
 
@@ -300,23 +356,19 @@ public partial class LRMSDbContext : DbContext
                 .HasColumnName("acceptance_date");
             entity.Property(e => e.DoiNumber)
                 .HasMaxLength(100)
-                .IsUnicode(false)
                 .HasColumnName("doi_number");
             entity.Property(e => e.JournalName)
                 .HasMaxLength(255)
-                .IsUnicode(false)
                 .HasColumnName("journal_name");
-            entity.Property(e => e.Pages)
-                .HasMaxLength(50)
-                .IsUnicode(false)
-                .HasColumnName("pages");
             entity.Property(e => e.ProjectId).HasColumnName("project_id");
             entity.Property(e => e.PublicationDate)
                 .HasColumnType("datetime")
                 .HasColumnName("publication_date");
-            entity.Property(e => e.PublisherApproval).HasColumnName("publisher_approval");
+            entity.Property(e => e.PublisherName)
+                .HasMaxLength(255)
+                .HasColumnName("publisher_name");
+            entity.Property(e => e.PublisherStatus).HasColumnName("publisher_status");
             entity.Property(e => e.ReviewerComments).HasColumnName("reviewer_comments");
-            entity.Property(e => e.RevisionHistory).HasColumnName("revision_history");
             entity.Property(e => e.SubmissionDate)
                 .HasColumnType("datetime")
                 .HasColumnName("submission_date");
@@ -328,19 +380,17 @@ public partial class LRMSDbContext : DbContext
 
         modelBuilder.Entity<Milestone>(entity =>
         {
-            entity.HasKey(e => e.MilestoneId).HasName("PK__Mileston__67592EB75043504B");
+            entity.HasKey(e => e.MilestoneId).HasName("PK__Mileston__67592EB79C6F9174");
 
             entity.ToTable("Milestone");
 
             entity.Property(e => e.MilestoneId).HasColumnName("milestone_id");
+            entity.Property(e => e.AssignBy).HasColumnName("assign_by");
             entity.Property(e => e.AssignTo).HasColumnName("assign_to");
             entity.Property(e => e.Description).HasColumnName("description");
             entity.Property(e => e.EndDate)
                 .HasColumnType("datetime")
                 .HasColumnName("end_date");
-            entity.Property(e => e.ProgressPercentage)
-                .HasColumnType("decimal(5, 2)")
-                .HasColumnName("progress_percentage");
             entity.Property(e => e.ProjectId).HasColumnName("project_id");
             entity.Property(e => e.StartDate)
                 .HasColumnType("datetime")
@@ -350,9 +400,13 @@ public partial class LRMSDbContext : DbContext
                 .HasMaxLength(255)
                 .HasColumnName("title");
 
-            entity.HasOne(d => d.AssignToNavigation).WithMany(p => p.Milestones)
+            entity.HasOne(d => d.AssignByNavigation).WithMany(p => p.MilestoneAssignByNavigations)
+                .HasForeignKey(d => d.AssignBy)
+                .HasConstraintName("FK_Milestone_GroupMember_AssignBy");
+
+            entity.HasOne(d => d.AssignToNavigation).WithMany(p => p.MilestoneAssignToNavigations)
                 .HasForeignKey(d => d.AssignTo)
-                .HasConstraintName("FK_Milestone_Users");
+                .HasConstraintName("FK_Milestone_GroupMember_AssignTo");
 
             entity.HasOne(d => d.Project).WithMany(p => p.Milestones)
                 .HasForeignKey(d => d.ProjectId)
@@ -361,13 +415,14 @@ public partial class LRMSDbContext : DbContext
 
         modelBuilder.Entity<Notification>(entity =>
         {
-            entity.HasKey(e => e.NotificationId).HasName("PK__Notifica__E059842F09DA854D");
+            entity.HasKey(e => e.NotificationId).HasName("PK__Notifica__E059842FD5E27EE0");
 
             entity.Property(e => e.NotificationId).HasColumnName("notification_id");
             entity.Property(e => e.CreatedAt)
                 .HasColumnType("datetime")
                 .HasColumnName("created_at");
             entity.Property(e => e.InvitationId).HasColumnName("invitation_id");
+            entity.Property(e => e.IsRead).HasColumnName("is_read");
             entity.Property(e => e.Message).HasColumnName("message");
             entity.Property(e => e.ProjectId).HasColumnName("project_id");
             entity.Property(e => e.Status).HasColumnName("status");
@@ -391,7 +446,9 @@ public partial class LRMSDbContext : DbContext
 
         modelBuilder.Entity<Project>(entity =>
         {
-            entity.HasKey(e => e.ProjectId).HasName("PK__Projects__BC799E1F7C43913B");
+            entity.HasKey(e => e.ProjectId).HasName("PK__Projects__BC799E1FB00E4B70");
+
+            entity.HasIndex(e => e.Status, "IDX_Projects_Status");
 
             entity.Property(e => e.ProjectId).HasColumnName("project_id");
             entity.Property(e => e.ApprovedBudget)
@@ -401,13 +458,17 @@ public partial class LRMSDbContext : DbContext
             entity.Property(e => e.CreatedAt)
                 .HasColumnType("datetime")
                 .HasColumnName("created_at");
+            entity.Property(e => e.CreatedBy).HasColumnName("created_by");
+            entity.Property(e => e.DepartmentId).HasColumnName("department_id");
             entity.Property(e => e.Description).HasColumnName("description");
             entity.Property(e => e.EndDate)
                 .HasColumnType("datetime")
                 .HasColumnName("end_date");
             entity.Property(e => e.GroupId).HasColumnName("group_id");
-            entity.Property(e => e.Methodology).HasColumnName("methodology");
-            entity.Property(e => e.Objective).HasColumnName("objective");
+            entity.Property(e => e.Methodlogy).HasColumnName("methodlogy");
+            entity.Property(e => e.ProjectName)
+                .HasMaxLength(255)
+                .HasColumnName("project_name");
             entity.Property(e => e.ProjectType).HasColumnName("project_type");
             entity.Property(e => e.SpentBudget)
                 .HasColumnType("decimal(18, 2)")
@@ -416,65 +477,67 @@ public partial class LRMSDbContext : DbContext
                 .HasColumnType("datetime")
                 .HasColumnName("start_date");
             entity.Property(e => e.Status).HasColumnName("status");
-            entity.Property(e => e.Title)
-                .HasMaxLength(255)
-                .HasColumnName("title");
-            entity.Property(e => e.Type).HasColumnName("type");
             entity.Property(e => e.UpdatedAt)
                 .HasColumnType("datetime")
                 .HasColumnName("updated_at");
-            entity.Property(e => e.UserId).HasColumnName("user_id");
 
-            entity.HasOne(d => d.ApprovedByNavigation).WithMany(p => p.ProjectApprovedByNavigations)
+            entity.HasOne(d => d.ApprovedByNavigation).WithMany(p => p.Projects)
                 .HasForeignKey(d => d.ApprovedBy)
-                .HasConstraintName("FK_Projects_Approver");
+                .HasConstraintName("FK_Projects_GroupMember_Approved");
+
+            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.Projects)
+                .HasForeignKey(d => d.CreatedBy)
+                .HasConstraintName("FK_Projects_Users_Created");
+
+            entity.HasOne(d => d.Department).WithMany(p => p.Projects)
+                .HasForeignKey(d => d.DepartmentId)
+                .HasConstraintName("FK_Projects_Department");
 
             entity.HasOne(d => d.Group).WithMany(p => p.Projects)
                 .HasForeignKey(d => d.GroupId)
                 .HasConstraintName("FK_Projects_Groups");
-
-            entity.HasOne(d => d.User).WithMany(p => p.ProjectUsers)
-                .HasForeignKey(d => d.UserId)
-                .HasConstraintName("FK_Projects_Users");
         });
 
         modelBuilder.Entity<ProjectResource>(entity =>
         {
-            entity.HasKey(e => e.ResourceId).HasName("PK__Project___4985FC73F1CB07CD");
+            entity.HasKey(e => e.ProjectResourceId).HasName("PK__Project___A2029D37E43DB5DB");
 
             entity.ToTable("Project_resources");
 
-            entity.Property(e => e.ResourceId).HasColumnName("resource_id");
+            entity.Property(e => e.ProjectResourceId).HasColumnName("project_resource_id");
             entity.Property(e => e.Acquired).HasColumnName("acquired");
-            entity.Property(e => e.EstimatedCost)
+            entity.Property(e => e.Cost)
                 .HasColumnType("decimal(18, 2)")
-                .HasColumnName("estimated_cost");
+                .HasColumnName("cost");
             entity.Property(e => e.ProjectId).HasColumnName("project_id");
             entity.Property(e => e.Quantity).HasColumnName("quantity");
+            entity.Property(e => e.ResourceName)
+                .HasMaxLength(200)
+                .HasColumnName("resource_name");
             entity.Property(e => e.ResourceType).HasColumnName("resource_type");
 
             entity.HasOne(d => d.Project).WithMany(p => p.ProjectResources)
                 .HasForeignKey(d => d.ProjectId)
-                .HasConstraintName("FK_Resources_Projects");
+                .HasConstraintName("FK_ProjectResources_Projects");
         });
 
         modelBuilder.Entity<Quota>(entity =>
         {
-            entity.HasKey(e => e.QuotaId).HasName("PK__Quotas__FF9A8B255E79CE1A");
+            entity.HasKey(e => e.QuotaId).HasName("PK__Quotas__FF9A8B250935C34D");
 
             entity.Property(e => e.QuotaId).HasColumnName("quota_id");
-            entity.Property(e => e.AllocatedAt)
-                .HasColumnType("datetime")
-                .HasColumnName("allocated_at");
+            entity.Property(e => e.AllocatedBudget)
+                .HasColumnType("decimal(18, 2)")
+                .HasColumnName("allocated_budget");
             entity.Property(e => e.AllocatedBy).HasColumnName("allocated_by");
-            entity.Property(e => e.CurrentValue)
-                .HasColumnType("decimal(18, 2)")
-                .HasColumnName("current_value");
-            entity.Property(e => e.LimitValue)
-                .HasColumnType("decimal(18, 2)")
-                .HasColumnName("limit_value");
+            entity.Property(e => e.CreatedAt)
+                .HasColumnType("datetime")
+                .HasColumnName("created_at");
             entity.Property(e => e.ProjectId).HasColumnName("project_id");
-            entity.Property(e => e.QuotaAmount).HasColumnName("quota_amount");
+            entity.Property(e => e.Status).HasColumnName("status");
+            entity.Property(e => e.UpdateAt)
+                .HasColumnType("datetime")
+                .HasColumnName("update_at");
 
             entity.HasOne(d => d.AllocatedByNavigation).WithMany(p => p.Quota)
                 .HasForeignKey(d => d.AllocatedBy)
@@ -487,7 +550,7 @@ public partial class LRMSDbContext : DbContext
 
         modelBuilder.Entity<Timeline>(entity =>
         {
-            entity.HasKey(e => e.TimelineId).HasName("PK__Timeline__DC6F55B00B621F68");
+            entity.HasKey(e => e.TimelineId).HasName("PK__Timeline__DC6F55B058CB5F44");
 
             entity.ToTable("Timeline");
 
@@ -499,10 +562,16 @@ public partial class LRMSDbContext : DbContext
             entity.Property(e => e.EndDate)
                 .HasColumnType("datetime")
                 .HasColumnName("end_date");
+            entity.Property(e => e.Event)
+                .HasMaxLength(255)
+                .HasColumnName("event");
             entity.Property(e => e.StartDate)
                 .HasColumnType("datetime")
                 .HasColumnName("start_date");
             entity.Property(e => e.TimelineType).HasColumnName("timeline_type");
+            entity.Property(e => e.UpdateAt)
+                .HasColumnType("datetime")
+                .HasColumnName("update_at");
 
             entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.Timelines)
                 .HasForeignKey(d => d.CreatedBy)
@@ -511,7 +580,9 @@ public partial class LRMSDbContext : DbContext
 
         modelBuilder.Entity<User>(entity =>
         {
-            entity.HasKey(e => e.UserId).HasName("PK__Users__B9BE370F44D8C626");
+            entity.HasKey(e => e.UserId).HasName("PK__Users__B9BE370FCE651109");
+
+            entity.HasIndex(e => e.Role, "IDX_Users_Role");
 
             entity.Property(e => e.UserId).HasColumnName("user_id");
             entity.Property(e => e.CreatedAt)
@@ -524,7 +595,6 @@ public partial class LRMSDbContext : DbContext
             entity.Property(e => e.FullName)
                 .HasMaxLength(200)
                 .HasColumnName("full_name");
-            entity.Property(e => e.GroupId).HasColumnName("group_id");
             entity.Property(e => e.Level).HasColumnName("level");
             entity.Property(e => e.Password)
                 .HasMaxLength(255)
@@ -540,6 +610,10 @@ public partial class LRMSDbContext : DbContext
             entity.Property(e => e.Username)
                 .HasMaxLength(100)
                 .HasColumnName("username");
+
+            entity.HasOne(d => d.Department).WithMany(p => p.Users)
+                .HasForeignKey(d => d.DepartmentId)
+                .HasConstraintName("FK_Users_Department");
         });
 
         OnModelCreatingPartial(modelBuilder);

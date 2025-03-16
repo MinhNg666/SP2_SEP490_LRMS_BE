@@ -7,17 +7,17 @@ public partial class Quota
 {
     public int QuotaId { get; set; }
 
-    public int? QuotaAmount { get; set; }
+    public decimal? AllocatedBudget { get; set; }
 
-    public int? AllocatedBy { get; set; }
+    public int? Status { get; set; }
 
-    public DateTime? AllocatedAt { get; set; }
+    public DateTime? CreatedAt { get; set; }
+
+    public DateTime? UpdateAt { get; set; }
 
     public int? ProjectId { get; set; }
 
-    public decimal? LimitValue { get; set; }
-
-    public decimal? CurrentValue { get; set; }
+    public int? AllocatedBy { get; set; }
 
     public virtual User? AllocatedByNavigation { get; set; }
 
