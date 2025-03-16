@@ -7,8 +7,6 @@ public partial class Milestone
 {
     public int MilestoneId { get; set; }
 
-    public int? ProjectId { get; set; }
-
     public string? Title { get; set; }
 
     public string? Description { get; set; }
@@ -21,9 +19,13 @@ public partial class Milestone
 
     public int? AssignTo { get; set; }
 
-    public decimal? ProgressPercentage { get; set; }
+    public int? AssignBy { get; set; }
 
-    public virtual User? AssignToNavigation { get; set; }
+    public int? ProjectId { get; set; }
+
+    public virtual GroupMember? AssignByNavigation { get; set; }
+
+    public virtual GroupMember? AssignToNavigation { get; set; }
 
     public virtual ICollection<Document> Documents { get; set; } = new List<Document>();
 

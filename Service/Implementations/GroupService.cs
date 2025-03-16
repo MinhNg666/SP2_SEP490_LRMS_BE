@@ -81,8 +81,6 @@ public class GroupService : IGroupService
                 var groupMember = new GroupMember
                 {
                     GroupId = group.GroupId,
-                    MemberName = member.MemberName,
-                    MemberEmail = member.MemberEmail,
                     Role = member.Role,
                     UserId = user.UserId,
                     Status = 1,
@@ -125,8 +123,6 @@ public class GroupService : IGroupService
                 var groupMember = new GroupMember
                 {
                     GroupId = group.GroupId,
-                    MemberName = member.MemberName,
-                    MemberEmail = member.MemberEmail,
                     Role = member.Role,
                     UserId = user.UserId,
                     Status = 1,

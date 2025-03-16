@@ -29,10 +29,10 @@ public class InvitationService : IInvitationService
     {
         var invitation = new Invitation
         {
-            Content = request.Content,
-            InvitedUserId = request.InvitedUserId,
+            Message = request.Content,
+            RecieveBy = request.InvitedUserId,
             GroupId = request.GroupId, // Thêm GroupId vào đây
-            InvitedBy = request.InvitedBy,
+            SentBy = request.InvitedBy,
             CreatedAt = DateTime.Now,
             Status = 0 // 0: Pending
         };
@@ -48,7 +48,7 @@ public class InvitationService : IInvitationService
     public async Task AcceptInvitation(int invitationId, int userId)
     {
         var invitation = await _invitationRepository.GetInvitationById(invitationId);
-        if (invitation == null || invitation.InvitedUserId != userId)
+        if (invitation == null || invitation.RecieveBy != userId)
         {
             throw new ServiceException("Invitation not found or does not belong to the user.");
         }
@@ -58,7 +58,7 @@ public class InvitationService : IInvitationService
         var groupMember = new GroupMember
         {
             GroupId = invitation.GroupId, // Giả sử bạn đã thêm GroupId vào Invitation
-            GroupMemberId = invitation.InvitedUserId.Value, // Thêm GroupMemberId
+            GroupMemberId = invitation.RecieveBy.Value, // Thêm GroupMemberId
             Role = invitation.InvitedRole, // Thêm vai trò
             UserId = userId,
             Status = 1, // Hoạt động
@@ -70,7 +70,7 @@ public class InvitationService : IInvitationService
     public async Task RejectInvitation(int invitationId, int userId)
     {
         var invitation = await _invitationRepository.GetInvitationById(invitationId);
-        if (invitation == null || invitation.InvitedUserId != userId)
+        if (invitation == null || invitation.RecieveBy != userId)
         {
             throw new ServiceException("Invitation not found or does not belong to the user.");
         }
