@@ -4,9 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using LRMS_API;
+using Repository.Implementations;
 
 namespace Repository.Interfaces;
-public interface INotificationRepository
+public interface INotificationRepository : IGenericRepository<Notification>
 {
     Task AddNotificationAsync(Notification notification);
     Task<IEnumerable<Notification>> GetNotificationsByUserId(int userId);

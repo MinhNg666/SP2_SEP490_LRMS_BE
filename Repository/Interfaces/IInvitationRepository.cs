@@ -4,10 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using LRMS_API;
+using Repository.Implementations;
 
 namespace Repository.Interfaces;
 
-public interface IInvitationRepository
+public interface IInvitationRepository : IGenericRepository<Invitation>
 {
     Task AddInvitationAsync(Invitation invitation);
     Task<IEnumerable<Invitation>> GetInvitationsByUserId(int userId);
