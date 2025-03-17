@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
+using Domain.DTO.Requests;
 using Domain.DTO.Responses;
 using LRMS_API;
 using Repository.Interfaces;
+using Service.Exceptions;
 using Service.Interfaces;
 
 namespace Service.Implementations;
@@ -16,21 +18,18 @@ public class NotificationService : INotificationService
         _mapper = mapper;
     }
 
-    //public async Task CreateNotification(int userId, string title, string message, int? projectId = null, int? invitationId = null)
-    //{
-    //    var notification = new Notification
-    //    {
-    //        UserId = userId,
-    //        Title = title,
-    //        Message = message,
-    //        Status = 0, // 0: Unread
-    //        CreatedAt = DateTime.Now,
-    //        ProjectId = projectId,
-    //        InvitationId = invitationId
-    //    };
-
-    //    await _notificationRepository.AddAsync(notification);
-    //}
+    public async Task CreateNotification(CreateNotificationRequest request)
+    {
+        try 
+        { 
+            var Notification = _mapper.Map<Notification>(request);
+            await _notificationRepository.AddAsync(Notification);
+        }
+        catch (Exception ex)
+        {
+            throw new ServiceException(ex.Message);
+        }
+    }
 
     public async Task<IEnumerable<NotificationResponse>> GetNotificationsByUserId(int userId)
     {
@@ -40,11 +39,19 @@ public class NotificationService : INotificationService
 
     public async Task MarkAsRead(int notificationId)
     {
-        var notification = await _notificationRepository.GetByIdAsync(notificationId);
-        if (notification != null)
+        try 
         {
-            notification.Status = 1; // 1: Read
-            await _notificationRepository.UpdateAsync(notification);
+            var notification = await _notificationRepository.GetByIdAsync(notificationId);
+            if (notification != null)
+            {
+                notification.Status = 1; // 1: Read
+                await _notificationRepository.UpdateAsync(notification);
+            }
         }
+        catch (Exception ex)
+        {
+            throw new ServiceException(ex.Message);
+        }
+        
     }
 }

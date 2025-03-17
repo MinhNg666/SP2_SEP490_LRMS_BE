@@ -43,16 +43,16 @@ public class InvitationService : IInvitationService
 
         // Tạo notification cho người được mời
         var group = await _groupRepository.GetByIdAsync(request.GroupId);
-        var notificationTitle = "New Group Invitation";
-        var notificationMessage = $"You have been invited to join the group '{group.GroupName}'";
+        var notificationRequest = new CreateNotificationRequest
+        {
+            UserId = request.InvitedUserId,
+            Title = "Group Invitation",
+            Message = $"You have been invited to join the group '{group.GroupName}'",
+            ProjectId = null,
+            InvitationId = invitation.InvitationId
+        };
 
-        await _notificationService.CreateNotification(
-            request.InvitedUserId,
-            notificationTitle,
-            notificationMessage,
-            null,
-            invitation.InvitationId
-        );
+        await _notificationService.CreateNotification(notificationRequest);
     }
 
     public async Task<IEnumerable<InvitationResponse>> GetInvitationsByUserId(int userId)
