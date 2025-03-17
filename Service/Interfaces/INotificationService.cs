@@ -1,9 +1,10 @@
-﻿using Domain.DTO.Responses;
+﻿using Domain.DTO.Requests;
+using Domain.DTO.Responses;
 
 namespace Service.Interfaces;
 public interface INotificationService
 {
-    //Task CreateNotification(int userId, string title, string message, int? projectId = null, int? invitationId = null);
+    Task CreateNotification(CreateNotificationRequest request);
     Task<IEnumerable<NotificationResponse>> GetNotificationsByUserId(int userId);
     Task MarkAsRead(int notificationId);
 }

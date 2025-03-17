@@ -1,4 +1,5 @@
-﻿using Domain.DTO.Responses;
+﻿using Domain.DTO.Requests;
+using Domain.DTO.Responses;
 using Microsoft.AspNetCore.Mvc;
 using Service.Interfaces;
 
@@ -27,8 +28,21 @@ public class NotificationController : ApiBaseController
             return BadRequest(ex.Message);
         }
     }
+    [HttpPost("notification")]
+    public async Task<IActionResult> CreateNotification( CreateNotificationRequest request)
+    {
+        try
+        {
+            await _notificationService.CreateNotification(request);
+            return Ok("Notification created");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
 
-    [HttpPost("{notificationId}/read")]
+    [HttpPut("{notificationId}/read")]
     public async Task<IActionResult> MarkAsRead(int notificationId)
     {
         try
