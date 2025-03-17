@@ -17,12 +17,14 @@ public class InvitationService : IInvitationService
 {
     private readonly IInvitationRepository _invitationRepository;
     private readonly IGroupRepository _groupRepository;
+    private readonly INotificationService _notificationService;
     private readonly IMapper _mapper;
-    public InvitationService(IInvitationRepository invitationRepository, IMapper mapper, IGroupRepository groupRepository)
+    public InvitationService(IInvitationRepository invitationRepository, IMapper mapper, IGroupRepository groupRepository, INotificationService notificationService)
     {
         _invitationRepository = invitationRepository;
         _mapper = mapper;
         _groupRepository = groupRepository;
+        _notificationService = notificationService;
     }
 
     public async Task SendInvitation(SendInvitationRequest request)
@@ -38,6 +40,19 @@ public class InvitationService : IInvitationService
         };
 
         await _invitationRepository.AddInvitationAsync(invitation);
+
+        // Tạo notification cho người được mời
+        var group = await _groupRepository.GetByIdAsync(request.GroupId);
+        var notificationTitle = "New Group Invitation";
+        var notificationMessage = $"You have been invited to join the group '{group.GroupName}'";
+
+        await _notificationService.CreateNotification(
+            request.InvitedUserId,
+            notificationTitle,
+            notificationMessage,
+            null,
+            invitation.InvitationId
+        );
     }
 
     public async Task<IEnumerable<InvitationResponse>> GetInvitationsByUserId(int userId)
