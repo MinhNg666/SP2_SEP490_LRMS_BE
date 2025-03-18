@@ -1,5 +1,90 @@
 [
   {
+    "ContainingType": "LRMS_API.Controllers.NotificationController",
+    "Method": "MarkAsRead",
+    "RelativePath": "api/{notificationId}/read",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "notificationId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LRMS_API.Controllers.ProjectController",
+    "Method": "ApproveProject",
+    "RelativePath": "api/{projectId}/approve",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "projectId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LRMS_API.Controllers.ProjectController",
+    "Method": "RejectProject",
+    "RelativePath": "api/{projectId}/reject",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "projectId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "reason",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LRMS_API.Controllers.InvitationController",
+    "Method": "GetInvitations",
+    "RelativePath": "api/{userId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LRMS_API.Controllers.InvitationController",
+    "Method": "AcceptInvitation",
+    "RelativePath": "api/accept/{invitationId}",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "invitationId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "LRMS_API.Controllers.UserController",
     "Method": "GetAllUsers",
     "RelativePath": "api/accounts",
@@ -132,6 +217,22 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "LRMS_API.Controllers.ProjectController",
+    "Method": "SendProjectForApproval",
+    "RelativePath": "api/approval-request",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "Domain.DTO.Requests.ProjectApprovalRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "LRMS_API.Controllers.AuthController",
     "Method": "Login",
     "RelativePath": "api/auth/login",
@@ -206,6 +307,54 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "LRMS_API.Controllers.NotificationController",
+    "Method": "CreateNotification",
+    "RelativePath": "api/notification",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "Domain.DTO.Requests.CreateNotificationRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LRMS_API.Controllers.InvitationController",
+    "Method": "RejectInvitation",
+    "RelativePath": "api/reject/{invitationId}",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "invitationId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LRMS_API.Controllers.ProjectController",
+    "Method": "CreateResearchProject",
+    "RelativePath": "api/research",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "Domain.DTO.Requests.CreateProjectRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "LRMS_API.Controllers.GroupController",
     "Method": "CreateStudentGroup",
     "RelativePath": "api/student-groups",
@@ -220,5 +369,31 @@
       }
     ],
     "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LRMS_API.Controllers.NotificationController",
+    "Method": "GetNotificationsByUserId",
+    "RelativePath": "api/user/{userId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Collections.Generic.IEnumerable\u00601[[Domain.DTO.Responses.NotificationResponse, Domain, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
   }
 ]

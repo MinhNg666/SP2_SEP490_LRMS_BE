@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
+using Domain.DTO.Requests;
+using LRMS_API;
 
 namespace Domain.Automapper
 {
@@ -11,6 +13,15 @@ namespace Domain.Automapper
     {
         public RequestMappingProfile() 
         {
+            CreateMap<CreateCouncilGroupRequest, Group>();
+            CreateMap<CreateNotificationRequest, Notification>();
+            CreateMap<CreateStudentGroupRequest, Group>();
+            CreateMap<SendInvitationRequest, Invitation>();
+            CreateMap<CreateUserRequest, User>();
+            CreateMap<ProjectApprovalRequest, Project>();
+            CreateMap<CreateProjectRequest, Project>();
+            CreateMap<UpdateStudentRequest, User>();
+            CreateMap<UpdateUserRequest, User>();
         }
     }
 }

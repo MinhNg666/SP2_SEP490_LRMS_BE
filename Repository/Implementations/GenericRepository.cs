@@ -9,9 +9,9 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
     protected readonly LRMSDbContext _context;
     private readonly DbSet<T> _dbSet;
 
-    public GenericRepository()
+    public GenericRepository(LRMSDbContext context)
     {
-        _context = new LRMSDbContext();
+        _context = context ?? throw new ArgumentNullException(nameof(context));
         _dbSet = _context.Set<T>();
     }
 

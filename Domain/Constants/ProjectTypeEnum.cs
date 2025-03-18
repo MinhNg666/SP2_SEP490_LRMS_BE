@@ -7,4 +7,7 @@ using System.Threading.Tasks;
 namespace Domain.Constants;
 public enum ProjectTypeEnum
 {
+    Research = 0,
+    Conference = 1,
+    Journal = 2
 }
