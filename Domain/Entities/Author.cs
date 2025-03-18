@@ -11,19 +11,15 @@ public partial class Author
     [Column("author_id")]
     public int AuthorId { get; set; }
 
-    [Column("project_id")]
-    public int? ProjectId { get; set; }
+    public int Role { get; set; }
 
-    [Column("user_id")]
+    public int ProjectId { get; set; }
+
     public int? UserId { get; set; }
 
-    [Column("role")]
-    public int? Role { get; set; }
+    public virtual ICollection<FundDisbursement> FundDisbursements { get; set; } = new List<FundDisbursement>();
 
-    [Column("email")]
-    public string? Email { get; set; }
-
-    public virtual Project? Project { get; set; }
+    public virtual Project Project { get; set; } = null!;
 
     public virtual User? User { get; set; }
 }

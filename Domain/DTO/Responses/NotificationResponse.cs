@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿namespace Domain.DTO.Responses;
 
-namespace LRMS_API;
-
-public partial class Notification
+public class NotificationResponse
 {
     public int NotificationId { get; set; }
 
@@ -22,10 +19,4 @@ public partial class Notification
     public int? InvitationId { get; set; }
 
     public int? UserId { get; set; }
-
-    public virtual Invitation? Invitation { get; set; }
-
-    public virtual Project? Project { get; set; }
-
-    public virtual User? User { get; set; }
 }

@@ -7,8 +7,6 @@ public partial class Conference
 {
     public int ConferenceId { get; set; }
 
-    public int? ProjectId { get; set; }
-
     public string? ConferenceName { get; set; }
 
     public int? ConferenceRanking { get; set; }
@@ -19,11 +17,9 @@ public partial class Conference
 
     public DateTime? AcceptanceDate { get; set; }
 
-    public string? ConferenceUrl { get; set; }
-
     public int? PresentationType { get; set; }
 
-    public string? ConferenceProceedings { get; set; }
+    public int? ProjectId { get; set; }
 
     public virtual ICollection<ConferenceExpense> ConferenceExpenses { get; set; } = new List<ConferenceExpense>();
 

@@ -25,7 +25,7 @@ public class InvitationRepository : GenericRepository<InvitationRepository>, IIn
 
     public async Task<IEnumerable<Invitation>> GetInvitationsByUserId(int userId)
     {
-        return await Task.FromResult(_context.Invitations.Where(i => i.InvitedUserId == userId));
+        return await Task.FromResult(_context.Invitations.Where(i => i.InvitationId == userId));
     }
     public async Task<Invitation> GetInvitationById(int invitationId) // Thêm phương thức này
     {

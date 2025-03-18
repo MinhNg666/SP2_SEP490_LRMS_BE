@@ -7,6 +7,8 @@ public partial class Group
 {
     public int GroupId { get; set; }
 
+    public int? GroupType { get; set; }
+
     public string? GroupName { get; set; }
 
     public int? MaxMember { get; set; }
@@ -17,7 +19,15 @@ public partial class Group
 
     public DateTime? CreatedAt { get; set; }
 
-    public int? GroupType { get; set; }
+    public DateTime? UpdatedAt { get; set; }
+
+    public int? CreatedBy { get; set; }
+
+    public int? GroupDepartment { get; set; }
+
+    public virtual User? CreatedByNavigation { get; set; }
+
+    public virtual Department? GroupDepartmentNavigation { get; set; }
 
     public virtual ICollection<GroupMember> GroupMembers { get; set; } = new List<GroupMember>();
 

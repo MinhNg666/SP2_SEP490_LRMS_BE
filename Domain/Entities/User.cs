@@ -19,7 +19,7 @@ public partial class User
 
     public int? Role { get; set; }
 
-    public int? DepartmentId { get; set; }
+    public int? Level { get; set; }
 
     public int? Status { get; set; }
 
@@ -27,29 +27,27 @@ public partial class User
 
     public DateTime? UpdatedAt { get; set; }
 
-    public int? GroupId { get; set; }
-
-    public int? Level { get; set; }
+    public int? DepartmentId { get; set; }
 
     public virtual ICollection<Author> Authors { get; set; } = new List<Author>();
 
-    public virtual ICollection<Department> Departments { get; set; } = new List<Department>();
+    public virtual Department? Department { get; set; }
 
     public virtual ICollection<Document> Documents { get; set; } = new List<Document>();
 
+    public virtual ICollection<FundDisbursement> FundDisbursements { get; set; } = new List<FundDisbursement>();
+
     public virtual ICollection<GroupMember> GroupMembers { get; set; } = new List<GroupMember>();
 
-    public virtual ICollection<Invitation> InvitationInvitedByNavigations { get; set; } = new List<Invitation>();
+    public virtual ICollection<Group> Groups { get; set; } = new List<Group>();
 
-    public virtual ICollection<Invitation> InvitationInvitedUsers { get; set; } = new List<Invitation>();
+    public virtual ICollection<Invitation> InvitationRecieveByNavigations { get; set; } = new List<Invitation>();
 
-    public virtual ICollection<Milestone> Milestones { get; set; } = new List<Milestone>();
+    public virtual ICollection<Invitation> InvitationSentByNavigations { get; set; } = new List<Invitation>();
 
     public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
 
-    public virtual ICollection<Project> ProjectApprovedByNavigations { get; set; } = new List<Project>();
-
-    public virtual ICollection<Project> ProjectUsers { get; set; } = new List<Project>();
+    public virtual ICollection<Project> Projects { get; set; } = new List<Project>();
 
     public virtual ICollection<Quota> Quota { get; set; } = new List<Quota>();
 

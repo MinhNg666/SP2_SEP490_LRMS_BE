@@ -21,6 +21,8 @@ public static class ServiceExtension
         services.AddScoped<IGroupRepository, GroupRepository>();
         services.AddScoped<IInvitationRepository, InvitationRepository>();
         services.AddScoped<IInvitationService, InvitationService>();
+        services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<INotificationRepository, NotificationRepository>();
 
         return services;
     }

@@ -9,6 +9,8 @@ public partial class Category
 
     public string? CategoryName { get; set; }
 
+    public int? Status { get; set; }
+
     public int? ProjectId { get; set; }
 
     public virtual Project? Project { get; set; }

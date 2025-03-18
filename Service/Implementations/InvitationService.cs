@@ -17,27 +17,42 @@ public class InvitationService : IInvitationService
 {
     private readonly IInvitationRepository _invitationRepository;
     private readonly IGroupRepository _groupRepository;
+    private readonly INotificationService _notificationService;
     private readonly IMapper _mapper;
-    public InvitationService(IInvitationRepository invitationRepository, IMapper mapper, IGroupRepository groupRepository)
+    public InvitationService(IInvitationRepository invitationRepository, IMapper mapper, IGroupRepository groupRepository, INotificationService notificationService)
     {
         _invitationRepository = invitationRepository;
         _mapper = mapper;
         _groupRepository = groupRepository;
+        _notificationService = notificationService;
     }
 
     public async Task SendInvitation(SendInvitationRequest request)
     {
         var invitation = new Invitation
         {
-            Content = request.Content,
-            InvitedUserId = request.InvitedUserId,
+            Message = request.Content,
+            RecieveBy = request.InvitedUserId,
             GroupId = request.GroupId, // Thêm GroupId vào đây
-            InvitedBy = request.InvitedBy,
+            SentBy = request.InvitedBy,
             CreatedAt = DateTime.Now,
             Status = 0 // 0: Pending
         };
 
         await _invitationRepository.AddInvitationAsync(invitation);
+
+        // Tạo notification cho người được mời
+        var group = await _groupRepository.GetByIdAsync(request.GroupId);
+        var notificationRequest = new CreateNotificationRequest
+        {
+            UserId = request.InvitedUserId,
+            Title = "Group Invitation",
+            Message = $"You have been invited to join the group '{group.GroupName}'",
+            ProjectId = null,
+            InvitationId = invitation.InvitationId
+        };
+
+        await _notificationService.CreateNotification(notificationRequest);
     }
 
     public async Task<IEnumerable<InvitationResponse>> GetInvitationsByUserId(int userId)
@@ -48,7 +63,7 @@ public class InvitationService : IInvitationService
     public async Task AcceptInvitation(int invitationId, int userId)
     {
         var invitation = await _invitationRepository.GetInvitationById(invitationId);
-        if (invitation == null || invitation.InvitedUserId != userId)
+        if (invitation == null || invitation.RecieveBy != userId)
         {
             throw new ServiceException("Invitation not found or does not belong to the user.");
         }
@@ -58,7 +73,7 @@ public class InvitationService : IInvitationService
         var groupMember = new GroupMember
         {
             GroupId = invitation.GroupId, // Giả sử bạn đã thêm GroupId vào Invitation
-            GroupMemberId = invitation.InvitedUserId.Value, // Thêm GroupMemberId
+            GroupMemberId = invitation.RecieveBy.Value, // Thêm GroupMemberId
             Role = invitation.InvitedRole, // Thêm vai trò
             UserId = userId,
             Status = 1, // Hoạt động
@@ -70,7 +85,7 @@ public class InvitationService : IInvitationService
     public async Task RejectInvitation(int invitationId, int userId)
     {
         var invitation = await _invitationRepository.GetInvitationById(invitationId);
-        if (invitation == null || invitation.InvitedUserId != userId)
+        if (invitation == null || invitation.RecieveBy != userId)
         {
             throw new ServiceException("Invitation not found or does not belong to the user.");
         }
