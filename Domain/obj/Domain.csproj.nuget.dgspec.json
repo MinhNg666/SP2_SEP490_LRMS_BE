@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "G:\\SEP490\\LRMS API\\Domain\\Domain.csproj": {}
+    "D:\\Programming\\LRMS_BE\\SP2_SEP490_LRMS_BE\\Domain\\Domain.csproj": {}
   },
   "projects": {
-    "G:\\SEP490\\LRMS API\\Domain\\Domain.csproj": {
+    "D:\\Programming\\LRMS_BE\\SP2_SEP490_LRMS_BE\\Domain\\Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "G:\\SEP490\\LRMS API\\Domain\\Domain.csproj",
+        "projectUniqueName": "D:\\Programming\\LRMS_BE\\SP2_SEP490_LRMS_BE\\Domain\\Domain.csproj",
         "projectName": "Domain",
-        "projectPath": "G:\\SEP490\\LRMS API\\Domain\\Domain.csproj",
-        "packagesPath": "C:\\Users\\23030\\.nuget\\packages\\",
-        "outputPath": "G:\\SEP490\\LRMS API\\Domain\\obj\\",
+        "projectPath": "D:\\Programming\\LRMS_BE\\SP2_SEP490_LRMS_BE\\Domain\\Domain.csproj",
+        "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
+        "outputPath": "D:\\Programming\\LRMS_BE\\SP2_SEP490_LRMS_BE\\Domain\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\23030\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -42,7 +42,7 @@
         "restoreAuditProperties": {
           "enableAudit": "true",
           "auditLevel": "low",
-          "auditMode": "direct"
+          "auditMode": "all"
         },
         "SdkAnalysisLevel": "9.0.100"
       },
@@ -101,7 +101,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.103/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.100/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

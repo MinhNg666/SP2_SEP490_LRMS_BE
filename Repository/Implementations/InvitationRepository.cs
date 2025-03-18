@@ -8,7 +8,7 @@ using Repository.Interfaces;
 
 namespace Repository.Implementations;
 
-public class InvitationRepository : GenericRepository<InvitationRepository>, IInvitationRepository
+public class InvitationRepository : GenericRepository<Invitation>, IInvitationRepository
 {
     private readonly LRMSDbContext _context;
 

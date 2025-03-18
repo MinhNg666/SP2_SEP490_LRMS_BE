@@ -5862,23 +5862,23 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\23030\\.nuget\\packages\\": {},
+    "C:\\Users\\Admin\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "G:\\SEP490\\LRMS API\\Service\\Service.csproj",
+      "projectUniqueName": "D:\\Programming\\LRMS_BE\\SP2_SEP490_LRMS_BE\\Service\\Service.csproj",
       "projectName": "Service",
-      "projectPath": "G:\\SEP490\\LRMS API\\Service\\Service.csproj",
-      "packagesPath": "C:\\Users\\23030\\.nuget\\packages\\",
-      "outputPath": "G:\\SEP490\\LRMS API\\Service\\obj\\",
+      "projectPath": "D:\\Programming\\LRMS_BE\\SP2_SEP490_LRMS_BE\\Service\\Service.csproj",
+      "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
+      "outputPath": "D:\\Programming\\LRMS_BE\\SP2_SEP490_LRMS_BE\\Service\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\23030\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -5893,8 +5893,8 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "projectReferences": {
-            "G:\\SEP490\\LRMS API\\Repository\\Repository.csproj": {
-              "projectPath": "G:\\SEP490\\LRMS API\\Repository\\Repository.csproj"
+            "D:\\Programming\\LRMS_BE\\SP2_SEP490_LRMS_BE\\Repository\\Repository.csproj": {
+              "projectPath": "D:\\Programming\\LRMS_BE\\SP2_SEP490_LRMS_BE\\Repository\\Repository.csproj"
             }
           }
         }
@@ -5907,7 +5907,7 @@
       "restoreAuditProperties": {
         "enableAudit": "true",
         "auditLevel": "low",
-        "auditMode": "direct"
+        "auditMode": "all"
       },
       "SdkAnalysisLevel": "9.0.100"
     },
@@ -5936,8 +5936,30 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.103/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.100/PortableRuntimeIdentifierGraph.json"
       }
     }
-  }
+  },
+  "logs": [
+    {
+      "code": "NU1903",
+      "level": "Warning",
+      "warningLevel": 1,
+      "message": "Package 'System.Text.Json' 8.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-8g4q-xg66-9fp4",
+      "libraryId": "System.Text.Json",
+      "targetGraphs": [
+        "net8.0"
+      ]
+    },
+    {
+      "code": "NU1903",
+      "level": "Warning",
+      "warningLevel": 1,
+      "message": "Package 'System.Text.Json' 8.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-hh2w-p6rv-4g7w",
+      "libraryId": "System.Text.Json",
+      "targetGraphs": [
+        "net8.0"
+      ]
+    }
+  ]
 }
