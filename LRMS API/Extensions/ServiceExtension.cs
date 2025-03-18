@@ -23,6 +23,8 @@ public static class ServiceExtension
         services.AddScoped<IInvitationService, InvitationService>();
         services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<INotificationRepository, NotificationRepository>();
+        services.AddScoped<IProjectRepository, ProjectRepository>();
+        services.AddScoped<IProjectService, ProjectService>();
 
         return services;
     }
