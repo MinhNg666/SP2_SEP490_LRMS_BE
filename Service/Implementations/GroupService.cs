@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AutoMapper;
 using Domain.DTO.Requests;
@@ -20,7 +21,8 @@ public class GroupService : IGroupService
     private readonly IMapper _mapper;
     private readonly IInvitationService _invitationService;
 
-    public GroupService(IUserRepository userRepository, IGroupRepository groupRepository, IMapper mapper, IInvitationService invitationService)
+    public GroupService(IUserRepository userRepository, IGroupRepository groupRepository, 
+        IMapper mapper, IInvitationService invitationService)
     {
         _userRepository = userRepository;
         _groupRepository = groupRepository;
@@ -43,6 +45,10 @@ public class GroupService : IGroupService
     {
         try
         {
+            if (groupId <= 0)
+            {
+                throw new ServiceException("Invalid group ID");
+            }
             var group = await _groupRepository.GetByIdAsync(groupId);
             if (group == null)
             {
@@ -50,8 +56,7 @@ public class GroupService : IGroupService
             }
             var groupMembers = await _groupRepository.GetMembersByGroupId(groupId);
             var groupResponse = _mapper.Map<GroupResponse>(group);
-            groupResponse.Members = _mapper.Map<IEnumerable<GroupMemberResponse>>(groupMembers);
-
+            groupResponse.Members = _mapper.Map<IEnumerable<GroupMemberResponse>>(groupMembers).ToList();
             return groupResponse;
         }
         catch (Exception e)
@@ -61,7 +66,7 @@ public class GroupService : IGroupService
     }
     public async Task CreateStudentGroup(CreateStudentGroupRequest request, int currentUserId)
     {
-        var group = new Group
+        var group = new LRMS_API.Group
         {
             GroupName = request.GroupName,
             MaxMember = request.MaxMember,
@@ -101,7 +106,7 @@ public class GroupService : IGroupService
     }
     public async Task CreateCouncilGroup(CreateCouncilGroupRequest request, int currentUserId)
     {
-        var group = new Group
+        var group = new LRMS_API.Group
         {
             GroupName = request.GroupName,
             MaxMember = 5,

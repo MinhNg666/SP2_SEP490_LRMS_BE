@@ -8,16 +8,11 @@ namespace Domain.DTO.Responses;
 public class GroupResponse
 {
     public int GroupId { get; set; }
-
-    public string? GroupName { get; set; }
-
-    public int? MaxMember { get; set; }
-
-    public int? CurrentMember { get; set; }
-
-    public int? Status { get; set; }
-
-    public int? GroupType { get; set; }
-
-    public IEnumerable<GroupMemberResponse> Members { get; set; }
+    public string GroupName { get; set; }
+    public int MaxMember { get; set; }
+    public int CurrentMember { get; set; }
+    public int Status { get; set; }
+    public int GroupType { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public ICollection<GroupMemberResponse> Members { get; set; }
 }

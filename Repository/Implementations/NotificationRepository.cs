@@ -10,7 +10,7 @@ namespace Repository.Implementations;
 public class NotificationRepository : GenericRepository<Notification>, INotificationRepository
 {
     private readonly LRMSDbContext _context;
-    public NotificationRepository(LRMSDbContext context)
+    public NotificationRepository(LRMSDbContext context) : base(context)
     {
         _context = context;
     }

@@ -15,8 +15,16 @@ public class ResponseMappingProfile : Profile
             .ForMember(dest => dest.UserId, opt =>
                 opt.MapFrom(src => src.UserId))
             .ReverseMap();
-        CreateMap<Group, GroupResponse>().ReverseMap();
-        CreateMap<GroupMember, GroupMemberResponse>().ReverseMap();
+        CreateMap<Group, GroupResponse>()
+            .ForMember(dest => dest.Members, opt => opt.MapFrom(src => src.GroupMembers));
+
+        CreateMap<GroupMember, GroupMemberResponse>()
+            .ForMember(dest => dest.MemberName, opt => 
+                opt.MapFrom(src => src.User != null ? src.User.Username : "Unknown"))
+            .ForMember(dest => dest.MemberEmail, opt => 
+                opt.MapFrom(src => src.User != null ? src.User.Email : "Unknown"))
+            .ForMember(dest => dest.UserId, opt => 
+                opt.MapFrom(src => src.UserId));
         CreateMap<Notification, NotificationResponse>().ReverseMap();
         CreateMap<Invitation, InvitationResponse>().ReverseMap();
         CreateMap<User, StudentProfileResponse>().ReverseMap();
