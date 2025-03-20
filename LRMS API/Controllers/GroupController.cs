@@ -33,7 +33,7 @@ public class GroupController : ApiBaseController
         }
     }
     [HttpGet("groups/{groupid}")]
-    public async Task<IActionResult> GetGroupById( int groupid)
+    public async Task<IActionResult> GetGroupById(int groupid)
     {
         try
         {

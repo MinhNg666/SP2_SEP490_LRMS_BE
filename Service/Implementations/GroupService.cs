@@ -44,25 +44,22 @@ public class GroupService : IGroupService
     public async Task<GroupResponse> GetGroupById(int groupId)
     {
         try
-        {
-            if (groupId <= 0)
-            {
-                throw new ServiceException("Invalid group ID");
-            }
-            var group = await _groupRepository.GetByIdAsync(groupId);
-            if (group == null)
-            {
-                throw new ServiceException("Group not found.");
-            }
-            var groupMembers = await _groupRepository.GetMembersByGroupId(groupId);
-            var groupResponse = _mapper.Map<GroupResponse>(group);
-            groupResponse.Members = _mapper.Map<IEnumerable<GroupMemberResponse>>(groupMembers).ToList();
-            return groupResponse;
-        }
-        catch (Exception e)
-        {
-            throw new ServiceException(e.Message);
-        }
+         {
+             var group = await _groupRepository.GetByIdAsync(groupId);
+             if (group == null)
+             {
+                 throw new ServiceException("Group not found.");
+             }
+             var groupMembers = await _groupRepository.GetMembersByGroupId(groupId);
+             var groupResponse = _mapper.Map<GroupResponse>(group);
+             groupResponse.Members = _mapper.Map<IEnumerable<GroupMemberResponse>>(groupMembers);
+ 
+             return groupResponse;
+         }
+         catch (Exception e)
+         {
+             throw new ServiceException(e.Message);
+         }
     }
     public async Task CreateStudentGroup(CreateStudentGroupRequest request, int currentUserId)
     {
