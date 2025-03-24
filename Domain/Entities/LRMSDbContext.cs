@@ -10,8 +10,7 @@ public partial class LRMSDbContext : DbContext
     {
     }
 
-    public LRMSDbContext(DbContextOptions<LRMSDbContext> options)
-        : base(options)
+    public LRMSDbContext(DbContextOptions<LRMSDbContext> options) : base(options)
     {
     }
 
@@ -53,6 +52,7 @@ public partial class LRMSDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
         modelBuilder.Entity<Author>(entity =>
         {
             entity.HasKey(e => e.AuthorId).HasName("PK__Author__86516BCFD3E29AFB");

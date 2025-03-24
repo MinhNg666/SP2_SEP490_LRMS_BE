@@ -12,4 +12,5 @@ public interface IGroupRepository : IGenericRepository<Group>
 {
     Task<IEnumerable<GroupMember>> GetMembersByGroupId(int groupId);
     Task AddMemberAsync(GroupMember groupMember);
+    Task<Group> GetByIdAsync(int id);
 }
