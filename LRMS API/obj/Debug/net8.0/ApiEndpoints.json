@@ -323,6 +323,32 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "LRMS_API.Controllers.PublicationController",
+    "Method": "GetAllPublications",
+    "RelativePath": "api/publications",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LRMS_API.Controllers.PublicationController",
+    "Method": "GetPublicationById",
+    "RelativePath": "api/publications/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "LRMS_API.Controllers.InvitationController",
     "Method": "RejectInvitation",
     "RelativePath": "api/reject/{invitationId}",
