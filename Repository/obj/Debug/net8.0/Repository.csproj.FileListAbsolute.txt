@@ -1,9 +1,3 @@
-D:\SPRING-25\LRMS_BE_2\Repository\bin\Debug\net8.0\Repository.deps.json
-D:\SPRING-25\LRMS_BE_2\Repository\bin\Debug\net8.0\Repository.runtimeconfig.json
-D:\SPRING-25\LRMS_BE_2\Repository\bin\Debug\net8.0\Repository.dll
-D:\SPRING-25\LRMS_BE_2\Repository\bin\Debug\net8.0\Repository.pdb
-D:\SPRING-25\LRMS_BE_2\Repository\bin\Debug\net8.0\Domain.dll
-D:\SPRING-25\LRMS_BE_2\Repository\bin\Debug\net8.0\Domain.pdb
 D:\SPRING-25\LRMS_BE_2\Repository\obj\Debug\net8.0\Repository.csproj.AssemblyReference.cache
 D:\SPRING-25\LRMS_BE_2\Repository\obj\Debug\net8.0\Repository.GeneratedMSBuildEditorConfig.editorconfig
 D:\SPRING-25\LRMS_BE_2\Repository\obj\Debug\net8.0\Repository.AssemblyInfoInputs.cache
