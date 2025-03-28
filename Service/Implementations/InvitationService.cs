@@ -36,7 +36,8 @@ public class InvitationService : IInvitationService
             GroupId = request.GroupId, // Thêm GroupId vào đây
             SentBy = request.InvitedBy,
             CreatedAt = DateTime.Now,
-            Status = 0 // 0: Pending
+            Status = 0, // 0: Pending
+            InvitedRole = request.InvitedRole
         };
 
         await _invitationRepository.AddInvitationAsync(invitation);
@@ -69,8 +70,13 @@ public class InvitationService : IInvitationService
         {
             throw new ServiceException("Invitation not found or does not belong to the user.");
         }
+        if (invitation.Status != 0) // 2: Rejected
+        {
+        throw new ServiceException("Invitation has already been proccess.");
+        }
 
         invitation.Status = 1; // 1: Accepted
+        invitation.RespondDate = DateTime.Now; // Gán thời gian phản hồi
         await _invitationRepository.UpdateInvitation(invitation);
         var groupMember = new GroupMember
         {
@@ -89,6 +95,11 @@ public class InvitationService : IInvitationService
         if (invitation == null || invitation.RecieveBy != userId)
         {
             throw new ServiceException("Invitation not found or does not belong to the user.");
+        }
+
+        if (invitation.Status != 0) // 2: Rejected
+        {
+        throw new ServiceException("Invitation has already been proccess.");
         }
 
         invitation.Status = 2; // 2: Rejected
