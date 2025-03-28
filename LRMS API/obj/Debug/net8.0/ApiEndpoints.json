@@ -373,7 +373,7 @@
   {
     "ContainingType": "LRMS_API.Controllers.NotificationController",
     "Method": "GetNotificationsByUserId",
-    "RelativePath": "api/user/{userId}",
+    "RelativePath": "api/user/{userId}/notifications",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
@@ -384,16 +384,6 @@
         "IsRequired": true
       }
     ],
-    "ReturnTypes": [
-      {
-        "Type": "System.Collections.Generic.IEnumerable\u00601[[Domain.DTO.Responses.NotificationResponse, Domain, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
+    "ReturnTypes": []
   }
 ]

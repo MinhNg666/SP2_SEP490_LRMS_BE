@@ -1,4 +1,6 @@
-﻿using Domain.DTO.Requests;
+﻿using Domain.Constants;
+using Domain.DTO.Common;
+using Domain.DTO.Requests;
 using Domain.DTO.Responses;
 using Microsoft.AspNetCore.Mvc;
 using Service.Interfaces;
@@ -15,17 +17,17 @@ public class NotificationController : ApiBaseController
         _notificationService = notificationService;
     }
 
-    [HttpGet("user/{userId}")]
-    public async Task<ActionResult<IEnumerable<NotificationResponse>>> GetNotificationsByUserId(int userId)
+    [HttpGet("user/{userId}/notifications")]
+    public async Task<IActionResult> GetNotificationsByUserId(int userId)
     {
         try
         {
             var notifications = await _notificationService.GetNotificationsByUserId(userId);
-            return Ok(notifications);
+            return Ok(new ApiResponse(StatusCodes.Status200OK, MessageConstants.SUCCESSFUL, notifications));
         }
-        catch (Exception ex)
+        catch (Exception e)
         {
-            return BadRequest(ex.Message);
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, e.Message));
         }
     }
     [HttpPost("notification")]
@@ -34,11 +36,11 @@ public class NotificationController : ApiBaseController
         try
         {
             await _notificationService.CreateNotification(request);
-            return Ok("Notification created");
+            return Ok(new ApiResponse(StatusCodes.Status200OK, MessageConstants.SUCCESSFUL,"Notification created"));
         }
-        catch (Exception ex)
+        catch (Exception e)
         {
-            return BadRequest(ex.Message);
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, e.Message));
         }
     }
 
@@ -48,11 +50,11 @@ public class NotificationController : ApiBaseController
         try
         {
             await _notificationService.MarkAsRead(notificationId);
-            return Ok("Notification marked as read");
+            return Ok(new ApiResponse(StatusCodes.Status200OK, MessageConstants.SUCCESSFUL, "Notification marked as read"));
         }
-        catch (Exception ex)
+        catch (Exception e)
         {
-            return BadRequest(ex.Message);
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, e.Message));
         }
     }
 }

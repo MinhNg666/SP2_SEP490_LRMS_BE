@@ -1,5 +1,4 @@
-﻿
-using AutoMapper;
+﻿using AutoMapper;
 using Domain.DTO.Common;
 using Domain.DTO.Responses;
 using LRMS_API;
@@ -9,7 +8,7 @@ namespace Domain.Automapper;
 public class ResponseMappingProfile : Profile
 {
     public ResponseMappingProfile()
-        {
+    {
         CreateMap<User, UserResponse>().ReverseMap();
         CreateMap<User, LoginResponse>()
             .ForMember(dest => dest.UserId, opt =>
@@ -28,5 +27,6 @@ public class ResponseMappingProfile : Profile
         CreateMap<Notification, NotificationResponse>().ReverseMap();
         CreateMap<Invitation, InvitationResponse>().ReverseMap();
         CreateMap<User, StudentProfileResponse>().ReverseMap();
+        CreateMap<GroupMember, UserGroupResponse>().ReverseMap();
     } 
 }

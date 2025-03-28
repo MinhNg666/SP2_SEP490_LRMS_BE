@@ -233,7 +233,7 @@
         }
       }
     },
-    "/api/user/{userId}": {
+    "/api/user/{userId}/notifications": {
       "get": {
         "tags": [
           "Notification"
@@ -251,33 +251,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/NotificationResponse"
-                  }
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/NotificationResponse"
-                  }
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/NotificationResponse"
-                  }
-                }
-              }
-            }
+            "description": "OK"
           }
         }
       }
@@ -699,6 +673,11 @@
               "$ref": "#/components/schemas/MemberRequest"
             },
             "nullable": true
+          },
+          "groupDepartment": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -882,53 +861,6 @@
           "role": {
             "type": "integer",
             "format": "int32"
-          }
-        },
-        "additionalProperties": false
-      },
-      "NotificationResponse": {
-        "type": "object",
-        "properties": {
-          "notificationId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "projectId": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          },
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "message": {
-            "type": "string",
-            "nullable": true
-          },
-          "status": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          },
-          "isRead": {
-            "type": "boolean",
-            "nullable": true
-          },
-          "invitationId": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          },
-          "userId": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
           }
         },
         "additionalProperties": false

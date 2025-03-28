@@ -48,7 +48,9 @@ public class InvitationService : IInvitationService
             UserId = request.InvitedUserId,
             Title = "Group Invitation",
             Message = $"You have been invited to join the group '{group.GroupName}'",
-            ProjectId = null,
+            ProjectId = request.ProjectId,
+            Status = 0,
+            IsRead = false,
             InvitationId = invitation.InvitationId
         };
 

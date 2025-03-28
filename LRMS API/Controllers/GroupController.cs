@@ -50,7 +50,12 @@ public class GroupController : ApiBaseController
     {
         try
         {
-            var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value); // Lấy ID người dùng từ Claims
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim))
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "User ID is missing from claims."));
+        }
+            var currentUserId = int.Parse(userIdClaim); // Lấy ID người dùng từ Claims
             await _groupService.CreateCouncilGroup(request, currentUserId);
             return Ok(new ApiResponse(StatusCodes.Status200OK, MessageConstants.SUCCESSFUL));
         }

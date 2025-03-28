@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AutoMapper;
+using Domain.Constants;
 using Domain.DTO.Requests;
 using Domain.DTO.Responses;
 using LRMS_API;
@@ -103,9 +104,20 @@ public class GroupService : IGroupService
     }
     public async Task CreateCouncilGroup(CreateCouncilGroupRequest request, int currentUserId)
     {
+            if (string.IsNullOrEmpty(request.GroupName))
+    {
+        throw new ServiceException("Group name cannot be null or empty.");
+    }
+
+    if (request.Members == null || !request.Members.Any())
+    {
+        throw new ServiceException("Members cannot be null or empty.");
+    }
         var group = new LRMS_API.Group
         {
             GroupName = request.GroupName,
+            GroupDepartment = request.GroupDepartment,
+            CreatedBy = currentUserId,
             MaxMember = 5,
             CurrentMember = 0,
             Status = 1,
@@ -127,7 +139,7 @@ public class GroupService : IGroupService
                     GroupId = group.GroupId,
                     Role = member.Role,
                     UserId = user.UserId,
-                    Status = 1,
+                    Status = (int?)GroupMemberStatus.Pending,
                 };
 
                 await _groupRepository.AddMemberAsync(groupMember);
@@ -138,7 +150,9 @@ public class GroupService : IGroupService
                     Content = $"You have been invited to join the group '{group.GroupName}'.",
                     InvitedUserId = user.UserId,
                     InvitedBy = currentUserId,
-                    GroupId = group.GroupId // Thêm GroupId vào đây
+                    InvitedRole = member.Role,
+                    GroupId = group.GroupId,
+                    //ProjectId = 
                 };
 
                 await _invitationService.SendInvitation(invitationRequest);
