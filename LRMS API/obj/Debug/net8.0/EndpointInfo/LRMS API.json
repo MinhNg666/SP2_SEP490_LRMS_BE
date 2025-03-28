@@ -678,6 +678,11 @@
             "type": "integer",
             "format": "int32",
             "nullable": true
+          },
+          "projectId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -700,6 +705,15 @@
           "projectId": {
             "type": "integer",
             "format": "int32",
+            "nullable": true
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "isRead": {
+            "type": "boolean",
             "nullable": true
           },
           "invitationId": {
@@ -767,6 +781,11 @@
             "items": {
               "$ref": "#/components/schemas/StudentMemberRequest"
             },
+            "nullable": true
+          },
+          "projectId": {
+            "type": "integer",
+            "format": "int32",
             "nullable": true
           }
         },

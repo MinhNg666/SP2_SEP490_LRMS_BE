@@ -95,7 +95,8 @@ public class GroupService : IGroupService
                     InvitedUserId = user.UserId,
                     InvitedBy = currentUserId,
                     GroupId = group.GroupId, // Thêm GroupId vào đây
-                    InvitedRole = member.Role // Thêm vai trò
+                    InvitedRole = member.Role,
+                    ProjectId = request.ProjectId // Thêm vai trò
                 };
 
                 await _invitationService.SendInvitation(invitationRequest);
@@ -152,7 +153,7 @@ public class GroupService : IGroupService
                     InvitedBy = currentUserId,
                     InvitedRole = member.Role,
                     GroupId = group.GroupId,
-                    //ProjectId = 
+                    ProjectId = request.ProjectId
                 };
 
                 await _invitationService.SendInvitation(invitationRequest);

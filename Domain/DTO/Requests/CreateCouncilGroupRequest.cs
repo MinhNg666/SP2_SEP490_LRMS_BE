@@ -11,6 +11,7 @@ public class CreateCouncilGroupRequest
     public string GroupName { get; set; }
     public List<MemberRequest> Members { get; set; }
     public int? GroupDepartment { get; set; }
+    public int? ProjectId { get; set; }
 }
 public class MemberRequest
 {

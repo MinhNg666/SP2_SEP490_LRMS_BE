@@ -75,7 +75,6 @@ public class InvitationService : IInvitationService
         var groupMember = new GroupMember
         {
             GroupId = invitation.GroupId, // Giả sử bạn đã thêm GroupId vào Invitation
-            GroupMemberId = invitation.RecieveBy.Value, // Thêm GroupMemberId
             Role = invitation.InvitedRole, // Thêm vai trò
             UserId = userId,
             Status = 1, // Hoạt động

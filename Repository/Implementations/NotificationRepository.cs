@@ -26,4 +26,10 @@ public class NotificationRepository : GenericRepository<Notification>, INotifica
             .Where(n => n.UserId == userId)
             .ToListAsync();
     }
+    public async Task<IEnumerable<Notification>> GetByUserIdAsync(int userId)
+{
+    return await _context.Notifications
+        .Where(n => n.UserId == userId) // Lọc theo userId
+        .ToListAsync();
+}
 }
