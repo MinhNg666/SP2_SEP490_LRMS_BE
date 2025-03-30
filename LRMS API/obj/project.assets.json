@@ -7738,11 +7738,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "G:\\SEP490\\LRMS API\\LRMS API\\LRMS API.csproj",
+      "projectUniqueName": "G:\\SEP490\\LRMS API Main\\SP2_SEP490_LRMS_BE\\LRMS API\\LRMS API.csproj",
       "projectName": "LRMS API",
-      "projectPath": "G:\\SEP490\\LRMS API\\LRMS API\\LRMS API.csproj",
+      "projectPath": "G:\\SEP490\\LRMS API Main\\SP2_SEP490_LRMS_BE\\LRMS API\\LRMS API.csproj",
       "packagesPath": "C:\\Users\\23030\\.nuget\\packages\\",
-      "outputPath": "G:\\SEP490\\LRMS API\\LRMS API\\obj\\",
+      "outputPath": "G:\\SEP490\\LRMS API Main\\SP2_SEP490_LRMS_BE\\LRMS API\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -7763,8 +7763,8 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "projectReferences": {
-            "G:\\SEP490\\LRMS API\\Service\\Service.csproj": {
-              "projectPath": "G:\\SEP490\\LRMS API\\Service\\Service.csproj"
+            "G:\\SEP490\\LRMS API Main\\SP2_SEP490_LRMS_BE\\Service\\Service.csproj": {
+              "projectPath": "G:\\SEP490\\LRMS API Main\\SP2_SEP490_LRMS_BE\\Service\\Service.csproj"
             }
           }
         }

@@ -4137,11 +4137,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "G:\\SEP490\\LRMS API\\Domain\\Domain.csproj",
+      "projectUniqueName": "G:\\SEP490\\LRMS API Main\\SP2_SEP490_LRMS_BE\\Domain\\Domain.csproj",
       "projectName": "Domain",
-      "projectPath": "G:\\SEP490\\LRMS API\\Domain\\Domain.csproj",
+      "projectPath": "G:\\SEP490\\LRMS API Main\\SP2_SEP490_LRMS_BE\\Domain\\Domain.csproj",
       "packagesPath": "C:\\Users\\23030\\.nuget\\packages\\",
-      "outputPath": "G:\\SEP490\\LRMS API\\Domain\\obj\\",
+      "outputPath": "G:\\SEP490\\LRMS API Main\\SP2_SEP490_LRMS_BE\\Domain\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

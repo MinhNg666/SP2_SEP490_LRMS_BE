@@ -1,0 +1,7 @@
+D:\SPRING-25\LRMS_BE_2\LRMS API\obj\Debug\net8.0\LRMS API.csproj.AssemblyReference.cache
+D:\SPRING-25\LRMS_BE_2\LRMS API\obj\Debug\net8.0\LRMS API.GeneratedMSBuildEditorConfig.editorconfig
+D:\SPRING-25\LRMS_BE_2\LRMS API\obj\Debug\net8.0\LRMS API.AssemblyInfoInputs.cache
+D:\SPRING-25\LRMS_BE_2\LRMS API\obj\Debug\net8.0\LRMS API.AssemblyInfo.cs
+D:\SPRING-25\LRMS_BE_2\LRMS API\obj\Debug\net8.0\LRMS API.csproj.CoreCompileInputs.cache
+D:\SPRING-25\LRMS_BE_2\LRMS API\obj\Debug\net8.0\LRMS API.MvcApplicationPartsAssemblyInfo.cache
+D:\SPRING-25\LRMS_BE_2\LRMS API\obj\Debug\net8.0\LRMS API.sourcelink.json

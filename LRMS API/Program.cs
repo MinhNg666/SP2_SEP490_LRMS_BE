@@ -4,6 +4,11 @@ using LRMS_API.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Service.Implementations;
+using Service.Interfaces;
+using Microsoft.EntityFrameworkCore;
+using LRMS_API;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -66,7 +71,12 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+builder.Services.AddDbContext<LRMSDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("LRMSDB")));
+
+builder.Services.AddScoped<IPublicationService, PublicationService>();
 builder.Services.AddAuthorization();
+
 
 var app = builder.Build();
 
