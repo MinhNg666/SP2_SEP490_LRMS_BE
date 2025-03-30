@@ -1,5 +1,6 @@
 ## Visual Studio temporary files
 .vs/
+**/bin/
 *.suo
 *.user
 *.userosscache
