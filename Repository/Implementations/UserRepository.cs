@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Domain.Constants;
+using Domain.DTO.Responses;
 using LRMS_API;
 using Microsoft.EntityFrameworkCore;
 using Repository.Interfaces;
@@ -24,4 +25,16 @@ public class UserRepository : GenericRepository<User>, IUserRepository
             .AsSplitQuery()
             .SingleOrDefaultAsync(x => x.Email.Equals(email.ToLower()));
     }
+
+    public async Task<IEnumerable<UserGroupResponse>> GetUserGroups(int userId)
+{
+    return await _context.GroupMembers
+        .Where(gm => gm.UserId == userId)
+        .Select(gm => new UserGroupResponse
+        {
+            GroupId = gm.GroupId,
+            GroupName = gm.Group.GroupName,
+            Role = gm.Role
+        }).ToListAsync();
+}
 }

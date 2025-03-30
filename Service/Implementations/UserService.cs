@@ -35,18 +35,22 @@ namespace Service.Implementations
             {
                 new Claim(ClaimTypes.Email, request.Email)
             };
-                if (request.Email.ToLower().Equals(_adminAccount.Email.ToLower()) &&
+
+            if (request.Email.ToLower().Equals(_adminAccount.Email.ToLower()) &&
                 request.Password.Equals(_adminAccount.Password))
-                {
-                    claims.Add(new Claim(ClaimTypes.Role, SystemRoleEnum.Admin.ToString()));
-                    return new LoginResponse
+            {
+                claims.Add(new Claim(ClaimTypes.NameIdentifier, _adminAccount.Email)); // Thay đổi để sử dụng email admin
+                claims.Add(new Claim(ClaimTypes.Role, SystemRoleEnum.Admin.ToString()));
+                return new LoginResponse
                 {
                     Email = _adminAccount.Email,
                     Status = (int)AccountStatusEnum.Active,
                     Role = (int)SystemRoleEnum.Admin,
-                    AccessToken = _tokenService.GenerateAccessToken(claims)
+                    AccessToken = _tokenService.GenerateAccessToken(claims),
+                    Groups = new List<UserGroupResponse>()
                 };
             }
+
             try
             {
                 var existingUser = await _userRepository.GetUserByEmail(request.Email);
@@ -56,7 +60,7 @@ namespace Service.Implementations
                 }
                 if (BCrypt.Net.BCrypt.Verify(request.Password, existingUser.Password))
                 {
-                    claims.Add(new Claim("UserID", existingUser.UserId.ToString()));
+                    claims.Add(new Claim(ClaimTypes.NameIdentifier, existingUser.UserId.ToString())); // Đảm bảo thêm UserId vào claims
                     claims.Add(new Claim(ClaimTypes.Role,
                         existingUser.Role == (int)SystemRoleEnum.Student
                             ? SystemRoleEnum.Student.ToString()
@@ -65,6 +69,9 @@ namespace Service.Implementations
                     var loginResponse = _mapper.Map<LoginResponse>(existingUser);
                     loginResponse.AccessToken = _tokenService.GenerateAccessToken(claims);
 
+                    var userGroups = await _userRepository.GetUserGroups(existingUser.UserId);
+                    loginResponse.Groups = userGroups.ToList(); // Gán danh sách group vào LoginResponse
+
                     return loginResponse;
                 }
             }
@@ -72,6 +79,7 @@ namespace Service.Implementations
             {
                 throw new ServiceException(MessageConstants.INVALID_ACCOUNT_CREDENTIALS);
             }
+
             return null;
         }
         public async Task RegisterStudent(RegisterStudentRequest request) 
@@ -112,8 +120,11 @@ namespace Service.Implementations
                 var result = await _userRepository.GetByIdAsync(accountId);
                 if (result == null)
                     throw new ServiceException(MessageConstants.NOT_FOUND);
+                var userGroups = await _userRepository.GetUserGroups(accountId);
+                var userResponse = _mapper.Map<UserResponse>(result);
+                userResponse.Groups = userGroups.ToList(); // Sử dụng danh sách UserGroupResponse
 
-                return _mapper.Map<UserResponse>(result);
+                return userResponse;
             }
             catch (Exception e)
             {
@@ -208,6 +219,11 @@ namespace Service.Implementations
             {
                 throw new ServiceException(e.Message);
             }
+        }
+        public async Task<IEnumerable<NotificationResponse>> GetNotificationsByUserId(int userId)
+        {
+            var notifications = await _userRepository.GetByIdAsync(userId);
+            return _mapper.Map<IEnumerable<NotificationResponse>>(notifications);
         }
     }
 }

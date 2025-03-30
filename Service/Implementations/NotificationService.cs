@@ -33,7 +33,7 @@ public class NotificationService : INotificationService
 
     public async Task<IEnumerable<NotificationResponse>> GetNotificationsByUserId(int userId)
     {
-        var notifications = await _notificationRepository.GetByIdAsync(userId);
+        var notifications = await _notificationRepository.GetByUserIdAsync(userId);
         return _mapper.Map<IEnumerable<NotificationResponse>>(notifications);
     }
 

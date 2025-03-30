@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AutoMapper;
+using Domain.Constants;
 using Domain.DTO.Requests;
 using Domain.DTO.Responses;
 using LRMS_API;
@@ -44,25 +45,22 @@ public class GroupService : IGroupService
     public async Task<GroupResponse> GetGroupById(int groupId)
     {
         try
-        {
-            if (groupId <= 0)
-            {
-                throw new ServiceException("Invalid group ID");
-            }
-            var group = await _groupRepository.GetByIdAsync(groupId);
-            if (group == null)
-            {
-                throw new ServiceException("Group not found.");
-            }
-            var groupMembers = await _groupRepository.GetMembersByGroupId(groupId);
-            var groupResponse = _mapper.Map<GroupResponse>(group);
-            groupResponse.Members = _mapper.Map<IEnumerable<GroupMemberResponse>>(groupMembers).ToList();
-            return groupResponse;
-        }
-        catch (Exception e)
-        {
-            throw new ServiceException(e.Message);
-        }
+         {
+             var group = await _groupRepository.GetByIdAsync(groupId);
+             if (group == null)
+             {
+                 throw new ServiceException("Group not found.");
+             }
+             var groupMembers = await _groupRepository.GetMembersByGroupId(groupId);
+             var groupResponse = _mapper.Map<GroupResponse>(group);
+             groupResponse.Members = _mapper.Map<IEnumerable<GroupMemberResponse>>(groupMembers);
+ 
+             return groupResponse;
+         }
+         catch (Exception e)
+         {
+             throw new ServiceException(e.Message);
+         }
     }
     public async Task CreateStudentGroup(CreateStudentGroupRequest request, int currentUserId)
     {
@@ -97,7 +95,8 @@ public class GroupService : IGroupService
                     InvitedUserId = user.UserId,
                     InvitedBy = currentUserId,
                     GroupId = group.GroupId, // Thêm GroupId vào đây
-                    InvitedRole = member.Role // Thêm vai trò
+                    InvitedRole = member.Role,
+                    ProjectId = request.ProjectId // Thêm vai trò
                 };
 
                 await _invitationService.SendInvitation(invitationRequest);
@@ -106,9 +105,20 @@ public class GroupService : IGroupService
     }
     public async Task CreateCouncilGroup(CreateCouncilGroupRequest request, int currentUserId)
     {
+            if (string.IsNullOrEmpty(request.GroupName))
+    {
+        throw new ServiceException("Group name cannot be null or empty.");
+    }
+
+    if (request.Members == null || !request.Members.Any())
+    {
+        throw new ServiceException("Members cannot be null or empty.");
+    }
         var group = new LRMS_API.Group
         {
             GroupName = request.GroupName,
+            GroupDepartment = request.GroupDepartment,
+            CreatedBy = currentUserId,
             MaxMember = 5,
             CurrentMember = 0,
             Status = 1,
@@ -130,7 +140,7 @@ public class GroupService : IGroupService
                     GroupId = group.GroupId,
                     Role = member.Role,
                     UserId = user.UserId,
-                    Status = 1,
+                    Status = (int?)GroupMemberStatus.Pending,
                 };
 
                 await _groupRepository.AddMemberAsync(groupMember);
@@ -141,7 +151,9 @@ public class GroupService : IGroupService
                     Content = $"You have been invited to join the group '{group.GroupName}'.",
                     InvitedUserId = user.UserId,
                     InvitedBy = currentUserId,
-                    GroupId = group.GroupId // Thêm GroupId vào đây
+                    InvitedRole = member.Role,
+                    GroupId = group.GroupId,
+                    ProjectId = request.ProjectId
                 };
 
                 await _invitationService.SendInvitation(invitationRequest);

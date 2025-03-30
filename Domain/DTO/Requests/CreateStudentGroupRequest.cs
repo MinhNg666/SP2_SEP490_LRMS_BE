@@ -11,7 +11,7 @@ public class CreateStudentGroupRequest
     public string GroupName { get; set; }
     public int MaxMember { get; set; }
     public List<StudentMemberRequest> Members { get; set; }
-
+    public int? ProjectId { get; set; }
 }
 public class StudentMemberRequest 
 {

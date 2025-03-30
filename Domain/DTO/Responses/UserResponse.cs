@@ -30,7 +30,7 @@ namespace Domain.DTO.Responses
 
         public DateTime? UpdatedAt { get; set; }
 
-        public int? GroupId { get; set; }
+        public List<UserGroupResponse> Groups { get; set; } 
 
         public string? Level { get; set; }
     }

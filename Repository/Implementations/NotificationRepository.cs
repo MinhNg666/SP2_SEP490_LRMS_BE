@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using LRMS_API;
 using Repository.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace Repository.Implementations;
 public class NotificationRepository : GenericRepository<Notification>, INotificationRepository
@@ -21,6 +22,19 @@ public class NotificationRepository : GenericRepository<Notification>, INotifica
     }
     public async Task<IEnumerable<Notification>> GetNotificationsByUserId(int userId)
     {
-        return await Task.FromResult(_context.Notifications.Where(n => n.UserId == userId));
+        return await _context.Notifications
+            .Where(n => n.UserId == userId)
+            .ToListAsync();
+    }
+    public async Task<IEnumerable<Notification>> GetByUserIdAsync(int userId)
+    {
+        return await _context.Notifications
+            .Where(n => n.UserId == userId) // Lọc theo userId
+            .ToListAsync();
+    }
+    public async Task UpdateInvitation(Invitation invitation)
+    {
+        _context.Invitations.Update(invitation);
+        await _context.SaveChangesAsync();
     }
 }

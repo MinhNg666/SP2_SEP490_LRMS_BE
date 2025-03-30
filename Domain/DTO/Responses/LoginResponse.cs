@@ -13,6 +13,7 @@ namespace Domain.DTO.Responses
         public string FullName { get; set; }
         public int Status { get; set; }
         public int Role { get; set; }
+        public List<UserGroupResponse> Groups { get; set; } // Thêm thuộc tính này
         public string AccessToken { get; set; }
     }
 }
