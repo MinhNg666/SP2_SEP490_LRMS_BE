@@ -86,7 +86,8 @@ public class GroupService : IGroupService
                     GroupId = group.GroupId,
                     Role = member.Role,
                     UserId = user.UserId,
-                    Status = 1,
+                    Status = (int?)GroupMemberStatus.Pending,
+                    JoinDate = null
                 };
                 await _groupRepository.AddMemberAsync(groupMember);
                 var invitationRequest = new SendInvitationRequest
@@ -141,6 +142,7 @@ public class GroupService : IGroupService
                     Role = member.Role,
                     UserId = user.UserId,
                     Status = (int?)GroupMemberStatus.Pending,
+                    JoinDate = null
                 };
 
                 await _groupRepository.AddMemberAsync(groupMember);

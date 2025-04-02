@@ -74,5 +74,26 @@ public class GroupRepository : GenericRepository<Group>, IGroupRepository
             throw new Exception($"Error adding group member: {ex.Message}");
         }
     }
+    public async Task<GroupMember> GetGroupMember(int groupId, int userId)
+    {
+        return await _context.GroupMembers
+            .FirstOrDefaultAsync(gm => gm.GroupId == groupId && gm.UserId == userId);
+    }
+
+    public async Task UpdateMemberAsync(GroupMember groupMember)
+    {
+        _context.GroupMembers.Update(groupMember);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task DeleteMemberAsync(int groupId, int userId)
+    {
+        var member = await GetGroupMember(groupId, userId);
+        if (member != null)
+        {
+            _context.GroupMembers.Remove(member);
+            await _context.SaveChangesAsync();
+        }
+    }
 }
 
