@@ -78,15 +78,13 @@ public class InvitationService : IInvitationService
         invitation.Status = 1; // 1: Accepted
         invitation.RespondDate = DateTime.Now; // Gán thời gian phản hồi
         await _invitationRepository.UpdateInvitation(invitation);
-        var groupMember = new GroupMember
+        var groupMember = await _groupRepository.GetGroupMember(invitation.GroupId.Value, userId);
+        if (groupMember != null)
         {
-            GroupId = invitation.GroupId, // Giả sử bạn đã thêm GroupId vào Invitation
-            Role = invitation.InvitedRole, // Thêm vai trò
-            UserId = userId,
-            Status = 1, // Hoạt động
-            JoinDate = DateTime.Now
-        };
-        await _groupRepository.AddMemberAsync(groupMember);
+            groupMember.Status = 1; // Active
+            groupMember.JoinDate = DateTime.Now;
+            await _groupRepository.UpdateMemberAsync(groupMember);
+        }
     }
 
     public async Task RejectInvitation(int invitationId, int userId)
@@ -104,5 +102,6 @@ public class InvitationService : IInvitationService
 
         invitation.Status = 2; // 2: Rejected
         await _invitationRepository.UpdateInvitation(invitation);
+        await _groupRepository.DeleteMemberAsync(invitation.GroupId.Value, userId);
     }
 }
