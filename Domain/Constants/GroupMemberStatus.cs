@@ -7,6 +7,6 @@ using System.Threading.Tasks;
 namespace Domain.Constants;
 public enum GroupMemberStatus
 {
-    Acctive = 1,
+    Active = 1,
     Pending = 0
 }

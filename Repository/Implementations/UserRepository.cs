@@ -29,7 +29,7 @@ public class UserRepository : GenericRepository<User>, IUserRepository
     public async Task<IEnumerable<UserGroupResponse>> GetUserGroups(int userId)
 {
     return await _context.GroupMembers
-        .Where(gm => gm.UserId == userId)
+        .Where(gm => gm.UserId == userId && gm.Status == (int)GroupMemberStatus.Active)
         .Select(gm => new UserGroupResponse
         {
             GroupId = gm.GroupId,
