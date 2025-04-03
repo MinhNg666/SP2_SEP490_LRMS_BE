@@ -30,6 +30,39 @@ public class GroupService : IGroupService
         _mapper = mapper;
         _invitationService = invitationService;
     }
+    private async Task ValidateMemberInfo(string email, string fullName)
+    {
+    // Kiểm tra email hợp lệ
+        if (string.IsNullOrEmpty(email))
+        {
+            throw new ServiceException("Email cannot be empty.");
+        }
+
+        var emailPattern = @"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$";
+        if (!Regex.IsMatch(email, emailPattern))
+        {
+            throw new ServiceException($"Invalid email format: {email}");
+        }
+
+    // Kiểm tra tên hợp lệ
+        if (string.IsNullOrEmpty(fullName))
+        {
+            throw new ServiceException("Full name cannot be empty.");
+        }
+
+    // Kiểm tra user tồn tại trong hệ thống
+        var user = await _userRepository.GetUserByEmail(email);
+        if (user == null)
+        {
+            throw new ServiceException($"User with email {email} not found in the system.");
+        }
+
+    // Kiểm tra tên khớp với email
+        if (!user.FullName.Equals(fullName, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ServiceException($"Full name '{fullName}' does not match with the registered name for email {email}.");
+        }
+    }
     public async Task<IEnumerable<GroupResponse>> GetAllGroups() 
     {
         try
@@ -64,6 +97,45 @@ public class GroupService : IGroupService
     }
     public async Task CreateStudentGroup(CreateStudentGroupRequest request, int currentUserId)
     {
+        // Kiểm tra tên nhóm
+    if (string.IsNullOrEmpty(request.GroupName))
+    {
+        throw new ServiceException("Group name cannot be null or empty.");
+    }
+
+    // Kiểm tra danh sách thành viên
+    if (request.Members == null || !request.Members.Any())
+    {
+        throw new ServiceException("Members cannot be null or empty.");
+    }
+
+    // Kiểm tra thông tin của tất cả thành viên
+    foreach (var member in request.Members)
+    {
+        await ValidateMemberInfo(member.MemberEmail, member.MemberName);
+    }
+
+    // Kiểm tra số lượng và vai trò của các thành viên
+    var leaderCount = request.Members.Count(m => m.Role == (int)GroupMemberRoleEnum.Leader);
+    var supervisorCount = request.Members.Count(m => m.Role == (int)GroupMemberRoleEnum.Supervisor);
+
+    if (leaderCount != 1)
+    {
+        throw new ServiceException("Student group must have exactly one leader.");
+    }
+
+    if (supervisorCount != 1)
+    {
+        throw new ServiceException("Student group must have exactly one supervisor.");
+    }
+
+    // Kiểm tra supervisor phải là lecturer
+    var supervisorMember = request.Members.First(m => m.Role == (int)GroupMemberRoleEnum.Supervisor);
+    var supervisor = await _userRepository.GetUserByEmail(supervisorMember.MemberEmail);
+    if (supervisor.Role != (int)SystemRoleEnum.Lecturer)
+    {
+        throw new ServiceException("Supervisor must be a lecturer.");
+    }
         var group = new LRMS_API.Group
         {
             GroupName = request.GroupName,
@@ -106,7 +178,7 @@ public class GroupService : IGroupService
     }
     public async Task CreateCouncilGroup(CreateCouncilGroupRequest request, int currentUserId)
     {
-            if (string.IsNullOrEmpty(request.GroupName))
+        if (string.IsNullOrEmpty(request.GroupName))
     {
         throw new ServiceException("Group name cannot be null or empty.");
     }
@@ -114,6 +186,56 @@ public class GroupService : IGroupService
     if (request.Members == null || !request.Members.Any())
     {
         throw new ServiceException("Members cannot be null or empty.");
+    }
+    foreach (var member in request.Members)
+    {
+        await ValidateMemberInfo(member.MemberEmail, member.MemberName);
+    }
+
+    // Kiểm tra số lượng và vai trò của các thành viên
+    var chairmanCount = request.Members.Count(m => m.Role == (int)GroupMemberRoleEnum.Council_Chairman);
+    var secretaryCount = request.Members.Count(m => m.Role == (int)GroupMemberRoleEnum.Secretary);
+    var councilMemberCount = request.Members.Count(m => m.Role == (int)GroupMemberRoleEnum.Council_Member);
+
+    if (chairmanCount != 1)
+    {
+        throw new ServiceException("Council must have exactly one chairman.");
+    }
+
+    if (secretaryCount != 1)
+    {
+        throw new ServiceException("Council must have exactly one secretary.");
+    }
+
+    if (councilMemberCount != 3)
+    {
+        throw new ServiceException("Council must have exactly three council members.");
+    }
+
+    // Kiểm tra level của từng thành viên
+    foreach (var member in request.Members)
+    {
+        var user = await _userRepository.GetUserByEmail(member.MemberEmail);
+
+        switch (member.Role)
+        {
+            case (int)GroupMemberRoleEnum.Council_Chairman:
+                if (user.Level != (int)LevelEnum.Professor)
+                    throw new ServiceException("Council chairman must be a Professor.");
+                break;
+
+            case (int)GroupMemberRoleEnum.Secretary:
+                if (user.Level != (int)LevelEnum.Associate_Professor)
+                    throw new ServiceException("Secretary must be an Associate Professor.");
+                break;
+
+            case (int)GroupMemberRoleEnum.Council_Member:
+                if (user.Level != (int)LevelEnum.PhD && 
+                    user.Level != (int)LevelEnum.Master && 
+                    user.Level != (int)LevelEnum.Bachelor)
+                    throw new ServiceException("Council member must be PhD, Master or Bachelor.");
+                break;
+        }
     }
         var group = new LRMS_API.Group
         {
