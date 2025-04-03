@@ -9,7 +9,8 @@ public enum GroupMemberRoleEnum
 {
     Leader = 0,
     Member = 1,
-    Council_Chairman =2,
-    Secretary = 3,
-    Council_Member = 4
+    Supervisor = 2,
+    Council_Chairman =3,
+    Secretary = 4,
+    Council_Member = 5
 }

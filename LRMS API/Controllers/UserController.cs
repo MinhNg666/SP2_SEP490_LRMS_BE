@@ -70,6 +70,33 @@ public class UserController : ApiBaseController
             return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, e.Message));
         }
     }
+    [HttpGet("get-all-students")]
+    public async Task<IActionResult> GetAllStudents()
+    {
+        try
+        {
+            var students = await _userService.GetAllStudents();
+            return Ok(students);
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e.Message);
+        }
+    }
+
+    [HttpGet("get-all-lecturers")]
+    public async Task<IActionResult> GetAllLecturers()
+    {
+        try
+        {
+            var lecturers = await _userService.GetAllLecturers();
+            return Ok(lecturers);
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e.Message);
+        }
+    }
     [HttpPost("accounts")]
     public async Task<IActionResult> CreateUser(CreateUserRequest request)
     {
