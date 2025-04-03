@@ -20,11 +20,11 @@ public class PublicationResponse
     public RoyaltyResponse Royalties { get; set; }
 }
 
-public class DepartmentResponse
-{
-    public int Id { get; set; }
-    public string Name { get; set; }
-}
+// public class DepartmentResponse
+// {
+//     public int Id { get; set; }
+//     public string Name { get; set; }
+// }
 
 public class CategoryResponse
 {

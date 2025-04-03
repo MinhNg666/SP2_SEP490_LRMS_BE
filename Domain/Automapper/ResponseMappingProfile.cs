@@ -31,5 +31,6 @@ public class ResponseMappingProfile : Profile
         CreateMap<Notification, NotificationResponse>().ReverseMap();
         CreateMap<User, StudentResponse>().ReverseMap();
         CreateMap<User, LecturerResponse>().ReverseMap();
+        CreateMap<Department, DepartmentResponse>();
     } 
 }
