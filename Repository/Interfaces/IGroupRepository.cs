@@ -13,6 +13,7 @@ public interface IGroupRepository : IGenericRepository<Group>
     Task<IEnumerable<GroupMember>> GetMembersByGroupId(int groupId);
     Task AddMemberAsync(GroupMember groupMember);
     Task<Group> GetByIdAsync(int id);
+    Task<IEnumerable<Group>> GetGroupsByUserId(int userId);
     Task<GroupMember> GetGroupMember(int groupId, int userId);
     Task UpdateMemberAsync(GroupMember groupMember);
     Task DeleteMemberAsync(int groupId, int userId);

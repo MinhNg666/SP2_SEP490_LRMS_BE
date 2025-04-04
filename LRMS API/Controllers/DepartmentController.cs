@@ -2,6 +2,7 @@ using Domain.Constants;
 using Domain.DTO.Common;
 using Microsoft.AspNetCore.Mvc;
 using Service.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 
 namespace LRMS_API.Controllers;
 
@@ -15,6 +16,7 @@ public class DepartmentController : ApiBaseController
     }
     
     [HttpGet("all-departments")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetAllDepartments()
     {
         try

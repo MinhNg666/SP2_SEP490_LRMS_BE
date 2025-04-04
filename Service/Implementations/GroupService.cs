@@ -95,6 +95,34 @@ public class GroupService : IGroupService
              throw new ServiceException(e.Message);
          }
     }
+    public async Task<IEnumerable<GroupResponse>> GetGroupsByUserId(int userId)
+{
+    try
+    {
+        // Lấy danh sách nhóm của user
+        var groups = await _groupRepository.GetGroupsByUserId(userId);
+        if (groups == null || !groups.Any())
+        {
+            return new List<GroupResponse>();
+        }
+
+        var groupResponses = new List<GroupResponse>();
+        foreach (var group in groups)
+        {
+            // Lấy thông tin thành viên cho mỗi nhóm
+            var members = await _groupRepository.GetMembersByGroupId(group.GroupId);
+            var groupResponse = _mapper.Map<GroupResponse>(group);
+            groupResponse.Members = _mapper.Map<IEnumerable<GroupMemberResponse>>(members);
+            groupResponses.Add(groupResponse);
+        }
+
+        return groupResponses;
+    }
+    catch (Exception e)
+    {
+        throw new ServiceException(e.Message);
+    }
+}
     public async Task CreateStudentGroup(CreateStudentGroupRequest request, int currentUserId)
     {
         // Kiểm tra tên nhóm
