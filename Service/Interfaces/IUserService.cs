@@ -24,6 +24,6 @@ namespace Service.Interfaces
         Task<bool> DeleteUser(int userId);
         Task<StudentProfileResponse> GetStudentProfile(int userId);
         Task<StudentProfileResponse> UpdateStudentProfile (int userId, UpdateStudentRequest request);
-
+        Task<bool> Logout(string refreshToken);
     }
 }

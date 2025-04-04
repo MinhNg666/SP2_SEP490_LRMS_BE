@@ -327,5 +327,26 @@ namespace Service.Implementations
             
             return loginResponse;
         }
+        public async Task<bool> Logout(string refreshToken)
+        {
+            if (string.IsNullOrEmpty(refreshToken))
+            {
+                throw new ServiceException("Refresh token is required");
+            }
+            
+            var user = await _userRepository.GetUserByRefreshToken(refreshToken);
+            if (user == null)
+            {
+                // hidden token
+                return true;
+            }
+            
+            // Clear refresh token data
+            user.RefreshToken = null;
+            user.RefreshTokenExpiryTime = null;
+            
+            await _userRepository.UpdateAsync(user);
+            return true;
+        }
     }
 }
