@@ -11,6 +11,7 @@ namespace Repository.Interfaces
     public interface IUserRepository : IGenericRepository<User>
     {
         Task<User> GetUserByEmail(string email);
-        Task<IEnumerable<UserGroupResponse>> GetUserGroups(int userId); // Add this line
+        Task<IEnumerable<UserGroupResponse>> GetUserGroups(int userId); 
+        Task<User> GetUserByRefreshToken(string refreshToken);
     }
 }
