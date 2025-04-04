@@ -22,6 +22,7 @@ public class UserRepository : GenericRepository<User>, IUserRepository
     public async Task<User> GetUserByEmail(string email)
     {
         return await _context.Users
+            .Include(u => u.Department)
             .AsSplitQuery()
             .SingleOrDefaultAsync(x => x.Email.Equals(email.ToLower()));
     }

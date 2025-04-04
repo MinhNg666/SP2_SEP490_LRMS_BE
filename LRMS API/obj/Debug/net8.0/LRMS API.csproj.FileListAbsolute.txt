@@ -1,11 +1,3 @@
-D:\Programming\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\LRMS API.csproj.AssemblyReference.cache
-D:\Programming\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\LRMS API.GeneratedMSBuildEditorConfig.editorconfig
-D:\Programming\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\LRMS API.AssemblyInfoInputs.cache
-D:\Programming\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\LRMS API.AssemblyInfo.cs
-D:\Programming\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\LRMS API.csproj.CoreCompileInputs.cache
-D:\Programming\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\LRMS API.MvcApplicationPartsAssemblyInfo.cache
-D:\Programming\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\LRMS API.sourcelink.json
-D:\Programming\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\LRMS API.MvcApplicationPartsAssemblyInfo.cs
 D:\Programming\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\appsettings.Development.json
 D:\Programming\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\LRMS API.staticwebassets.endpoints.json
 D:\Programming\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\LRMS API.exe
@@ -141,6 +133,14 @@ D:\Programming\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Service.dll
 D:\Programming\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Service.pdb
 D:\Programming\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Domain.pdb
 D:\Programming\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Repository.pdb
+D:\Programming\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\LRMS API.csproj.AssemblyReference.cache
+D:\Programming\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\LRMS API.GeneratedMSBuildEditorConfig.editorconfig
+D:\Programming\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\LRMS API.AssemblyInfoInputs.cache
+D:\Programming\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\LRMS API.AssemblyInfo.cs
+D:\Programming\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\LRMS API.csproj.CoreCompileInputs.cache
+D:\Programming\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\LRMS API.MvcApplicationPartsAssemblyInfo.cs
+D:\Programming\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\LRMS API.MvcApplicationPartsAssemblyInfo.cache
+D:\Programming\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\LRMS API.sourcelink.json
 D:\Programming\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\scopedcss\bundle\LRMS API.styles.css
 D:\Programming\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\staticwebassets.build.json
 D:\Programming\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\staticwebassets.development.json

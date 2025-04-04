@@ -12,6 +12,7 @@ namespace Service.Interfaces
     public interface IUserService
     {
         Task<LoginResponse> Login(LoginRequest request);
+        Task<LoginResponse> RefreshToken(string accessToken, string refreshToken);
         Task RegisterStudent(RegisterStudentRequest request);
         Task<IEnumerable<UserResponse>> GetAllUsers();
         Task<UserResponse> GetUserById(int userId);

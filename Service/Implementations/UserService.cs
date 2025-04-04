@@ -67,10 +67,42 @@ namespace Service.Implementations
                             : SystemRoleEnum.Lecturer.ToString()));
 
                     var loginResponse = _mapper.Map<LoginResponse>(existingUser);
+                    
+                    // Set Department explicitly if needed
+                    if (existingUser.Department != null)
+                    {
+                        loginResponse.Department = _mapper.Map<DepartmentResponse>(existingUser.Department);
+                    }
+                    
+                    // Generate tokens
                     loginResponse.AccessToken = _tokenService.GenerateAccessToken(claims);
-
+                    loginResponse.RefreshToken = _tokenService.GenerateRefreshToken();
+                    loginResponse.TokenExpiresAt = _tokenService.GetAccessTokenExpiryTime();
+                    
+                    // Update user with refresh token
+                    existingUser.RefreshToken = loginResponse.RefreshToken;
+                    existingUser.RefreshTokenExpiryTime = DateTime.Now.AddDays(7); // 7 days validity
+                    existingUser.LastLogin = DateTime.Now;
+                    loginResponse.LastLogin = existingUser.LastLogin;
+                    
+                    await _userRepository.UpdateAsync(existingUser);
+                    
+                    // Fetch user groups
                     var userGroups = await _userRepository.GetUserGroups(existingUser.UserId);
-                    loginResponse.Groups = userGroups.ToList(); // Gán danh sách group vào LoginResponse
+                    // Fetch if group available
+                    if (userGroups.Any())
+                    {
+                        loginResponse.Groups = userGroups.ToList();
+                    }
+
+                    if (existingUser.Role == (int)SystemRoleEnum.Lecturer)
+                    {
+                        loginResponse.Level = existingUser.Level;
+                    }
+                    else
+                    {
+                        loginResponse.Level = null;
+                    }
 
                     return loginResponse;
                 }
@@ -259,6 +291,41 @@ namespace Service.Implementations
         {
             var notifications = await _userRepository.GetByIdAsync(userId);
             return _mapper.Map<IEnumerable<NotificationResponse>>(notifications);
+        }
+        public async Task<LoginResponse> RefreshToken(string accessToken, string refreshToken)
+        {
+            var principal = _tokenService.GetPrincipalFromExpiredToken(accessToken);
+            var userId = int.Parse(principal.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null || user.RefreshToken != refreshToken || user.RefreshTokenExpiryTime <= DateTime.Now)
+            {
+                throw new ServiceException("Invalid client request");
+            }
+            
+            var claims = principal.Claims.ToList();
+            
+            var newAccessToken = _tokenService.GenerateAccessToken(claims);
+            var newRefreshToken = _tokenService.GenerateRefreshToken();
+            
+            user.RefreshToken = newRefreshToken;
+            user.RefreshTokenExpiryTime = DateTime.Now.AddDays(7);
+            await _userRepository.UpdateAsync(user);
+            
+            var loginResponse = _mapper.Map<LoginResponse>(user);
+            loginResponse.AccessToken = newAccessToken;
+            loginResponse.RefreshToken = newRefreshToken;
+            loginResponse.TokenExpiresAt = _tokenService.GetAccessTokenExpiryTime();
+            loginResponse.LastLogin = user.LastLogin;
+            
+            // Fetch user groups
+            var userGroups = await _userRepository.GetUserGroups(user.UserId);
+            if (userGroups.Any()) // Only set groups if there are any
+            {
+                loginResponse.Groups = userGroups.ToList();
+            }
+            
+            return loginResponse;
         }
     }
 }
