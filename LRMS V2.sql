@@ -656,3 +656,22 @@ VALUES
 (12500.00, 1, GETDATE(), GETDATE(), N'Yêu cầu giải ngân 4', 4, 4, 4, 4),
 (15000.00, 1, GETDATE(), GETDATE(), N'Yêu cầu giải ngân 5', 5, 5, 5, 5),
 (9000.00, 1, GETDATE(), GETDATE(), N'Yêu cầu giải ngân 6', 6, 6, 6, 6);
+
+--  19 Remember to run these SQL script when you pull the new code ( updated 4/4/2025)
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'RefreshToken')
+BEGIN
+    ALTER TABLE Users ADD RefreshToken nvarchar(max) NULL;
+END
+
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'RefreshTokenExpiryTime')
+BEGIN
+    ALTER TABLE Users ADD RefreshTokenExpiryTime datetime2 NULL;
+END
+
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'LastLogin')
+BEGIN
+    ALTER TABLE Users ADD LastLogin datetime2 NULL;
+END
+
+
+

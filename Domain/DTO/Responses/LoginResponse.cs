@@ -13,7 +13,13 @@ namespace Domain.DTO.Responses
         public string FullName { get; set; }
         public int Status { get; set; }
         public int Role { get; set; }
-        public List<UserGroupResponse> Groups { get; set; } // Thêm thuộc tính này
+        public int? Level { get; set; }
+        public DepartmentResponse Department { get; set; }
+        public string? ProfileImageUrl { get; set; }
+        public List<UserGroupResponse> Groups { get; set; }
         public string AccessToken { get; set; }
+        public string RefreshToken { get; set; }
+        public DateTime TokenExpiresAt { get; set; }
+        public DateTime? LastLogin { get; set; }
     }
 }

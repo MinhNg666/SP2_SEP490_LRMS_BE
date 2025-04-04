@@ -11,8 +11,11 @@ public class ResponseMappingProfile : Profile
     {
         CreateMap<User, UserResponse>().ReverseMap();
         CreateMap<User, LoginResponse>()
-            .ForMember(dest => dest.UserId, opt =>
-                opt.MapFrom(src => src.UserId))
+            .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
+            .ForMember(dest => dest.Department, opt => opt.MapFrom(src => src.Department))
+            .ForMember(dest => dest.ProfileImageUrl, opt => opt.MapFrom(src => ""))
+            .ForMember(dest => dest.TokenExpiresAt, opt => opt.Ignore())
+            .ForMember(dest => dest.RefreshToken, opt => opt.Ignore())
             .ReverseMap();
         CreateMap<Group, GroupResponse>()
             .ForMember(dest => dest.Members, opt => opt.MapFrom(src => src.GroupMembers));

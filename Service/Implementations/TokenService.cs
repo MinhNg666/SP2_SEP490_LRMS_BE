@@ -22,13 +22,20 @@ public class TokenService: ITokenService
     {
         var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
         var signinCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
+        
         var tokenOptions = new JwtSecurityToken(
             claims: claims,
+            expires: DateTime.Now.AddHours(1), // Set token expiry time to 1 hour
             signingCredentials: signinCredentials
         );
         
         var tokenString = new JwtSecurityTokenHandler().WriteToken(tokenOptions);
         return tokenString;
+    }
+    
+    public DateTime GetAccessTokenExpiryTime()
+    {
+        return DateTime.Now.AddHours(1); // Same expiry time as in GenerateAccessToken
     }
 
     public string GenerateRefreshToken()
