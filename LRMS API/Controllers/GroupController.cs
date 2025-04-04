@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Service.Exceptions;
 using Service.Implementations;
 using Service.Interfaces;
-
+using Microsoft.AspNetCore.Authorization;
 namespace LRMS_API.Controllers;
 [ApiController]
 
@@ -19,6 +19,7 @@ public class GroupController : ApiBaseController
         _groupService = groupService;
     }
     [HttpGet("groups")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetAllGroups() 
     {
         try
@@ -45,6 +46,23 @@ public class GroupController : ApiBaseController
             return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, e.Message));
         }
     }
+    [HttpGet("groups/{userId}")]
+    public async Task<ActionResult<IEnumerable<GroupResponse>>> GetGroupsByUserId(int userId)
+    {
+        try
+        {
+            var groups = await _groupService.GetGroupsByUserId(userId);
+            return Ok(groups);
+        }
+        catch (ServiceException e)
+        {
+            return BadRequest(new { message = e.Message });
+        }
+        catch (Exception e)
+        {
+            return StatusCode(500, new { message = "An error occurred while processing your request." });
+        }      
+    }
     [HttpPost("council-groups")]
     public async Task<IActionResult> CreateCouncilGroup(CreateCouncilGroupRequest request) 
     {
@@ -64,7 +82,7 @@ public class GroupController : ApiBaseController
             return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, e.Message));
         }
     }
-    [HttpPost("student-groups")]
+    [HttpPost("research-groups")]
     public async Task<IActionResult> CreateStudentGroup(CreateStudentGroupRequest request) 
     {
         try 

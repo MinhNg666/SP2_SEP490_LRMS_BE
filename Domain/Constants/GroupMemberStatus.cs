@@ -5,8 +5,10 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Domain.Constants;
+
 public enum GroupMemberStatus
 {
+    Pending = 0,
     Active = 1,
-    Pending = 0
+    Inactive = 2
 }
