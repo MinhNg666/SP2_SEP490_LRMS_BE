@@ -12,4 +12,5 @@ public class MessageConstants
     public const string NOT_FOUND = "Not found resource";
     public const string DUPLICATE = "Duplicate resource";
     public const string INVALID_ACCOUNT_CREDENTIALS = "Invalid account credentials";
+    public static readonly string LOGOUT_SUCCESSFUL = "Logout successful";
 }

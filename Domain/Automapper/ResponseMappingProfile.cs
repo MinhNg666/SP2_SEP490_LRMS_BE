@@ -1,5 +1,4 @@
-﻿
-using AutoMapper;
+﻿using AutoMapper;
 using Domain.DTO.Common;
 using Domain.DTO.Responses;
 using LRMS_API;
@@ -9,11 +8,14 @@ namespace Domain.Automapper;
 public class ResponseMappingProfile : Profile
 {
     public ResponseMappingProfile()
-        {
+    {
         CreateMap<User, UserResponse>().ReverseMap();
         CreateMap<User, LoginResponse>()
-            .ForMember(dest => dest.UserId, opt =>
-                opt.MapFrom(src => src.UserId))
+            .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
+            .ForMember(dest => dest.Department, opt => opt.MapFrom(src => src.Department))
+            .ForMember(dest => dest.ProfileImageUrl, opt => opt.MapFrom(src => ""))
+            .ForMember(dest => dest.TokenExpiresAt, opt => opt.Ignore())
+            .ForMember(dest => dest.RefreshToken, opt => opt.Ignore())
             .ReverseMap();
         CreateMap<Group, GroupResponse>()
             .ForMember(dest => dest.Members, opt => opt.MapFrom(src => src.GroupMembers));
@@ -28,5 +30,10 @@ public class ResponseMappingProfile : Profile
         CreateMap<Notification, NotificationResponse>().ReverseMap();
         CreateMap<Invitation, InvitationResponse>().ReverseMap();
         CreateMap<User, StudentProfileResponse>().ReverseMap();
+        CreateMap<GroupMember, UserGroupResponse>().ReverseMap();
+        CreateMap<Notification, NotificationResponse>().ReverseMap();
+        CreateMap<User, StudentResponse>().ReverseMap();
+        CreateMap<User, LecturerResponse>().ReverseMap();
+        CreateMap<Department, DepartmentResponse>();
     } 
 }

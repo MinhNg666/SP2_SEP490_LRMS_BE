@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using LRMS_API;
 using Microsoft.EntityFrameworkCore;
 using Repository.Interfaces;
+using Domain.Constants;
 
 namespace Repository.Implementations;
 
@@ -46,6 +47,13 @@ public class GroupRepository : GenericRepository<Group>, IGroupRepository
             throw new Exception($"Error getting all groups: {ex.Message}");
         }
     }
+    public async Task<IEnumerable<Group>> GetGroupsByUserId(int userId)
+    {
+    return await _context.Groups
+        .Include(g => g.GroupMembers)
+        .Where(g => g.GroupMembers.Any(gm => gm.UserId == userId && gm.Status == (int)GroupMemberStatus.Active))
+        .ToListAsync();
+    }
 
     public async Task<IEnumerable<GroupMember>> GetMembersByGroupId(int groupId)
     {
@@ -72,6 +80,27 @@ public class GroupRepository : GenericRepository<Group>, IGroupRepository
         catch (Exception ex)
         {
             throw new Exception($"Error adding group member: {ex.Message}");
+        }
+    }
+    public async Task<GroupMember> GetGroupMember(int groupId, int userId)
+    {
+        return await _context.GroupMembers
+            .FirstOrDefaultAsync(gm => gm.GroupId == groupId && gm.UserId == userId);
+    }
+
+    public async Task UpdateMemberAsync(GroupMember groupMember)
+    {
+        _context.GroupMembers.Update(groupMember);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task DeleteMemberAsync(int groupId, int userId)
+    {
+        var member = await GetGroupMember(groupId, userId);
+        if (member != null)
+        {
+            _context.GroupMembers.Remove(member);
+            await _context.SaveChangesAsync();
         }
     }
 }

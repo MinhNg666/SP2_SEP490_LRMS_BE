@@ -36,7 +36,8 @@ public class InvitationService : IInvitationService
             GroupId = request.GroupId, // Thêm GroupId vào đây
             SentBy = request.InvitedBy,
             CreatedAt = DateTime.Now,
-            Status = 0 // 0: Pending
+            Status = 0, // 0: Pending
+            InvitedRole = request.InvitedRole
         };
 
         await _invitationRepository.AddInvitationAsync(invitation);
@@ -48,7 +49,9 @@ public class InvitationService : IInvitationService
             UserId = request.InvitedUserId,
             Title = "Group Invitation",
             Message = $"You have been invited to join the group '{group.GroupName}'",
-            ProjectId = null,
+            ProjectId = request.ProjectId,
+            Status = 0,
+            IsRead = false,
             InvitationId = invitation.InvitationId
         };
 
@@ -67,19 +70,21 @@ public class InvitationService : IInvitationService
         {
             throw new ServiceException("Invitation not found or does not belong to the user.");
         }
+        if (invitation.Status != 0) // 2: Rejected
+        {
+        throw new ServiceException("Invitation has already been proccess.");
+        }
 
         invitation.Status = 1; // 1: Accepted
+        invitation.RespondDate = DateTime.Now; // Gán thời gian phản hồi
         await _invitationRepository.UpdateInvitation(invitation);
-        var groupMember = new GroupMember
+        var groupMember = await _groupRepository.GetGroupMember(invitation.GroupId.Value, userId);
+        if (groupMember != null)
         {
-            GroupId = invitation.GroupId, // Giả sử bạn đã thêm GroupId vào Invitation
-            GroupMemberId = invitation.RecieveBy.Value, // Thêm GroupMemberId
-            Role = invitation.InvitedRole, // Thêm vai trò
-            UserId = userId,
-            Status = 1, // Hoạt động
-            JoinDate = DateTime.Now
-        };
-        await _groupRepository.AddMemberAsync(groupMember);
+            groupMember.Status = 1; // Active
+            groupMember.JoinDate = DateTime.Now;
+            await _groupRepository.UpdateMemberAsync(groupMember);
+        }
     }
 
     public async Task RejectInvitation(int invitationId, int userId)
@@ -90,7 +95,13 @@ public class InvitationService : IInvitationService
             throw new ServiceException("Invitation not found or does not belong to the user.");
         }
 
+        if (invitation.Status != 0) // 2: Rejected
+        {
+        throw new ServiceException("Invitation has already been proccess.");
+        }
+
         invitation.Status = 2; // 2: Rejected
         await _invitationRepository.UpdateInvitation(invitation);
+        await _groupRepository.DeleteMemberAsync(invitation.GroupId.Value, userId);
     }
 }

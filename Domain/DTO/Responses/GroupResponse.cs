@@ -14,5 +14,5 @@ public class GroupResponse
     public int Status { get; set; }
     public int GroupType { get; set; }
     public DateTime CreatedAt { get; set; }
-    public ICollection<GroupMemberResponse> Members { get; set; }
+    public IEnumerable<GroupMemberResponse> Members { get; set; }
 }

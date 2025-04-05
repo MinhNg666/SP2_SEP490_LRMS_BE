@@ -35,18 +35,22 @@ namespace Service.Implementations
             {
                 new Claim(ClaimTypes.Email, request.Email)
             };
-                if (request.Email.ToLower().Equals(_adminAccount.Email.ToLower()) &&
+
+            if (request.Email.ToLower().Equals(_adminAccount.Email.ToLower()) &&
                 request.Password.Equals(_adminAccount.Password))
-                {
-                    claims.Add(new Claim(ClaimTypes.Role, SystemRoleEnum.Admin.ToString()));
-                    return new LoginResponse
+            {
+                claims.Add(new Claim(ClaimTypes.NameIdentifier, _adminAccount.Email)); // Thay đổi để sử dụng email admin
+                claims.Add(new Claim(ClaimTypes.Role, SystemRoleEnum.Admin.ToString()));
+                return new LoginResponse
                 {
                     Email = _adminAccount.Email,
                     Status = (int)AccountStatusEnum.Active,
                     Role = (int)SystemRoleEnum.Admin,
-                    AccessToken = _tokenService.GenerateAccessToken(claims)
+                    AccessToken = _tokenService.GenerateAccessToken(claims),
+                    Groups = new List<UserGroupResponse>()
                 };
             }
+
             try
             {
                 var existingUser = await _userRepository.GetUserByEmail(request.Email);
@@ -56,14 +60,49 @@ namespace Service.Implementations
                 }
                 if (BCrypt.Net.BCrypt.Verify(request.Password, existingUser.Password))
                 {
-                    claims.Add(new Claim("UserID", existingUser.UserId.ToString()));
+                    claims.Add(new Claim(ClaimTypes.NameIdentifier, existingUser.UserId.ToString())); // Đảm bảo thêm UserId vào claims
                     claims.Add(new Claim(ClaimTypes.Role,
                         existingUser.Role == (int)SystemRoleEnum.Student
                             ? SystemRoleEnum.Student.ToString()
                             : SystemRoleEnum.Lecturer.ToString()));
 
                     var loginResponse = _mapper.Map<LoginResponse>(existingUser);
+                    
+                    // Set Department explicitly if needed
+                    if (existingUser.Department != null)
+                    {
+                        loginResponse.Department = _mapper.Map<DepartmentResponse>(existingUser.Department);
+                    }
+                    
+                    // Generate tokens
                     loginResponse.AccessToken = _tokenService.GenerateAccessToken(claims);
+                    loginResponse.RefreshToken = _tokenService.GenerateRefreshToken();
+                    loginResponse.TokenExpiresAt = _tokenService.GetAccessTokenExpiryTime();
+                    
+                    // Update user with refresh token
+                    existingUser.RefreshToken = loginResponse.RefreshToken;
+                    existingUser.RefreshTokenExpiryTime = DateTime.Now.AddDays(7); // 7 days validity
+                    existingUser.LastLogin = DateTime.Now;
+                    loginResponse.LastLogin = existingUser.LastLogin;
+                    
+                    await _userRepository.UpdateAsync(existingUser);
+                    
+                    // Fetch user groups
+                    var userGroups = await _userRepository.GetUserGroups(existingUser.UserId);
+                    // Fetch if group available
+                    if (userGroups.Any())
+                    {
+                        loginResponse.Groups = userGroups.ToList();
+                    }
+
+                    if (existingUser.Role == (int)SystemRoleEnum.Lecturer)
+                    {
+                        loginResponse.Level = existingUser.Level;
+                    }
+                    else
+                    {
+                        loginResponse.Level = null;
+                    }
 
                     return loginResponse;
                 }
@@ -72,6 +111,7 @@ namespace Service.Implementations
             {
                 throw new ServiceException(MessageConstants.INVALID_ACCOUNT_CREDENTIALS);
             }
+
             return null;
         }
         public async Task RegisterStudent(RegisterStudentRequest request) 
@@ -112,8 +152,11 @@ namespace Service.Implementations
                 var result = await _userRepository.GetByIdAsync(accountId);
                 if (result == null)
                     throw new ServiceException(MessageConstants.NOT_FOUND);
+                var userGroups = await _userRepository.GetUserGroups(accountId);
+                var userResponse = _mapper.Map<UserResponse>(result);
+                userResponse.Groups = userGroups.ToList(); // Sử dụng danh sách UserGroupResponse
 
-                return _mapper.Map<UserResponse>(result);
+                return userResponse;
             }
             catch (Exception e)
             {
@@ -127,6 +170,41 @@ namespace Service.Implementations
                 var users = await _userRepository.GetAllAsync();
                 var filteredUsers = users.Where(u => u.Level == (int)level);
                 return _mapper.Map<IEnumerable<UserResponse>>(filteredUsers);
+            }
+            catch (Exception e)
+            {
+                throw new ServiceException(e.Message);
+            }
+        }
+        public async Task<IEnumerable<StudentResponse>> GetAllStudents()
+        {
+            try
+            {
+                var users = await _userRepository.GetAllAsync();
+                var students = users.Where(u => u.Role == (int)SystemRoleEnum.Student);
+                var studentResponses = new List<StudentResponse>();
+                foreach (var student in students)
+                {
+                    var studentResponse = _mapper.Map<StudentResponse>(student);
+                    var userGroups = await _userRepository.GetUserGroups(student.UserId);
+                    studentResponse.Groups = userGroups.ToList();
+                    studentResponses.Add(studentResponse);
+                }
+            
+            return studentResponses;
+            }
+            catch (Exception e)
+            {
+                throw new ServiceException(e.Message);
+            }
+        }
+        public async Task<IEnumerable<LecturerResponse>> GetAllLecturers()
+        {
+            try
+            {
+                var users = await _userRepository.GetAllAsync();
+                var lecturers = users.Where(u => u.Role == (int)SystemRoleEnum.Lecturer);
+                return _mapper.Map<IEnumerable<LecturerResponse>>(lecturers);
             }
             catch (Exception e)
             {
@@ -208,6 +286,67 @@ namespace Service.Implementations
             {
                 throw new ServiceException(e.Message);
             }
+        }
+        public async Task<IEnumerable<NotificationResponse>> GetNotificationsByUserId(int userId)
+        {
+            var notifications = await _userRepository.GetByIdAsync(userId);
+            return _mapper.Map<IEnumerable<NotificationResponse>>(notifications);
+        }
+        public async Task<LoginResponse> RefreshToken(string accessToken, string refreshToken)
+        {
+            var principal = _tokenService.GetPrincipalFromExpiredToken(accessToken);
+            var userId = int.Parse(principal.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null || user.RefreshToken != refreshToken || user.RefreshTokenExpiryTime <= DateTime.Now)
+            {
+                throw new ServiceException("Invalid client request");
+            }
+            
+            var claims = principal.Claims.ToList();
+            
+            var newAccessToken = _tokenService.GenerateAccessToken(claims);
+            var newRefreshToken = _tokenService.GenerateRefreshToken();
+            
+            user.RefreshToken = newRefreshToken;
+            user.RefreshTokenExpiryTime = DateTime.Now.AddDays(7);
+            await _userRepository.UpdateAsync(user);
+            
+            var loginResponse = _mapper.Map<LoginResponse>(user);
+            loginResponse.AccessToken = newAccessToken;
+            loginResponse.RefreshToken = newRefreshToken;
+            loginResponse.TokenExpiresAt = _tokenService.GetAccessTokenExpiryTime();
+            loginResponse.LastLogin = user.LastLogin;
+            
+            // Fetch user groups
+            var userGroups = await _userRepository.GetUserGroups(user.UserId);
+            if (userGroups.Any()) // Only set groups if there are any
+            {
+                loginResponse.Groups = userGroups.ToList();
+            }
+            
+            return loginResponse;
+        }
+        public async Task<bool> Logout(string refreshToken)
+        {
+            if (string.IsNullOrEmpty(refreshToken))
+            {
+                throw new ServiceException("Refresh token is required");
+            }
+            
+            var user = await _userRepository.GetUserByRefreshToken(refreshToken);
+            if (user == null)
+            {
+                // hidden token
+                return true;
+            }
+            
+            // Clear refresh token data
+            user.RefreshToken = null;
+            user.RefreshTokenExpiryTime = null;
+            
+            await _userRepository.UpdateAsync(user);
+            return true;
         }
     }
 }

@@ -5,12 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Domain.Constants;
-public enum LevelEnum
+public enum InvitationEnum
 {
-    No_level = 0,
-    Professor = 1,
-    Associate_Professor = 2,
-    PhD = 3,
-    Master = 4,
-    Bachelor =5
+    Accepted = 0,
+    Rejected = 1,
+    Pending = 2,
 }
