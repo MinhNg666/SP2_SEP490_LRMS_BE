@@ -75,6 +75,7 @@ builder.Services.AddDbContext<LRMSDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("LRMSDB")));
 
 builder.Services.AddScoped<IPublicationService, PublicationService>();
+builder.Services.AddScoped<ITimelineService, TimelineService>();
 builder.Services.AddAuthorization();
 
 

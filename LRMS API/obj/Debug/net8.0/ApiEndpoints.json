@@ -397,6 +397,48 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "LRMS_API.Controllers.TimelineController",
+    "Method": "CreateTimeline",
+    "RelativePath": "api/timelines",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "Domain.DTO.Requests.TimelineRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LRMS_API.Controllers.TimelineController",
+    "Method": "GetAllTimelines",
+    "RelativePath": "api/timelines",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LRMS_API.Controllers.TimelineController",
+    "Method": "GetTimelineById",
+    "RelativePath": "api/timelines/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "LRMS_API.Controllers.NotificationController",
     "Method": "GetNotificationsByUserId",
     "RelativePath": "api/user/{userId}",
