@@ -183,15 +183,14 @@ namespace Service.Implementations
                 var users = await _userRepository.GetAllAsync();
                 var students = users.Where(u => u.Role == (int)SystemRoleEnum.Student);
                 var studentResponses = new List<StudentResponse>();
+                
                 foreach (var student in students)
                 {
                     var studentResponse = _mapper.Map<StudentResponse>(student);
-                    var userGroups = await _userRepository.GetUserGroups(student.UserId);
-                    studentResponse.Groups = userGroups.ToList();
                     studentResponses.Add(studentResponse);
                 }
             
-            return studentResponses;
+                return studentResponses;
             }
             catch (Exception e)
             {
