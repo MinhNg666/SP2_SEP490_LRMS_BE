@@ -47,10 +47,24 @@ public class GroupController : ApiBaseController
         }
     }
     [HttpGet("groups-by-user/{userId}")]
+    [Authorize]
     public async Task<ActionResult<IEnumerable<GroupResponse>>> GetGroupsByUserId(int userId)
     {
         try
         {
+            var currentUserIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(currentUserIdString))
+            {
+                return Unauthorized(new { message = "User not authenticated" });
+            }
+            
+            var currentUserId = int.Parse(currentUserIdString);
+            
+            if (currentUserId != userId)
+            {
+                return Forbid();
+            }
+            
             var groups = await _groupService.GetGroupsByUserId(userId);
             return Ok(groups);
         }
