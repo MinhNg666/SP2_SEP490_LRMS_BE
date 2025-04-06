@@ -16,7 +16,7 @@ public class UserController : ApiBaseController
     {
         _userService = userService;
     }
-    [HttpGet("accounts")]
+    [HttpGet("users")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetAllUsers() 
     {
@@ -31,7 +31,7 @@ public class UserController : ApiBaseController
             return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, e.Message));
         }
     }
-    [HttpGet("accounts/{userId}")]
+    [HttpGet("users/{userId}")]
     public async Task<IActionResult> GetUserById(int userId)
     {
         try
@@ -44,7 +44,7 @@ public class UserController : ApiBaseController
             return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, e.Message));
         }
     }
-    [HttpGet("accounts/level/{level}")]
+    [HttpGet("users/level/{level}")]
     public async Task<IActionResult> GetUsersByLevel(LevelEnum level)
     {
         try
@@ -57,7 +57,7 @@ public class UserController : ApiBaseController
             return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, e.Message));
         }
     }
-    [HttpPut("accounts/{userId}")]
+    [HttpPut("users/{userId}")]
     public async Task<IActionResult> UpdateUser(int userId, UpdateUserRequest request)
     {
         try
@@ -70,34 +70,36 @@ public class UserController : ApiBaseController
             return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, e.Message));
         }
     }
-    [HttpGet("get-all-students")]
+    [HttpGet("users/students")]
+    [Authorize]
     public async Task<IActionResult> GetAllStudents()
     {
         try
         {
             var students = await _userService.GetAllStudents();
-            return Ok(students);
+            return Ok(new ApiResponse(StatusCodes.Status200OK, MessageConstants.SUCCESSFUL, students));
         }
         catch (Exception e)
         {
-            return BadRequest(e.Message);
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, e.Message));
         }
     }
 
-    [HttpGet("get-all-lecturers")]
+    [HttpGet("users/lecturers")]
+    [Authorize]
     public async Task<IActionResult> GetAllLecturers()
     {
         try
         {
             var lecturers = await _userService.GetAllLecturers();
-            return Ok(lecturers);
+            return Ok(new ApiResponse(StatusCodes.Status200OK, MessageConstants.SUCCESSFUL, lecturers));
         }
         catch (Exception e)
         {
-            return BadRequest(e.Message);
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, e.Message));
         }
     }
-    [HttpPost("accounts")]
+    [HttpPost("users")]
     public async Task<IActionResult> CreateUser(CreateUserRequest request)
     {
         try
@@ -110,7 +112,7 @@ public class UserController : ApiBaseController
             return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, e.Message));
         }
     }
-    [HttpDelete("accounts/{userId}")]
+    [HttpDelete("users/{userId}")]
     public async Task<IActionResult> DeleteUser(int userId)
     {
         try
@@ -123,7 +125,7 @@ public class UserController : ApiBaseController
             return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, e.Message));
         }
     }
-    [HttpGet("accounts/{userId}/profile")]
+    [HttpGet("users/{userId}/profile")]
     public async Task<IActionResult> GetStudentProfile(int userId)
     {
         try
@@ -136,7 +138,7 @@ public class UserController : ApiBaseController
             return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, e.Message));
         }
     }
-    [HttpPut("accounts/{userId}/profile")]
+    [HttpPut("users/{userId}/profile")]
     public async Task<IActionResult> UpdateStudentProfile(int userId, UpdateStudentRequest request)
     {
         try
@@ -145,6 +147,28 @@ public class UserController : ApiBaseController
             return Ok(new ApiResponse(StatusCodes.Status200OK, MessageConstants.SUCCESSFUL, result));
         }
         catch (ServiceException e)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, e.Message));
+        }
+    }
+    [HttpGet("users/academic")]
+    [Authorize]
+    public async Task<IActionResult> GetAcademicUsers()
+    {
+        try
+        {
+            var students = await _userService.GetAllStudents();
+            var lecturers = await _userService.GetAllLecturers();
+            
+            var academicUsers = new 
+            {
+                Students = students,
+                Lecturers = lecturers
+            };
+            
+            return Ok(new ApiResponse(StatusCodes.Status200OK, MessageConstants.SUCCESSFUL, academicUsers));
+        }
+        catch (Exception e)
         {
             return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, e.Message));
         }
