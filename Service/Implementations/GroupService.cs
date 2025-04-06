@@ -78,92 +78,142 @@ public class GroupService : IGroupService
     public async Task<GroupResponse> GetGroupById(int groupId)
     {
         try
-         {
-             var group = await _groupRepository.GetByIdAsync(groupId);
-             if (group == null)
-             {
-                 throw new ServiceException("Group not found.");
-             }
-             var groupMembers = await _groupRepository.GetMembersByGroupId(groupId);
-             var groupResponse = _mapper.Map<GroupResponse>(group);
-             groupResponse.Members = _mapper.Map<IEnumerable<GroupMemberResponse>>(groupMembers);
- 
-             return groupResponse;
-         }
-         catch (Exception e)
-         {
-             throw new ServiceException(e.Message);
-         }
+        {
+            var group = await _groupRepository.GetByIdAsync(groupId);
+            if (group == null)
+            {
+                throw new ServiceException("Group not found.");
+            }
+            
+            var groupMembers = await _groupRepository.GetMembersByGroupId(groupId);
+            var activeMembers = groupMembers.Where(m => m.Status == (int)GroupMemberStatus.Active).ToList();
+            
+            var groupResponse = _mapper.Map<GroupResponse>(group);
+            groupResponse.Members = _mapper.Map<IEnumerable<GroupMemberResponse>>(activeMembers);
+            groupResponse.CurrentMember = activeMembers.Count;
+            
+            return groupResponse;
+        }
+        catch (Exception e)
+        {
+            throw new ServiceException(e.Message);
+        }
     }
     public async Task<IEnumerable<GroupResponse>> GetGroupsByUserId(int userId)
-{
-    try
     {
-        // Lấy danh sách nhóm của user
-        var groups = await _groupRepository.GetGroupsByUserId(userId);
-        if (groups == null || !groups.Any())
+        try
         {
-            return new List<GroupResponse>();
-        }
+            var groups = await _groupRepository.GetGroupsByUserId(userId);
+            if (groups == null || !groups.Any())
+            {
+                return new List<GroupResponse>();
+            }
 
-        var groupResponses = new List<GroupResponse>();
-        foreach (var group in groups)
+            var groupResponses = new List<GroupResponse>();
+            foreach (var group in groups)
+            {
+                var members = await _groupRepository.GetMembersByGroupId(group.GroupId);
+                var activeMembers = members.Where(m => m.Status == (int)GroupMemberStatus.Active).ToList();
+                
+                var groupResponse = _mapper.Map<GroupResponse>(group);
+                groupResponse.Members = _mapper.Map<IEnumerable<GroupMemberResponse>>(activeMembers);
+                groupResponse.CurrentMember = activeMembers.Count;
+                
+                groupResponses.Add(groupResponse);
+            }
+
+            return groupResponses;
+        }
+        catch (Exception e)
         {
-            // Lấy thông tin thành viên cho mỗi nhóm
-            var members = await _groupRepository.GetMembersByGroupId(group.GroupId);
-            var groupResponse = _mapper.Map<GroupResponse>(group);
-            groupResponse.Members = _mapper.Map<IEnumerable<GroupMemberResponse>>(members);
-            groupResponses.Add(groupResponse);
+            throw new ServiceException(e.Message);
         }
-
-        return groupResponses;
     }
-    catch (Exception e)
-    {
-        throw new ServiceException(e.Message);
-    }
-}
     public async Task CreateStudentGroup(CreateStudentGroupRequest request, int currentUserId)
     {
-        // Kiểm tra tên nhóm
-    if (string.IsNullOrEmpty(request.GroupName))
-    {
-        throw new ServiceException("Group name cannot be null or empty.");
-    }
+        // Validate group name
+        if (string.IsNullOrEmpty(request.GroupName))
+        {
+            throw new ServiceException("Group name cannot be null or empty.");
+        }
 
-    // Kiểm tra danh sách thành viên
-    if (request.Members == null || !request.Members.Any())
-    {
-        throw new ServiceException("Members cannot be null or empty.");
-    }
+        // Validate member list
+        if (request.Members == null || !request.Members.Any())
+        {
+            throw new ServiceException("Members cannot be null or empty.");
+        }
 
-    // Kiểm tra thông tin của tất cả thành viên
-    foreach (var member in request.Members)
-    {
-        await ValidateMemberInfo(member.MemberEmail, member.MemberName);
-    }
+        // Get creator information
+        var creator = await _userRepository.GetByIdAsync(currentUserId);
+        if (creator == null)
+        {
+            throw new ServiceException("Creator not found.");
+        }
 
-    // Kiểm tra số lượng và vai trò của các thành viên
-    var leaderCount = request.Members.Count(m => m.Role == (int)GroupMemberRoleEnum.Leader);
-    var supervisorCount = request.Members.Count(m => m.Role == (int)GroupMemberRoleEnum.Supervisor);
+        bool isStudentCreated = creator.Role == (int)SystemRoleEnum.Student;
+        
+        // Validate all members
+        foreach (var member in request.Members)
+        {
+            await ValidateMemberInfo(member.MemberEmail, member.MemberName);
+        }
 
-    if (leaderCount != 1)
-    {
-        throw new ServiceException("Student group must have exactly one leader.");
-    }
+        // Count supervisors and students
+        var supervisors = request.Members.Where(m => m.Role == (int)GroupMemberRoleEnum.Supervisor).ToList();
+        var students = request.Members.Where(m => m.Role != (int)GroupMemberRoleEnum.Supervisor).ToList();
+        
+        // Apply business rules based on creator type
+        if (isStudentCreated)
+        {
+            // Student-created: Max 2 supervisors + 5 students
+            if (supervisors.Count > 2)
+            {
+                throw new ServiceException("Student-created research groups can have at most 2 supervisors.");
+            }
+            
+            if (students.Count > 5)
+            {
+                throw new ServiceException("Student-created research groups can have at most 5 students.");
+            }
+            
+            if (supervisors.Count == 0)
+            {
+                throw new ServiceException("Research group must have at least one supervisor.");
+            }
+            
+            // Set proper max member value
+            request.MaxMember = 7; // 2 supervisors + 5 students
+        }
+        else
+        {
+            // Lecturer-created: Max 10 members total
+            if (request.Members.Count > 10)
+            {
+                throw new ServiceException("Lecturer-created research groups can have at most 10 members.");
+            }
+            
+            // Set proper max member value
+            request.MaxMember = 10;
+        }
 
-    if (supervisorCount != 1)
-    {
-        throw new ServiceException("Student group must have exactly one supervisor.");
-    }
+        // Ensure exactly one leader
+        var leaderCount = request.Members.Count(m => m.Role == (int)GroupMemberRoleEnum.Leader);
+        if (leaderCount != 1)
+        {
+            throw new ServiceException("Research group must have exactly one leader.");
+        }
 
-    // Kiểm tra supervisor phải là lecturer
-    var supervisorMember = request.Members.First(m => m.Role == (int)GroupMemberRoleEnum.Supervisor);
-    var supervisor = await _userRepository.GetUserByEmail(supervisorMember.MemberEmail);
-    if (supervisor.Role != (int)SystemRoleEnum.Lecturer)
-    {
-        throw new ServiceException("Supervisor must be a lecturer.");
-    }
+        // Verify supervisors are lecturers
+        foreach (var supervisorMember in supervisors)
+        {
+            var supervisor = await _userRepository.GetUserByEmail(supervisorMember.MemberEmail);
+            if (supervisor.Role != (int)SystemRoleEnum.Lecturer)
+            {
+                throw new ServiceException($"Supervisor {supervisorMember.MemberName} must be a lecturer.");
+            }
+        }
+
+        // Create the group
         var group = new LRMS_API.Group
         {
             GroupName = request.GroupName,
@@ -171,16 +221,19 @@ public class GroupService : IGroupService
             CurrentMember = 0,
             Status = 1,
             CreatedAt = DateTime.Now,
-            GroupType = 0
+            CreatedBy = currentUserId,
+            GroupType = (int)GroupTypeEnum.Student
         };
+        
         await _groupRepository.AddAsync(group);
-        // Gửi lời mời cho các thành viên
+        
+        // Process members and send invitations
         foreach (var member in request.Members)
         {
             var user = await _userRepository.GetUserByEmail(member.MemberEmail);
             if (user != null)
             {
-                // Tạo GroupMember
+                // Create GroupMember
                 var groupMember = new GroupMember
                 {
                     GroupId = group.GroupId,
@@ -190,14 +243,15 @@ public class GroupService : IGroupService
                     JoinDate = null
                 };
                 await _groupRepository.AddMemberAsync(groupMember);
+                
                 var invitationRequest = new SendInvitationRequest
                 {
-                    Content = $"You have been invited to join the student group '{group.GroupName}'.",
+                    Content = $"You have been invited to join the research group '{group.GroupName}'.",
                     InvitedUserId = user.UserId,
                     InvitedBy = currentUserId,
-                    GroupId = group.GroupId, // Thêm GroupId vào đây
+                    GroupId = group.GroupId,
                     InvitedRole = member.Role,
-                    ProjectId = request.ProjectId // Thêm vai trò
+                    ProjectId = request.ProjectId
                 };
 
                 await _invitationService.SendInvitation(invitationRequest);
@@ -218,6 +272,13 @@ public class GroupService : IGroupService
     foreach (var member in request.Members)
     {
         await ValidateMemberInfo(member.MemberEmail, member.MemberName);
+        
+        // Validate council members must be lecturer
+        var user = await _userRepository.GetUserByEmail(member.MemberEmail);
+        if (user.Role != (int)SystemRoleEnum.Lecturer)
+        {
+            throw new ServiceException($"Council member {member.MemberName} must be a lecturer.");
+        }
     }
 
     // Kiểm tra số lượng và vai trò của các thành viên
@@ -310,6 +371,17 @@ public class GroupService : IGroupService
 
                 await _invitationService.SendInvitation(invitationRequest);
             }
+        }
+    }
+
+    private async Task UpdateGroupMemberCount(int groupId)
+    {
+        var group = await _groupRepository.GetByIdAsync(groupId);
+        if (group != null)
+        {
+            var activeMembers = await _groupRepository.GetMembersByGroupId(groupId);
+            group.CurrentMember = activeMembers.Count(m => m.Status == (int)GroupMemberStatus.Active);
+            await _groupRepository.UpdateAsync(group);
         }
     }
 }

@@ -499,6 +499,50 @@ VALUES
 ('user5', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', N'Nguyễn Văn E', 'accountingDep1@example.com', '0123456785', 3, 4, 1, GETDATE(), GETDATE(), 1),
 ('user6', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', N'Trần Thị F', 'accountingDep2@example.com', '0123456784', 3, 2, 1, GETDATE(), GETDATE(), 1);
 
+-- Add more lecturers
+INSERT INTO [Users] ([username], [password], [full_name], [email], [phone], [role], [level], [status], [created_at], [updated_at], [department_id])
+VALUES 
+('Johnson', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Michael Johnson', 'johnson@example.com', '0123487111', 1, 2, 1, GETDATE(), GETDATE(), 1),
+('Smith', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Sarah Smith', 'smith@example.com', '0123487222', 1, 1, 1, GETDATE(), GETDATE(), 2),
+('Davis', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Robert Davis', 'davis@example.com', '0123487333', 1, 3, 1, GETDATE(), GETDATE(), 1),
+('Wilson', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Emily Wilson', 'wilson@example.com', '0123487444', 1, 2, 1, GETDATE(), GETDATE(), 3);
+
+-- Add more students
+INSERT INTO [Users] ([username], [password], [full_name], [email], [phone], [role], [level], [status], [created_at], [updated_at], [department_id])
+VALUES 
+('student_brown', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'James Brown', 'brown@example.com', '0123476111', 2, NULL, 1, GETDATE(), GETDATE(), 1),
+('student_miller', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Jennifer Miller', 'miller@example.com', '0123476222', 2, NULL, 1, GETDATE(), GETDATE(), 2),
+('student_taylor', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'David Taylor', 'taylor@example.com', '0123476333', 2, NULL, 1, GETDATE(), GETDATE(), 1),
+('student_anderson', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Emma Anderson', 'anderson@example.com', '0123476444', 2, NULL, 1, GETDATE(), GETDATE(), 3),
+('student_thomas', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'William Thomas', 'thomas@example.com', '0123476555', 2, NULL, 1, GETDATE(), GETDATE(), 2),
+('student_jackson', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Olivia Jackson', 'jackson@example.com', '0123476666', 2, NULL, 1, GETDATE(), GETDATE(), 1);
+
+-- Update lecturer emails (@lecturer)
+UPDATE Users
+SET email = username + '@lecturer.com'
+WHERE role = 1;
+
+-- Update student emails (@student)
+UPDATE Users
+SET email = username + '@student.com'
+WHERE role = 2;
+
+-- Update accounting department emails (@accounting)
+UPDATE Users
+SET email = username + '@accounting.com'
+WHERE role = 3;
+
+-- Update office emails (@office)
+UPDATE Users
+SET email = username + '@office.com'
+WHERE role = 4;
+
+-- Update admin emails (@admin)
+UPDATE Users
+SET email = username + '@admin.com'
+WHERE role = 0;
+
+
 -- 3. Dữ liệu cho bảng Groups (điều chỉnh lại)
 INSERT INTO [Groups] ([group_type], [group_name], [max_member], [current_member], [status], [created_at], [created_by], [group_department])
 VALUES 
