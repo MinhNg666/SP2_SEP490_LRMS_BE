@@ -21,9 +21,9 @@ public class SendInvitationRequest
 
     public int InvitedUserId { get; set; }
 
-    public int? InvitedBy { get; set; }
+    public int InvitedBy { get; set; }
 
-    public int? InvitedRole { get; set; }
+    public int InvitedRole { get; set; }
 
     public DateTime? RespondDate { get; set; }
 }

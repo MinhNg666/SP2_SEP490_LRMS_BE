@@ -12,4 +12,5 @@ public interface INotificationRepository : IGenericRepository<Notification>
     Task AddNotificationAsync(Notification notification);
     Task<IEnumerable<Notification>> GetNotificationsByUserId(int userId);
     Task<IEnumerable<Notification>> GetByUserIdAsync(int userId);
+    Task<IEnumerable<Notification>> GetByInvitationIdAsync(int invitationId);
 }

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
+using Domain.Constants;
 using Domain.DTO.Requests;
 using Domain.DTO.Responses;
 using LRMS_API;
@@ -19,36 +20,53 @@ public class InvitationService : IInvitationService
     private readonly IGroupRepository _groupRepository;
     private readonly INotificationService _notificationService;
     private readonly IMapper _mapper;
-    public InvitationService(IInvitationRepository invitationRepository, IMapper mapper, IGroupRepository groupRepository, INotificationService notificationService)
+    private readonly IUserRepository _userRepository;
+
+    public InvitationService(IInvitationRepository invitationRepository, IMapper mapper, IGroupRepository groupRepository, INotificationService notificationService, IUserRepository userRepository)
     {
         _invitationRepository = invitationRepository;
         _mapper = mapper;
         _groupRepository = groupRepository;
         _notificationService = notificationService;
+        _userRepository = userRepository;
     }
 
     public async Task SendInvitation(SendInvitationRequest request)
     {
+        // Get the group first
+        var group = await _groupRepository.GetByIdAsync(request.GroupId);
+        if (group == null)
+        {
+            throw new ServiceException("Group not found.");
+        }
+
+        // Get the sender's information
+        var sender = await _userRepository.GetByIdAsync(request.InvitedBy);
+        if (sender == null)
+        {
+            throw new ServiceException("Sender not found.");
+        }
+
         var invitation = new Invitation
         {
             Message = request.Content,
             RecieveBy = request.InvitedUserId,
-            GroupId = request.GroupId, // Thêm GroupId vào đây
+            GroupId = request.GroupId,
             SentBy = request.InvitedBy,
             CreatedAt = DateTime.Now,
-            Status = 0, // 0: Pending
+            Status = (int)InvitationEnum.Pending,
             InvitedRole = request.InvitedRole
         };
 
         await _invitationRepository.AddInvitationAsync(invitation);
 
-        // Tạo notification cho người được mời
-        var group = await _groupRepository.GetByIdAsync(request.GroupId);
+        // Create notification with sender's name
+        var senderName = sender.FullName ?? "Unknown User";
         var notificationRequest = new CreateNotificationRequest
         {
             UserId = request.InvitedUserId,
             Title = "Group Invitation",
-            Message = $"You have been invited to join the group '{group.GroupName}'",
+            Message = $"You have been invited by {senderName} to join the group '{group.GroupName}'",
             ProjectId = request.ProjectId,
             Status = 0,
             IsRead = false,
@@ -70,20 +88,32 @@ public class InvitationService : IInvitationService
         {
             throw new ServiceException("Invitation not found or does not belong to the user.");
         }
-        if (invitation.Status != 0) // 2: Rejected
+        
+        if (invitation.Status != (int)InvitationEnum.Pending)
         {
-        throw new ServiceException("Invitation has already been proccess.");
+            throw new ServiceException("Invitation has already been processed.");
         }
 
-        invitation.Status = 1; // 1: Accepted
-        invitation.RespondDate = DateTime.Now; // Gán thời gian phản hồi
+        invitation.Status = (int)InvitationEnum.Accepted;
+        invitation.RespondDate = DateTime.Now;
         await _invitationRepository.UpdateInvitation(invitation);
-        var groupMember = await _groupRepository.GetGroupMember(invitation.GroupId.Value, userId);
-        if (groupMember != null)
+        
+        // Update notification status
+        await _notificationService.UpdateNotificationForInvitation(invitationId, (int)InvitationEnum.Accepted);
+        
+        if (invitation.GroupId.HasValue)
         {
-            groupMember.Status = 1; // Active
-            groupMember.JoinDate = DateTime.Now;
-            await _groupRepository.UpdateMemberAsync(groupMember);
+            var groupMember = await _groupRepository.GetGroupMember(invitation.GroupId.Value, userId);
+            if (groupMember != null)
+            {
+                groupMember.Status = 1; // Active
+                groupMember.JoinDate = DateTime.Now;
+                await _groupRepository.UpdateMemberAsync(groupMember);
+            }
+        }
+        else
+        {
+            throw new ServiceException("Group ID is missing from invitation.");
         }
     }
 
@@ -95,13 +125,27 @@ public class InvitationService : IInvitationService
             throw new ServiceException("Invitation not found or does not belong to the user.");
         }
 
-        if (invitation.Status != 0) // 2: Rejected
+        if (invitation.Status != (int)InvitationEnum.Pending)
         {
-        throw new ServiceException("Invitation has already been proccess.");
+            throw new ServiceException("Invitation has already been processed.");
         }
 
-        invitation.Status = 2; // 2: Rejected
+        invitation.Status = (int)InvitationEnum.Rejected;
+        invitation.RespondDate = DateTime.Now;
         await _invitationRepository.UpdateInvitation(invitation);
-        await _groupRepository.DeleteMemberAsync(invitation.GroupId.Value, userId);
+        
+        // Update notification status
+        await _notificationService.UpdateNotificationForInvitation(invitationId, (int)InvitationEnum.Rejected);
+        
+        if (invitation.GroupId.HasValue)
+        {
+            // Update member status to rejected
+            var groupMember = await _groupRepository.GetGroupMember(invitation.GroupId.Value, userId);
+            if (groupMember != null)
+            {
+                groupMember.Status = (int)GroupMemberStatus.Rejected;
+                await _groupRepository.UpdateMemberAsync(groupMember);
+            }
+        }
     }
 }

@@ -37,4 +37,10 @@ public class NotificationRepository : GenericRepository<Notification>, INotifica
         _context.Invitations.Update(invitation);
         await _context.SaveChangesAsync();
     }
+    public async Task<IEnumerable<Notification>> GetByInvitationIdAsync(int invitationId)
+    {
+        return await _context.Notifications
+            .Where(n => n.InvitationId == invitationId)
+            .ToListAsync();
+    }
 }

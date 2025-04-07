@@ -7,7 +7,7 @@ using Service.Interfaces;
 
 namespace LRMS_API.Controllers;
 [ApiController]
-
+[Route("api/notifications")]
 public class NotificationController : ApiBaseController
 {
     private readonly INotificationService _notificationService;
@@ -17,8 +17,8 @@ public class NotificationController : ApiBaseController
         _notificationService = notificationService;
     }
 
-    [HttpGet("user/{userId}/notifications")]
-    public async Task<IActionResult> GetNotificationsByUserId(int userId)
+    [HttpGet]
+    public async Task<IActionResult> GetNotifications([FromQuery] int userId)
     {
         try
         {
@@ -30,8 +30,9 @@ public class NotificationController : ApiBaseController
             return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, e.Message));
         }
     }
-    [HttpPost("notification")]
-    public async Task<IActionResult> CreateNotification( CreateNotificationRequest request)
+
+    [HttpPost]
+    public async Task<IActionResult> CreateNotification(CreateNotificationRequest request)
     {
         try
         {
@@ -44,13 +45,21 @@ public class NotificationController : ApiBaseController
         }
     }
 
-    [HttpPut("{notificationId}/read")]
-    public async Task<IActionResult> MarkAsRead(int notificationId)
+    [HttpPatch("{notificationId}")]
+    public async Task<IActionResult> UpdateNotification(int notificationId, [FromBody] UpdateNotificationRequest request)
     {
         try
         {
-            await _notificationService.MarkAsRead(notificationId);
-            return Ok(new ApiResponse(StatusCodes.Status200OK, MessageConstants.SUCCESSFUL, "Notification marked as read"));
+            if (request == null)
+            {
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Request body is required"));
+            }
+            
+            if (request.IsRead.HasValue && request.IsRead.Value)
+            {
+                await _notificationService.MarkAsRead(notificationId);
+            }
+            return Ok(new ApiResponse(StatusCodes.Status200OK, MessageConstants.SUCCESSFUL, "Notification updated"));
         }
         catch (Exception e)
         {
