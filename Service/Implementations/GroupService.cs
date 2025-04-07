@@ -390,12 +390,12 @@ public class GroupService : IGroupService
                 {
                     var invitationRequest = new SendInvitationRequest
                     {
-                        Content = $"You have been invited to join the group '{group.GroupName}'.",
+                        Content = $"You have been invited to join the council group '{group.GroupName}'.",
                         InvitedUserId = user.UserId,
                         InvitedBy = currentUserId,
                         InvitedRole = member.Role,
                         GroupId = group.GroupId,
-                        ProjectId = request.ProjectId
+                        ProjectId = null 
                     };
 
                     await _invitationService.SendInvitation(invitationRequest);
