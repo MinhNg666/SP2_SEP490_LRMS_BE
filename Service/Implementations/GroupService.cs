@@ -114,11 +114,16 @@ public class GroupService : IGroupService
             {
                 var members = await _groupRepository.GetMembersByGroupId(group.GroupId);
                 
-                // Include both active and pending members
-                var relevantMembers = members.Where(m => 
-                    m.Status == (int)GroupMemberStatus.Active || 
-                    m.Status == (int)GroupMemberStatus.Pending
-                ).ToList();
+                // For normal users, show only active and pending members
+                // For the group creator, also show rejected members
+                var relevantMembers = group.CreatedBy == userId
+                    ? members.Where(m => 
+                        m.Status == (int)GroupMemberStatus.Active || 
+                        m.Status == (int)GroupMemberStatus.Pending ||
+                        m.Status == (int)GroupMemberStatus.Rejected)
+                    : members.Where(m => 
+                        m.Status == (int)GroupMemberStatus.Active || 
+                        m.Status == (int)GroupMemberStatus.Pending);
                 
                 var groupResponse = _mapper.Map<GroupResponse>(group);
                 groupResponse.Members = _mapper.Map<IEnumerable<GroupMemberResponse>>(relevantMembers);

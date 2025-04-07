@@ -20,16 +20,33 @@ public class InvitationService : IInvitationService
     private readonly IGroupRepository _groupRepository;
     private readonly INotificationService _notificationService;
     private readonly IMapper _mapper;
-    public InvitationService(IInvitationRepository invitationRepository, IMapper mapper, IGroupRepository groupRepository, INotificationService notificationService)
+    private readonly IUserRepository _userRepository;
+
+    public InvitationService(IInvitationRepository invitationRepository, IMapper mapper, IGroupRepository groupRepository, INotificationService notificationService, IUserRepository userRepository)
     {
         _invitationRepository = invitationRepository;
         _mapper = mapper;
         _groupRepository = groupRepository;
         _notificationService = notificationService;
+        _userRepository = userRepository;
     }
 
     public async Task SendInvitation(SendInvitationRequest request)
     {
+        // Get the group first
+        var group = await _groupRepository.GetByIdAsync(request.GroupId);
+        if (group == null)
+        {
+            throw new ServiceException("Group not found.");
+        }
+
+        // Get the sender's information
+        var sender = await _userRepository.GetByIdAsync(request.InvitedBy);
+        if (sender == null)
+        {
+            throw new ServiceException("Sender not found.");
+        }
+
         var invitation = new Invitation
         {
             Message = request.Content,
@@ -43,17 +60,13 @@ public class InvitationService : IInvitationService
 
         await _invitationRepository.AddInvitationAsync(invitation);
 
-        // Tạo notification cho người được mời
-        var group = await _groupRepository.GetByIdAsync(request.GroupId);
-        if (group == null)
-        {
-            throw new ServiceException("Group not found.");
-        }
+        // Create notification with sender's name
+        var senderName = sender.FullName ?? "Unknown User";
         var notificationRequest = new CreateNotificationRequest
         {
             UserId = request.InvitedUserId,
             Title = "Group Invitation",
-            Message = $"You have been invited to join the group '{group.GroupName}'",
+            Message = $"You have been invited by {senderName} to join the group '{group.GroupName}'",
             ProjectId = request.ProjectId,
             Status = 0,
             IsRead = false,
@@ -84,6 +97,9 @@ public class InvitationService : IInvitationService
         invitation.Status = (int)InvitationEnum.Accepted;
         invitation.RespondDate = DateTime.Now;
         await _invitationRepository.UpdateInvitation(invitation);
+        
+        // Update notification status
+        await _notificationService.UpdateNotificationForInvitation(invitationId, (int)InvitationEnum.Accepted);
         
         if (invitation.GroupId.HasValue)
         {
@@ -117,6 +133,19 @@ public class InvitationService : IInvitationService
         invitation.Status = (int)InvitationEnum.Rejected;
         invitation.RespondDate = DateTime.Now;
         await _invitationRepository.UpdateInvitation(invitation);
-        await _groupRepository.DeleteMemberAsync(invitation.GroupId.Value, userId);
+        
+        // Update notification status
+        await _notificationService.UpdateNotificationForInvitation(invitationId, (int)InvitationEnum.Rejected);
+        
+        if (invitation.GroupId.HasValue)
+        {
+            // Update member status to rejected
+            var groupMember = await _groupRepository.GetGroupMember(invitation.GroupId.Value, userId);
+            if (groupMember != null)
+            {
+                groupMember.Status = (int)GroupMemberStatus.Rejected;
+                await _groupRepository.UpdateMemberAsync(groupMember);
+            }
+        }
     }
 }
