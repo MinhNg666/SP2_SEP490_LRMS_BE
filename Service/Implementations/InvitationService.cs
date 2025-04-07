@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
+using Domain.Constants;
 using Domain.DTO.Requests;
 using Domain.DTO.Responses;
 using LRMS_API;
@@ -33,10 +34,10 @@ public class InvitationService : IInvitationService
         {
             Message = request.Content,
             RecieveBy = request.InvitedUserId,
-            GroupId = request.GroupId, // Thêm GroupId vào đây
+            GroupId = request.GroupId,
             SentBy = request.InvitedBy,
             CreatedAt = DateTime.Now,
-            Status = 0, // 0: Pending
+            Status = (int)InvitationEnum.Pending,
             InvitedRole = request.InvitedRole
         };
 
@@ -44,6 +45,10 @@ public class InvitationService : IInvitationService
 
         // Tạo notification cho người được mời
         var group = await _groupRepository.GetByIdAsync(request.GroupId);
+        if (group == null)
+        {
+            throw new ServiceException("Group not found.");
+        }
         var notificationRequest = new CreateNotificationRequest
         {
             UserId = request.InvitedUserId,
@@ -70,20 +75,29 @@ public class InvitationService : IInvitationService
         {
             throw new ServiceException("Invitation not found or does not belong to the user.");
         }
-        if (invitation.Status != 0) // 2: Rejected
+        
+        if (invitation.Status != (int)InvitationEnum.Pending)
         {
-        throw new ServiceException("Invitation has already been proccess.");
+            throw new ServiceException("Invitation has already been processed.");
         }
 
-        invitation.Status = 1; // 1: Accepted
-        invitation.RespondDate = DateTime.Now; // Gán thời gian phản hồi
+        invitation.Status = (int)InvitationEnum.Accepted;
+        invitation.RespondDate = DateTime.Now;
         await _invitationRepository.UpdateInvitation(invitation);
-        var groupMember = await _groupRepository.GetGroupMember(invitation.GroupId.Value, userId);
-        if (groupMember != null)
+        
+        if (invitation.GroupId.HasValue)
         {
-            groupMember.Status = 1; // Active
-            groupMember.JoinDate = DateTime.Now;
-            await _groupRepository.UpdateMemberAsync(groupMember);
+            var groupMember = await _groupRepository.GetGroupMember(invitation.GroupId.Value, userId);
+            if (groupMember != null)
+            {
+                groupMember.Status = 1; // Active
+                groupMember.JoinDate = DateTime.Now;
+                await _groupRepository.UpdateMemberAsync(groupMember);
+            }
+        }
+        else
+        {
+            throw new ServiceException("Group ID is missing from invitation.");
         }
     }
 
@@ -95,12 +109,13 @@ public class InvitationService : IInvitationService
             throw new ServiceException("Invitation not found or does not belong to the user.");
         }
 
-        if (invitation.Status != 0) // 2: Rejected
+        if (invitation.Status != (int)InvitationEnum.Pending)
         {
-        throw new ServiceException("Invitation has already been proccess.");
+            throw new ServiceException("Invitation has already been processed.");
         }
 
-        invitation.Status = 2; // 2: Rejected
+        invitation.Status = (int)InvitationEnum.Rejected;
+        invitation.RespondDate = DateTime.Now;
         await _invitationRepository.UpdateInvitation(invitation);
         await _groupRepository.DeleteMemberAsync(invitation.GroupId.Value, userId);
     }

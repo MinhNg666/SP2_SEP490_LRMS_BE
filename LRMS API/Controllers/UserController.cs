@@ -4,7 +4,9 @@ using Service.Interfaces;
 using Domain.DTO.Common;
 using Domain.Constants;
 using Domain.DTO.Requests;
+using Domain.DTO.Responses;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace LRMS_API.Controllers;
 [ApiController]
@@ -12,9 +14,11 @@ namespace LRMS_API.Controllers;
 public class UserController : ApiBaseController
 {
     private readonly IUserService _userService;
-    public UserController(IUserService userService)
+    private readonly IGroupService _groupService;
+    public UserController(IUserService userService, IGroupService groupService)
     {
         _userService = userService;
+        _groupService = groupService;
     }
     [HttpGet("users")]
     [Authorize(Roles = "Admin")]
@@ -172,5 +176,36 @@ public class UserController : ApiBaseController
         {
             return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, e.Message));
         }
+    }
+    [HttpGet("users/{userId}/groups")]
+    [Authorize]
+    public async Task<ActionResult<IEnumerable<GroupResponse>>> GetUserGroups(int userId)
+    {
+        try
+        {
+            var currentUserIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(currentUserIdString))
+            {
+                return Unauthorized(new { message = "User not authenticated" });
+            }
+            
+            var currentUserId = int.Parse(currentUserIdString);
+            
+            if (currentUserId != userId)
+            {
+                return Forbid();
+            }
+            
+            var groups = await _groupService.GetGroupsByUserId(userId);
+            return Ok(new ApiResponse(StatusCodes.Status200OK, MessageConstants.SUCCESSFUL, groups));
+        }
+        catch (ServiceException e)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, e.Message));
+        }
+        catch (Exception e)
+        {
+            return StatusCode(500, new ApiResponse(StatusCodes.Status500InternalServerError, "An error occurred while processing your request."));
+        }      
     }
 }

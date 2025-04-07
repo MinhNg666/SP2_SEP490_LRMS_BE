@@ -46,37 +46,37 @@ public class GroupController : ApiBaseController
             return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, e.Message));
         }
     }
-    [HttpGet("groups-by-user/{userId}")]
-    [Authorize]
-    public async Task<ActionResult<IEnumerable<GroupResponse>>> GetGroupsByUserId(int userId)
-    {
-        try
-        {
-            var currentUserIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(currentUserIdString))
-            {
-                return Unauthorized(new { message = "User not authenticated" });
-            }
+    // [HttpGet("groups-by-user/{userId}")]
+    // [Authorize]
+    // public async Task<ActionResult<IEnumerable<GroupResponse>>> GetGroupsByUserId(int userId)
+    // {
+    //     try
+    //     {
+    //         var currentUserIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    //         if (string.IsNullOrEmpty(currentUserIdString))
+    //         {
+    //             return Unauthorized(new { message = "User not authenticated" });
+    //         }
             
-            var currentUserId = int.Parse(currentUserIdString);
+    //         var currentUserId = int.Parse(currentUserIdString);
             
-            if (currentUserId != userId)
-            {
-                return Forbid();
-            }
+    //         if (currentUserId != userId)
+    //         {
+    //             return Forbid();
+    //         }
             
-            var groups = await _groupService.GetGroupsByUserId(userId);
-            return Ok(groups);
-        }
-        catch (ServiceException e)
-        {
-            return BadRequest(new { message = e.Message });
-        }
-        catch (Exception e)
-        {
-            return StatusCode(500, new { message = "An error occurred while processing your request." });
-        }      
-    }
+    //         var groups = await _groupService.GetGroupsByUserId(userId);
+    //         return Ok(groups);
+    //     }
+    //     catch (ServiceException e)
+    //     {
+    //         return BadRequest(new { message = e.Message });
+    //     }
+    //     catch (Exception e)
+    //     {
+    //         return StatusCode(500, new { message = "An error occurred while processing your request." });
+    //     }      
+    // }
     [HttpPost("council-groups")]
     public async Task<IActionResult> CreateCouncilGroup(CreateCouncilGroupRequest request) 
     {

@@ -22,8 +22,9 @@ public class NotificationService : INotificationService
     {
         try 
         { 
-            var Notification = _mapper.Map<Notification>(request);
-            await _notificationRepository.AddAsync(Notification);
+            var notification = _mapper.Map<Notification>(request);
+            notification.CreatedAt = DateTime.Now; // Set creation timestamp
+            await _notificationRepository.AddAsync(notification);
         }
         catch (Exception ex)
         {
@@ -53,5 +54,17 @@ public class NotificationService : INotificationService
             throw new ServiceException(ex.Message);
         }
         
+    }
+
+    public async Task UpdateNotificationForInvitation(int invitationId, int newStatus)
+    {
+        var notifications = await _notificationRepository.GetByInvitationIdAsync(invitationId);
+        
+        foreach (var notification in notifications)
+        {
+            // Update notification to reflect invitation status
+            notification.Status = newStatus;
+            await _notificationRepository.UpdateAsync(notification);
+        }
     }
 }

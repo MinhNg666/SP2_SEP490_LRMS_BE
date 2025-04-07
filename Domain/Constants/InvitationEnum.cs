@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Domain.Constants;
 public enum InvitationEnum
 {
-    Accepted = 0,
-    Rejected = 1,
-    Pending = 2,
+    Pending = 0,
+    Accepted = 1,
+    Rejected = 2
 }
