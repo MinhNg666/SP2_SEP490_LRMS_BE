@@ -314,17 +314,17 @@ public class GroupService : IGroupService
 
     if (chairmanCount != 1)
     {
-        throw new ServiceException("Council must have exactly one chairman.");
+        throw new ServiceException("Council must have one chairman.");
     }
 
     if (secretaryCount != 1)
     {
-        throw new ServiceException("Council must have exactly one secretary.");
+        throw new ServiceException("Council must have  one secretary.");
     }
 
     if (councilMemberCount != 3)
     {
-        throw new ServiceException("Council must have exactly three council members.");
+        throw new ServiceException("Council must have  three council members.");
     }
 
     // Kiểm tra level của từng thành viên
