@@ -5,35 +5,39 @@ using LRMS_API;
 using Repository.Interfaces;
 using Service.Exceptions;
 using Service.Interfaces;
+using Microsoft.AspNetCore.Http;
 
 namespace Service.Implementations;
 public class ProjectService : IProjectService
 {
+    private readonly IS3Service _s3Service;
     private readonly IProjectRepository _projectRepository;
     private readonly IGroupRepository _groupRepository;
     private readonly INotificationService _notificationService;
     private readonly IMapper _mapper;
 
-    public ProjectService( IProjectRepository projectRepository, IGroupRepository groupRepository,
+    public ProjectService(IS3Service s3Service, IProjectRepository projectRepository, IGroupRepository groupRepository,
         INotificationService notificationService, IMapper mapper)
     {
+        _s3Service = s3Service;
         _projectRepository = projectRepository;
         _groupRepository = groupRepository;
         _notificationService = notificationService;
         _mapper = mapper;
     }
 
-    public async Task<int> CreateResearchProject(CreateProjectRequest request, int createdBy)
+    public async Task<int> CreateResearchProject(CreateProjectRequest request, IFormFile documentFile, int createdBy)
     {
-        var project = new Project
+        try
         {
+            var project = new Project
+            {
             ProjectName = request.ProjectName,
             Description = request.Description,
             Methodlogy = request.Methodology,
             StartDate = request.StartDate,
             EndDate = request.EndDate,
             ApprovedBudget = request.ApprovedBudget,
-            SpentBudget = 0,
             Status = (int)ProjectStatusEnum.Pending,
             CreatedAt = DateTime.Now,
             CreatedBy = createdBy,
@@ -43,7 +47,29 @@ public class ProjectService : IProjectService
         };
 
         await _projectRepository.AddAsync(project);
+        if (documentFile != null)
+            {
+                var documentUrl = await _s3Service.UploadFileAsync(documentFile, $"projects/{project.ProjectId}/documents");
+
+                // 3. Tạo document record
+                var document = new Document
+                {
+                    ProjectId = project.ProjectId,
+                    DocumentUrl = documentUrl,
+                    FileName = documentFile.FileName,
+                    DocumentType = (int)DocumentTypeEnum.ProjectProposal,
+                    UploadAt = DateTime.Now,
+                    UploadedBy = createdBy
+                };
+
+                await _projectRepository.AddDocumentAsync(document);
+            }
         return project.ProjectId;
+        }
+        catch (Exception ex)
+        {
+            throw new ServiceException($"Error creating research project: {ex.Message}");
+        }
     }
 
     public async Task<bool> SendProjectForApproval(ProjectApprovalRequest request)

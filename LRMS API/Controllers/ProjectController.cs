@@ -1,5 +1,7 @@
-﻿using Domain.DTO.Requests;
+﻿using System.Security.Claims;
+using Domain.DTO.Requests;
 using Microsoft.AspNetCore.Mvc;
+using Service.Exceptions;
 using Service.Implementations;
 using Service.Interfaces;
 
@@ -15,17 +17,17 @@ public class ProjectController : ApiBaseController
     }
 
     [HttpPost("research")]
-    public async Task<IActionResult> CreateResearchProject([FromBody] CreateProjectRequest request)
+    public async Task<IActionResult> CreateResearchProject([FromForm] CreateProjectRequest request, IFormFile documentFile)
     {
         try
         {
-            int currentUserId = int.Parse(User.Identity.Name); // Lấy từ token
-            var projectId = await _projectService.CreateResearchProject(request, currentUserId);
-            return Ok(new { ProjectId = projectId });
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            var projectId = await _projectService.CreateResearchProject(request, documentFile, userId);
+            return Ok(new { projectId });
         }
-        catch (Exception ex)
+        catch (ServiceException ex)
         {
-            return BadRequest(ex.Message);
+            return BadRequest(new { message = ex.Message });
         }
     }
 
