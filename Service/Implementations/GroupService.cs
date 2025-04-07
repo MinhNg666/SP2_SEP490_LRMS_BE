@@ -113,11 +113,18 @@ public class GroupService : IGroupService
             foreach (var group in groups)
             {
                 var members = await _groupRepository.GetMembersByGroupId(group.GroupId);
-                var activeMembers = members.Where(m => m.Status == (int)GroupMemberStatus.Active).ToList();
+                
+                // Include both active and pending members
+                var relevantMembers = members.Where(m => 
+                    m.Status == (int)GroupMemberStatus.Active || 
+                    m.Status == (int)GroupMemberStatus.Pending
+                ).ToList();
                 
                 var groupResponse = _mapper.Map<GroupResponse>(group);
-                groupResponse.Members = _mapper.Map<IEnumerable<GroupMemberResponse>>(activeMembers);
-                groupResponse.CurrentMember = activeMembers.Count;
+                groupResponse.Members = _mapper.Map<IEnumerable<GroupMemberResponse>>(relevantMembers);
+                
+                // Count only active members for CurrentMember
+                groupResponse.CurrentMember = members.Count(m => m.Status == (int)GroupMemberStatus.Active);
                 
                 groupResponses.Add(groupResponse);
             }
@@ -161,8 +168,10 @@ public class GroupService : IGroupService
         // Count supervisors and students
         var supervisors = request.Members.Where(m => m.Role == (int)GroupMemberRoleEnum.Supervisor).ToList();
         var students = request.Members.Where(m => m.Role != (int)GroupMemberRoleEnum.Supervisor).ToList();
+        var leaders = request.Members.Where(m => m.Role == (int)GroupMemberRoleEnum.Leader).ToList();
         
         // Apply business rules based on creator type
+        int maxMember;
         if (isStudentCreated)
         {
             // Student-created: Max 2 supervisors + 5 students
@@ -171,18 +180,18 @@ public class GroupService : IGroupService
                 throw new ServiceException("Student-created research groups can have at most 2 supervisors.");
             }
             
-            if (students.Count > 5)
-            {
-                throw new ServiceException("Student-created research groups can have at most 5 students.");
-            }
-            
             if (supervisors.Count == 0)
             {
                 throw new ServiceException("Research group must have at least one supervisor.");
             }
             
+            if (students.Count < 4 || students.Count > 5)
+            {
+                throw new ServiceException("Student-created research groups must have between 4 and 5 student members.");
+            }
+            
             // Set proper max member value
-            request.MaxMember = 7; // 2 supervisors + 5 students
+            maxMember = 7; // 2 supervisors + 5 students
         }
         else
         {
@@ -192,24 +201,31 @@ public class GroupService : IGroupService
                 throw new ServiceException("Lecturer-created research groups can have at most 10 members.");
             }
             
+            if (supervisors.Any())
+            {
+                throw new ServiceException("Lecturer-created research groups cannot have supervisors.");
+            }
+            
             // Set proper max member value
-            request.MaxMember = 10;
+            maxMember = 10;
         }
 
         // Ensure exactly one leader
-        var leaderCount = request.Members.Count(m => m.Role == (int)GroupMemberRoleEnum.Leader);
-        if (leaderCount != 1)
+        if (leaders.Count != 1)
         {
             throw new ServiceException("Research group must have exactly one leader.");
         }
 
-        // Verify supervisors are lecturers
-        foreach (var supervisorMember in supervisors)
+        // Verify supervisors are lecturers (for student-created groups)
+        if (isStudentCreated)
         {
-            var supervisor = await _userRepository.GetUserByEmail(supervisorMember.MemberEmail);
-            if (supervisor.Role != (int)SystemRoleEnum.Lecturer)
+            foreach (var supervisorMember in supervisors)
             {
-                throw new ServiceException($"Supervisor {supervisorMember.MemberName} must be a lecturer.");
+                var supervisor = await _userRepository.GetUserByEmail(supervisorMember.MemberEmail);
+                if (supervisor.Role != (int)SystemRoleEnum.Lecturer)
+                {
+                    throw new ServiceException($"Supervisor {supervisorMember.MemberName} must be a lecturer.");
+                }
             }
         }
 
@@ -217,7 +233,7 @@ public class GroupService : IGroupService
         var group = new LRMS_API.Group
         {
             GroupName = request.GroupName,
-            MaxMember = request.MaxMember,
+            MaxMember = maxMember,
             CurrentMember = 0,
             Status = 1,
             CreatedAt = DateTime.Now,
@@ -233,28 +249,33 @@ public class GroupService : IGroupService
             var user = await _userRepository.GetUserByEmail(member.MemberEmail);
             if (user != null)
             {
-                // Create GroupMember
+                // Create GroupMember with status based on if it's the creator
+                var isCreator = user.UserId == currentUserId;
                 var groupMember = new GroupMember
                 {
                     GroupId = group.GroupId,
                     Role = member.Role,
                     UserId = user.UserId,
-                    Status = (int?)GroupMemberStatus.Pending,
-                    JoinDate = null
+                    Status = isCreator ? (int?)GroupMemberStatus.Active : (int?)GroupMemberStatus.Pending,
+                    JoinDate = isCreator ? DateTime.Now : null
                 };
                 await _groupRepository.AddMemberAsync(groupMember);
                 
-                var invitationRequest = new SendInvitationRequest
+                // Only send invitations to non-creators
+                if (!isCreator)
                 {
-                    Content = $"You have been invited to join the research group '{group.GroupName}'.",
-                    InvitedUserId = user.UserId,
-                    InvitedBy = currentUserId,
-                    GroupId = group.GroupId,
-                    InvitedRole = member.Role,
-                    ProjectId = request.ProjectId
-                };
+                    var invitationRequest = new SendInvitationRequest
+                    {
+                        Content = $"You have been invited to join the research group '{group.GroupName}'.",
+                        InvitedUserId = user.UserId,
+                        InvitedBy = currentUserId,
+                        GroupId = group.GroupId,
+                        InvitedRole = member.Role,
+                        ProjectId = null
+                    };
 
-                await _invitationService.SendInvitation(invitationRequest);
+                    await _invitationService.SendInvitation(invitationRequest);
+                }
             }
         }
     }
@@ -346,30 +367,34 @@ public class GroupService : IGroupService
             var user = await _userRepository.GetUserByEmail(member.MemberEmail);
             if (user != null)
             {
-                // Tạo GroupMember
+                // Create GroupMember with status based on if it's the creator
+                var isCreator = user.UserId == currentUserId;
                 var groupMember = new GroupMember
                 {
                     GroupId = group.GroupId,
                     Role = member.Role,
                     UserId = user.UserId,
-                    Status = (int?)GroupMemberStatus.Pending,
-                    JoinDate = null
+                    Status = isCreator ? (int?)GroupMemberStatus.Active : (int?)GroupMemberStatus.Pending,
+                    JoinDate = isCreator ? DateTime.Now : null
                 };
 
                 await _groupRepository.AddMemberAsync(groupMember);
 
-                // Gửi lời mời đến Invitation
-                var invitationRequest = new SendInvitationRequest
+                // Only send invitations to non-creators
+                if (!isCreator)
                 {
-                    Content = $"You have been invited to join the group '{group.GroupName}'.",
-                    InvitedUserId = user.UserId,
-                    InvitedBy = currentUserId,
-                    InvitedRole = member.Role,
-                    GroupId = group.GroupId,
-                    ProjectId = request.ProjectId
-                };
+                    var invitationRequest = new SendInvitationRequest
+                    {
+                        Content = $"You have been invited to join the group '{group.GroupName}'.",
+                        InvitedUserId = user.UserId,
+                        InvitedBy = currentUserId,
+                        InvitedRole = member.Role,
+                        GroupId = group.GroupId,
+                        ProjectId = request.ProjectId
+                    };
 
-                await _invitationService.SendInvitation(invitationRequest);
+                    await _invitationService.SendInvitation(invitationRequest);
+                }
             }
         }
     }

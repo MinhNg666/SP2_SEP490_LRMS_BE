@@ -203,7 +203,24 @@ namespace Service.Implementations
             {
                 var users = await _userRepository.GetAllAsync();
                 var lecturers = users.Where(u => u.Role == (int)SystemRoleEnum.Lecturer);
-                return _mapper.Map<IEnumerable<LecturerResponse>>(lecturers);
+                
+                // Use a list to populate with mapped and enhanced data
+                var lecturerResponses = new List<LecturerResponse>();
+                
+                foreach (var lecturer in lecturers)
+                {
+                    var lecturerResponse = _mapper.Map<LecturerResponse>(lecturer);
+                    
+                    // Add department name if department exists
+                    if (lecturer.Department != null)
+                    {
+                        lecturerResponse.DepartmentName = lecturer.Department.DepartmentName;
+                    }
+                    
+                    lecturerResponses.Add(lecturerResponse);
+                }
+                
+                return lecturerResponses;
             }
             catch (Exception e)
             {

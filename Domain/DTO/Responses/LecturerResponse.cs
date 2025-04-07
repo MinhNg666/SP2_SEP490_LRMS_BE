@@ -14,6 +14,6 @@ namespace Domain.DTO.Responses
         public string? Phone { get; set; }
         public int? Level { get; set; }
         public int? DepartmentId { get; set; }
-
+        public string? DepartmentName { get; set; }
     }
 }

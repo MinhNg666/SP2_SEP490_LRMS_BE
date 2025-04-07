@@ -46,4 +46,11 @@ public class UserRepository : GenericRepository<User>, IUserRepository
             .AsSplitQuery()
             .SingleOrDefaultAsync(x => x.RefreshToken == refreshToken);
     }
+
+    public override async Task<IEnumerable<User>> GetAllAsync()
+    {
+        return await _context.Users
+            .Include(u => u.Department)
+            .ToListAsync();
+    }
 }
