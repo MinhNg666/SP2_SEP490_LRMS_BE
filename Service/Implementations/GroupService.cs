@@ -287,71 +287,46 @@ public class GroupService : IGroupService
     public async Task CreateCouncilGroup(CreateCouncilGroupRequest request, int currentUserId)
     {
         if (string.IsNullOrEmpty(request.GroupName))
-    {
-        throw new ServiceException("Group name cannot be null or empty.");
-    }
-
-    if (request.Members == null || !request.Members.Any())
-    {
-        throw new ServiceException("Members cannot be null or empty.");
-    }
-    foreach (var member in request.Members)
-    {
-        await ValidateMemberInfo(member.MemberEmail, member.MemberName);
-        
-        // Validate council members must be lecturer
-        var user = await _userRepository.GetUserByEmail(member.MemberEmail);
-        if (user.Role != (int)SystemRoleEnum.Lecturer)
         {
-            throw new ServiceException($"Council member {member.MemberName} must be a lecturer.");
+            throw new ServiceException("Group name cannot be null or empty.");
         }
-    }
 
-    // Kiểm tra số lượng và vai trò của các thành viên
-    var chairmanCount = request.Members.Count(m => m.Role == (int)GroupMemberRoleEnum.Council_Chairman);
-    var secretaryCount = request.Members.Count(m => m.Role == (int)GroupMemberRoleEnum.Secretary);
-    var councilMemberCount = request.Members.Count(m => m.Role == (int)GroupMemberRoleEnum.Council_Member);
-
-    if (chairmanCount != 1)
-    {
-        throw new ServiceException("Council must have one chairman.");
-    }
-
-    if (secretaryCount != 1)
-    {
-        throw new ServiceException("Council must have  one secretary.");
-    }
-
-    if (councilMemberCount != 3)
-    {
-        throw new ServiceException("Council must have  three council members.");
-    }
-
-    // Kiểm tra level của từng thành viên
-    foreach (var member in request.Members)
-    {
-        var user = await _userRepository.GetUserByEmail(member.MemberEmail);
-
-        switch (member.Role)
+        if (request.Members == null || !request.Members.Any())
         {
-            case (int)GroupMemberRoleEnum.Council_Chairman:
-                if (user.Level != (int)LevelEnum.Professor)
-                    throw new ServiceException("Council chairman must be a Professor.");
-                break;
-
-            case (int)GroupMemberRoleEnum.Secretary:
-                if (user.Level != (int)LevelEnum.Associate_Professor)
-                    throw new ServiceException("Secretary must be an Associate Professor.");
-                break;
-
-            case (int)GroupMemberRoleEnum.Council_Member:
-                if (user.Level != (int)LevelEnum.PhD && 
-                    user.Level != (int)LevelEnum.Master && 
-                    user.Level != (int)LevelEnum.Bachelor)
-                    throw new ServiceException("Council member must be PhD, Master or Bachelor.");
-                break;
+            throw new ServiceException("Members cannot be null or empty.");
         }
-    }
+        foreach (var member in request.Members)
+        {
+            await ValidateMemberInfo(member.MemberEmail, member.MemberName);
+            
+            // Validate council members must be lecturer
+            var user = await _userRepository.GetUserByEmail(member.MemberEmail);
+            if (user.Role != (int)SystemRoleEnum.Lecturer)
+            {
+                throw new ServiceException($"Council member {member.MemberName} must be a lecturer.");
+            }
+        }
+
+        // Kiểm tra số lượng và vai trò của các thành viên
+        var chairmanCount = request.Members.Count(m => m.Role == (int)GroupMemberRoleEnum.Council_Chairman);
+        var secretaryCount = request.Members.Count(m => m.Role == (int)GroupMemberRoleEnum.Secretary);
+        var councilMemberCount = request.Members.Count(m => m.Role == (int)GroupMemberRoleEnum.Council_Member);
+
+        if (chairmanCount != 1)
+        {
+            throw new ServiceException("Council must have one chairman.");
+        }
+
+        if (secretaryCount != 1)
+        {
+            throw new ServiceException("Council must have one secretary.");
+        }
+
+        if (councilMemberCount != 3)
+        {
+            throw new ServiceException("Council must have three council members.");
+        }
+
         var group = new LRMS_API.Group
         {
             GroupName = request.GroupName,
