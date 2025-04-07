@@ -45,15 +45,15 @@ public class NotificationService : INotificationService
             var notification = await _notificationRepository.GetByIdAsync(notificationId);
             if (notification != null)
             {
-                notification.Status = 1; // 1: Read
+                notification.Status = 1;     // 1: Read status
+                notification.IsRead = true;  // Boolean flag for read state
                 await _notificationRepository.UpdateAsync(notification);
             }
         }
         catch (Exception ex)
         {
             throw new ServiceException(ex.Message);
-        }
-        
+        }   
     }
 
     public async Task UpdateNotificationForInvitation(int invitationId, int newStatus)
