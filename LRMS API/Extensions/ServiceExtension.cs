@@ -42,6 +42,7 @@ public static class ServiceExtension
         services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<IProjectRepository, ProjectRepository>();
         services.AddScoped<IDepartmentRepository, DepartmentRepository>();
+        services.AddScoped<IS3Service, S3Service>();
 
         return services;
     }
