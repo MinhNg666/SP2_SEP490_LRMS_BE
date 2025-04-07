@@ -49,10 +49,14 @@ public class GroupRepository : GenericRepository<Group>, IGroupRepository
     }
     public async Task<IEnumerable<Group>> GetGroupsByUserId(int userId)
     {
-    return await _context.Groups
-        .Include(g => g.GroupMembers)
-        .Where(g => g.GroupMembers.Any(gm => gm.UserId == userId && gm.Status == (int)GroupMemberStatus.Active))
-        .ToListAsync();
+        return await _context.Groups
+            .Include(g => g.GroupMembers)
+                .ThenInclude(gm => gm.User)
+            .Where(g => 
+                g.CreatedBy == userId || // Include groups created by this user
+                g.GroupMembers.Any(gm => gm.UserId == userId && gm.Status == (int)GroupMemberStatus.Active)
+            )
+            .ToListAsync();
     }
 
     public async Task<IEnumerable<GroupMember>> GetMembersByGroupId(int groupId)

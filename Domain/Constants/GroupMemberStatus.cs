@@ -10,5 +10,6 @@ public enum GroupMemberStatus
 {
     Pending = 0,
     Active = 1,
-    Inactive = 2
+    Inactive = 2,
+    Rejected = 3,
 }

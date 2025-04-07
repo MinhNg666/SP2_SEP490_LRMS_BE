@@ -15,8 +15,8 @@ public class DepartmentController : ApiBaseController
         _departmentService = departmentService;
     }
     
-    [HttpGet("all-departments")]
-    [Authorize(Roles = "Admin")]
+    [HttpGet("departments")]
+    [Authorize]
     public async Task<IActionResult> GetAllDepartments()
     {
         try

@@ -12,6 +12,6 @@ namespace Domain.DTO.Responses
         public string? FullName { get; set; }
         public string? Email { get; set; }
         public string? Phone { get; set; }
-        public List<UserGroupResponse> Groups { get; set; }
+        // public List<UserGroupResponse> Groups { get; set; }
     }
 }

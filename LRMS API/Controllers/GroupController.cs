@@ -46,6 +46,7 @@ public class GroupController : ApiBaseController
             return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, e.Message));
         }
     }
+
     [HttpGet("groups/{userId}")]
     public async Task<ActionResult<IEnumerable<GroupResponse>>> GetGroupsByUserId(int userId)
     {
