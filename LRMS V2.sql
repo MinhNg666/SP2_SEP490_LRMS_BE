@@ -479,7 +479,7 @@ CREATE INDEX IDX_Users_Role ON Users(role);
 CREATE INDEX IDX_Documents_Type ON Documents(document_type);
 GO
 
-DELETE FROM Department;
+
 
 -- 1. Dữ liệu cho bảng Department (giữ nguyên)
 INSERT INTO [Department] ([department_name])

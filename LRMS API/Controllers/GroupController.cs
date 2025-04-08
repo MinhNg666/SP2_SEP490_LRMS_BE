@@ -97,4 +97,39 @@ public class GroupController : ApiBaseController
             return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, e.Message));
         }
     }
+    [HttpGet("council-groups")]
+    [Authorize] // You may want to restrict this to certain roles
+    public async Task<IActionResult> GetAllCouncilGroups()
+    {
+        try
+        {
+            var result = await _groupService.GetAllCouncilGroups();
+            return Ok(new ApiResponse(StatusCodes.Status200OK, MessageConstants.SUCCESSFUL, result));
+        }
+        catch (ServiceException e)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, e.Message));
+        }
+    }
+    [HttpPost("groups/re-invite")]
+    [Authorize]
+    public async Task<IActionResult> ReInviteMember(ReInviteMemberRequest request)
+    {
+        try
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim))
+            {
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "User ID is missing from claims."));
+            }
+            
+            var currentUserId = int.Parse(userIdClaim);
+            await _groupService.ReInviteMember(request, currentUserId);
+            return Ok(new ApiResponse(StatusCodes.Status200OK, "Invitation sent successfully."));
+        }
+        catch (ServiceException e)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, e.Message));
+        }
+    }
 }
