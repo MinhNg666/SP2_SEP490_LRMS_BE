@@ -34,6 +34,8 @@ public static class ServiceExtension
         services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<IProjectService, ProjectService>();
         services.AddScoped<IDepartmentService, DepartmentService>();
+        services.AddScoped<ITimelineService, TimelineService>();
+        services.AddScoped<ITimelineSequenceService, TimelineSequenceService>();
         //services.AddScoped<IPublicationService, PublicationService>();
         
         //Repository
@@ -43,6 +45,7 @@ public static class ServiceExtension
         services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<IProjectRepository, ProjectRepository>();
         services.AddScoped<IDepartmentRepository, DepartmentRepository>();
+        services.AddScoped<ITimelineSequenceRepository, TimelineSequenceRepository>();
         services.AddScoped<IS3Service, S3Service>();
 
         return services;
