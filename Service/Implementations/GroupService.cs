@@ -389,4 +389,42 @@ public class GroupService : IGroupService
             await _groupRepository.UpdateAsync(group);
         }
     }
+
+    public async Task<IEnumerable<GroupResponse>> GetAllCouncilGroups()
+    {
+        try
+        {
+            var groups = await _groupRepository.GetAllAsync();
+            
+            // Filter out only council groups (GroupType = 1)
+            var councilGroups = groups.Where(g => g.GroupType == (int)GroupTypeEnum.Council).ToList();
+            
+            if (!councilGroups.Any())
+            {
+                return new List<GroupResponse>();
+            }
+            
+            var groupResponses = new List<GroupResponse>();
+            
+            foreach (var group in councilGroups)
+            {
+                var members = await _groupRepository.GetMembersByGroupId(group.GroupId);
+                
+                // Include all members regardless of status
+                var groupResponse = _mapper.Map<GroupResponse>(group);
+                groupResponse.Members = _mapper.Map<IEnumerable<GroupMemberResponse>>(members);
+                
+                // Count only active members for CurrentMember
+                groupResponse.CurrentMember = members.Count(m => m.Status == (int)GroupMemberStatus.Active);
+                
+                groupResponses.Add(groupResponse);
+            }
+            
+            return groupResponses;
+        }
+        catch (Exception e)
+        {
+            throw new ServiceException(e.Message);
+        }
+    }
 }

@@ -110,4 +110,18 @@ public class GroupController : ApiBaseController
             return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, e.Message));
         }
     }
+    [HttpGet("council-groups")]
+    [Authorize] // You may want to restrict this to certain roles
+    public async Task<IActionResult> GetAllCouncilGroups()
+    {
+        try
+        {
+            var result = await _groupService.GetAllCouncilGroups();
+            return Ok(new ApiResponse(StatusCodes.Status200OK, MessageConstants.SUCCESSFUL, result));
+        }
+        catch (ServiceException e)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, e.Message));
+        }
+    }
 }
