@@ -898,7 +898,7 @@ BEGIN
     ALTER TABLE Users ADD LastLogin datetime2 NULL;
 END
 
-
-
-
-
+--  20 ( updated 8/4/2025)
+ALTER TABLE Documents DROP CONSTRAINT CHK_Documents_References;
+ALTER TABLE Documents ADD CONSTRAINT CHK_Documents_References 
+CHECK (project_resource_id IS NOT NULL);

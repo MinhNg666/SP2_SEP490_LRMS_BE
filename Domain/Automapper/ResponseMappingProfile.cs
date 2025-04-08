@@ -35,5 +35,11 @@ public class ResponseMappingProfile : Profile
         CreateMap<User, StudentResponse>().ReverseMap();
         CreateMap<User, LecturerResponse>().ReverseMap();
         CreateMap<Department, DepartmentResponse>();
+        CreateMap<Project, ProjectResponse>()
+            .ForMember(dest => dest.GroupName, opt => opt.MapFrom(src => src.Group.GroupName))
+            .ForMember(dest => dest.DepartmentId, opt => opt.MapFrom(src => src.Department.DepartmentId))
+            .ForMember(dest => dest.Documents, opt => opt.MapFrom(src => src.Documents));
+            
+        CreateMap<Document, DocumentResponse>();
     } 
 }

@@ -19,9 +19,9 @@ public partial class Document
 
     public int? MilestoneId { get; set; }
 
-    public int ProjectResourceId { get; set; }
+    public int? ProjectResourceId { get; set; }
 
-    public int ConferenceExpenseId { get; set; }
+    public int? ConferenceExpenseId { get; set; }
 
     public int? FundDisbursementId { get; set; }
 
