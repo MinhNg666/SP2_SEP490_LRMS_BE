@@ -14,5 +14,6 @@ public interface IInvitationRepository : IGenericRepository<Invitation>
     Task<IEnumerable<Invitation>> GetInvitationsByUserId(int userId);
     Task<Invitation> GetInvitationById(int invitationId);
     Task UpdateInvitation(Invitation invitation);
+    Task<IEnumerable<Invitation>> GetPendingInvitationsByGroupId(int groupId);
 
 }
