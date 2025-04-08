@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace LRMS_API;
 
 public partial class Project
 {
+    [Key]
     public int ProjectId { get; set; }
 
     public string? ProjectName { get; set; }
@@ -37,6 +40,9 @@ public partial class Project
 
     public int? DepartmentId { get; set; }
 
+    [ForeignKey("Sequence")]
+    public int? SequenceId { get; set; }
+
     public virtual GroupMember? ApprovedByNavigation { get; set; }
 
     public virtual ICollection<Author> Authors { get; set; } = new List<Author>();
@@ -48,6 +54,8 @@ public partial class Project
     public virtual User? CreatedByNavigation { get; set; }
 
     public virtual Department? Department { get; set; }
+
+    public virtual TimelineSequence? Sequence { get; set; }
 
     public virtual ICollection<Document> Documents { get; set; } = new List<Document>();
 

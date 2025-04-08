@@ -10,8 +10,7 @@ public partial class LRMSDbContext : DbContext
     {
     }
 
-    public LRMSDbContext(DbContextOptions<LRMSDbContext> options)
-        : base(options)
+    public LRMSDbContext(DbContextOptions<LRMSDbContext> options) : base(options)
     {
     }
 
@@ -49,10 +48,13 @@ public partial class LRMSDbContext : DbContext
 
     public virtual DbSet<Timeline> Timelines { get; set; }
 
+    public virtual DbSet<TimelineSequence> TimelineSequence { get; set; }
+
     public virtual DbSet<User> Users { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
         modelBuilder.Entity<Author>(entity =>
         {
             entity.HasKey(e => e.AuthorId).HasName("PK__Author__86516BCFD3E29AFB");
@@ -480,6 +482,7 @@ public partial class LRMSDbContext : DbContext
             entity.Property(e => e.UpdatedAt)
                 .HasColumnType("datetime")
                 .HasColumnName("updated_at");
+            entity.Property(e => e.SequenceId).HasColumnName("sequence_id");
 
             entity.HasOne(d => d.ApprovedByNavigation).WithMany(p => p.Projects)
                 .HasForeignKey(d => d.ApprovedBy)
@@ -496,6 +499,11 @@ public partial class LRMSDbContext : DbContext
             entity.HasOne(d => d.Group).WithMany(p => p.Projects)
                 .HasForeignKey(d => d.GroupId)
                 .HasConstraintName("FK_Projects_Groups");
+
+            entity.HasOne(d => d.Sequence)
+                .WithMany(p => p.Projects)
+                .HasForeignKey(d => d.SequenceId)
+                .HasConstraintName("FK_Project_TimelineSequence");
         });
 
         modelBuilder.Entity<ProjectResource>(entity =>
@@ -550,32 +558,49 @@ public partial class LRMSDbContext : DbContext
 
         modelBuilder.Entity<Timeline>(entity =>
         {
-            entity.HasKey(e => e.TimelineId).HasName("PK__Timeline__DC6F55B058CB5F44");
+            entity.HasKey(e => e.TimelineId);
 
-            entity.ToTable("Timeline");
+            entity.ToTable("Timeline", "dbo");
 
             entity.Property(e => e.TimelineId).HasColumnName("timeline_id");
-            entity.Property(e => e.CreatedAt)
-                .HasColumnType("datetime")
-                .HasColumnName("created_at");
-            entity.Property(e => e.CreatedBy).HasColumnName("created_by");
-            entity.Property(e => e.EndDate)
-                .HasColumnType("datetime")
-                .HasColumnName("end_date");
-            entity.Property(e => e.Event)
-                .HasMaxLength(255)
-                .HasColumnName("event");
-            entity.Property(e => e.StartDate)
-                .HasColumnType("datetime")
-                .HasColumnName("start_date");
+            entity.Property(e => e.SequenceId).HasColumnName("sequence_id");
+            entity.Property(e => e.StartDate).HasColumnName("start_date").HasColumnType("datetime");
+            entity.Property(e => e.EndDate).HasColumnName("end_date").HasColumnType("datetime");
+            entity.Property(e => e.Event).HasColumnName("event").HasMaxLength(255);
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasColumnType("datetime");
+            entity.Property(e => e.UpdateAt).HasColumnName("update_at").HasColumnType("datetime");
             entity.Property(e => e.TimelineType).HasColumnName("timeline_type");
-            entity.Property(e => e.UpdateAt)
-                .HasColumnType("datetime")
-                .HasColumnName("update_at");
+            entity.Property(e => e.CreatedBy).HasColumnName("created_by");
 
-            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.Timelines)
+            entity.HasOne(d => d.Sequence)
+                .WithMany(p => p.Timelines)
+                .HasForeignKey(d => d.SequenceId)
+                .HasConstraintName("FK_Timeline_TimelineSequence");
+
+            entity.HasOne(d => d.CreatedByNavigation)
+                .WithMany(p => p.Timelines)
                 .HasForeignKey(d => d.CreatedBy)
                 .HasConstraintName("FK_Timeline_Users");
+        });
+
+        modelBuilder.Entity<TimelineSequence>(entity =>
+        {
+            entity.HasKey(e => e.SequenceId);
+            
+            entity.ToTable("TimelineSequence", "dbo");
+
+            entity.Property(e => e.SequenceId).HasColumnName("sequence_id");
+            entity.Property(e => e.SequenceName).HasColumnName("sequence_name").HasMaxLength(255);
+            entity.Property(e => e.SequenceDescription).HasColumnName("sequence_description").HasColumnType("nvarchar(MAX)");
+            entity.Property(e => e.SequenceColor).HasColumnName("sequence_color").HasMaxLength(50);
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasColumnType("datetime");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at").HasColumnType("datetime");
+            entity.Property(e => e.CreatedBy).HasColumnName("created_by");
+
+            entity.HasOne(d => d.CreatedByNavigation)
+                .WithMany()
+                .HasForeignKey(d => d.CreatedBy)
+                .HasConstraintName("FK_TimelineSequence_Users");
         });
 
         modelBuilder.Entity<User>(entity =>

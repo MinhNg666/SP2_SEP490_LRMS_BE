@@ -7,9 +7,10 @@ using System.Threading.Tasks;
 namespace Domain.Constants;
 public enum LevelEnum
 {
-    Professor = 0,
-    Associate_Professor = 1,
-    PhD = 2,
-    Master = 3,
-    Bachelor =4
+    No_level = 0,
+    Professor = 1,
+    Associate_Professor = 2,
+    PhD = 3,
+    Master = 4,
+    Bachelor =5
 }

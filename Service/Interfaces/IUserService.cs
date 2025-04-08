@@ -12,15 +12,18 @@ namespace Service.Interfaces
     public interface IUserService
     {
         Task<LoginResponse> Login(LoginRequest request);
+        Task<LoginResponse> RefreshToken(string accessToken, string refreshToken);
         Task RegisterStudent(RegisterStudentRequest request);
         Task<IEnumerable<UserResponse>> GetAllUsers();
         Task<UserResponse> GetUserById(int userId);
         Task<IEnumerable<UserResponse>> GetUsersByLevel(LevelEnum level);
+        Task<IEnumerable<StudentResponse>> GetAllStudents();
+        Task<IEnumerable<LecturerResponse>> GetAllLecturers();
         Task CreateUser(CreateUserRequest request);
         Task<UserResponse> UpdateUser(int userId, UpdateUserRequest request);
         Task<bool> DeleteUser(int userId);
         Task<StudentProfileResponse> GetStudentProfile(int userId);
         Task<StudentProfileResponse> UpdateStudentProfile (int userId, UpdateStudentRequest request);
-
+        Task<bool> Logout(string refreshToken);
     }
 }

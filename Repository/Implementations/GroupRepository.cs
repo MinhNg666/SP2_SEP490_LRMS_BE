@@ -6,23 +6,106 @@ using System.Threading.Tasks;
 using LRMS_API;
 using Microsoft.EntityFrameworkCore;
 using Repository.Interfaces;
+using Domain.Constants;
 
 namespace Repository.Implementations;
 
 public class GroupRepository : GenericRepository<Group>, IGroupRepository
 {
+    private readonly LRMSDbContext _context;
+    public GroupRepository(LRMSDbContext context) : base(context)
+    {
+        _context = context;
+    }
+
+    public override async Task<Group> GetByIdAsync(int id)
+    {
+        try 
+        {
+            return await _context.Groups
+                .Include(g => g.GroupMembers)
+                    .ThenInclude(gm => gm.User)
+                .SingleOrDefaultAsync(g => g.GroupId == id);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Error getting group by id: {ex.Message}");
+        }
+    }
+
+    public override async Task<IEnumerable<Group>> GetAllAsync()
+    {
+        try
+        {
+            return await _context.Groups
+                .Include(g => g.GroupMembers)
+                    .ThenInclude(gm => gm.User)
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Error getting all groups: {ex.Message}");
+        }
+    }
+    public async Task<IEnumerable<Group>> GetGroupsByUserId(int userId)
+    {
+        return await _context.Groups
+            .Include(g => g.GroupMembers)
+                .ThenInclude(gm => gm.User)
+            .Where(g => 
+                g.CreatedBy == userId || // Include groups created by this user
+                g.GroupMembers.Any(gm => gm.UserId == userId && gm.Status == (int)GroupMemberStatus.Active)
+            )
+            .ToListAsync();
+    }
+
     public async Task<IEnumerable<GroupMember>> GetMembersByGroupId(int groupId)
     {
-        return await _context.GroupMembers
-            .AsSplitQuery()
-            .Where(x => x.GroupId == groupId)
-            .ToListAsync();
+        try
+        {
+            return await _context.GroupMembers
+                .Include(x => x.User)
+                .Where(x => x.GroupId == groupId)
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Error getting members by group id: {ex.Message}");
+        }
     }
 
     public async Task AddMemberAsync(GroupMember groupMember)
     {
-        await _context.GroupMembers.AddAsync(groupMember); // Thêm dòng này
-        await _context.SaveChangesAsync(); // Lưu thay đổi
+        try
+        {
+            await _context.GroupMembers.AddAsync(groupMember);
+            await _context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Error adding group member: {ex.Message}");
+        }
+    }
+    public async Task<GroupMember> GetGroupMember(int groupId, int userId)
+    {
+        return await _context.GroupMembers
+            .FirstOrDefaultAsync(gm => gm.GroupId == groupId && gm.UserId == userId);
+    }
+
+    public async Task UpdateMemberAsync(GroupMember groupMember)
+    {
+        _context.GroupMembers.Update(groupMember);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task DeleteMemberAsync(int groupId, int userId)
+    {
+        var member = await GetGroupMember(groupId, userId);
+        if (member != null)
+        {
+            _context.GroupMembers.Remove(member);
+            await _context.SaveChangesAsync();
+        }
     }
 }
 

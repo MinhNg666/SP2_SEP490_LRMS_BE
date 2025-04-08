@@ -17,12 +17,13 @@ public class SendInvitationRequest
     public DateTime? CreatedAt { get; set; }
 
     public int GroupId { get; set; }
+    public int? ProjectId { get; set; }
 
     public int InvitedUserId { get; set; }
 
-    public int? InvitedBy { get; set; }
+    public int InvitedBy { get; set; }
 
-    public int? InvitedRole { get; set; }
+    public int InvitedRole { get; set; }
 
     public DateTime? RespondDate { get; set; }
 }

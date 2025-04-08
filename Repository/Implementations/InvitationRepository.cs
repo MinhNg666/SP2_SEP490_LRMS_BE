@@ -4,15 +4,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using LRMS_API;
+using Microsoft.EntityFrameworkCore;
 using Repository.Interfaces;
 
 namespace Repository.Implementations;
 
-public class InvitationRepository : GenericRepository<InvitationRepository>, IInvitationRepository
+public class InvitationRepository : GenericRepository<Invitation>, IInvitationRepository
 {
     private readonly LRMSDbContext _context;
 
-    public InvitationRepository(LRMSDbContext context)
+    public InvitationRepository(LRMSDbContext context) : base(context)
     {
         _context = context;
     }
@@ -25,7 +26,9 @@ public class InvitationRepository : GenericRepository<InvitationRepository>, IIn
 
     public async Task<IEnumerable<Invitation>> GetInvitationsByUserId(int userId)
     {
-        return await Task.FromResult(_context.Invitations.Where(i => i.InvitationId == userId));
+        return await _context.Invitations
+        .Where(i => i.RecieveBy == userId) // Lọc theo userId
+        .ToListAsync();
     }
     public async Task<Invitation> GetInvitationById(int invitationId) // Thêm phương thức này
     {

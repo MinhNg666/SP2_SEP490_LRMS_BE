@@ -1,11 +1,13 @@
-﻿using Domain.DTO.Requests;
+﻿using Domain.Constants;
+using Domain.DTO.Common;
+using Domain.DTO.Requests;
 using Domain.DTO.Responses;
 using Microsoft.AspNetCore.Mvc;
 using Service.Interfaces;
 
 namespace LRMS_API.Controllers;
 [ApiController]
-
+[Route("api/notifications")]
 public class NotificationController : ApiBaseController
 {
     private readonly INotificationService _notificationService;
@@ -15,44 +17,53 @@ public class NotificationController : ApiBaseController
         _notificationService = notificationService;
     }
 
-    [HttpGet("user/{userId}")]
-    public async Task<ActionResult<IEnumerable<NotificationResponse>>> GetNotificationsByUserId(int userId)
+    [HttpGet]
+    public async Task<IActionResult> GetNotifications([FromQuery] int userId)
     {
         try
         {
             var notifications = await _notificationService.GetNotificationsByUserId(userId);
-            return Ok(notifications);
+            return Ok(new ApiResponse(StatusCodes.Status200OK, MessageConstants.SUCCESSFUL, notifications));
         }
-        catch (Exception ex)
+        catch (Exception e)
         {
-            return BadRequest(ex.Message);
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, e.Message));
         }
     }
-    [HttpPost("notification")]
-    public async Task<IActionResult> CreateNotification( CreateNotificationRequest request)
+
+    [HttpPost]
+    public async Task<IActionResult> CreateNotification(CreateNotificationRequest request)
     {
         try
         {
             await _notificationService.CreateNotification(request);
-            return Ok("Notification created");
+            return Ok(new ApiResponse(StatusCodes.Status200OK, MessageConstants.SUCCESSFUL,"Notification created"));
         }
-        catch (Exception ex)
+        catch (Exception e)
         {
-            return BadRequest(ex.Message);
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, e.Message));
         }
     }
 
-    [HttpPut("{notificationId}/read")]
-    public async Task<IActionResult> MarkAsRead(int notificationId)
+    [HttpPatch("{notificationId}")]
+    public async Task<IActionResult> UpdateNotification(int notificationId, [FromBody] UpdateNotificationRequest request)
     {
         try
         {
-            await _notificationService.MarkAsRead(notificationId);
-            return Ok("Notification marked as read");
+            if (request == null)
+            {
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Request body is required"));
+            }
+            
+            if (request.IsRead.HasValue && request.IsRead.Value)
+            {
+                await _notificationService.MarkAsRead(notificationId);
+            }
+            return Ok(new ApiResponse(StatusCodes.Status200OK, MessageConstants.SUCCESSFUL, "Notification updated"));
         }
-        catch (Exception ex)
+        catch (Exception e)
         {
-            return BadRequest(ex.Message);
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, e.Message));
         }
     }
 }
