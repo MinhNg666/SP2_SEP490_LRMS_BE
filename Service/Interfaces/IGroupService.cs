@@ -15,4 +15,5 @@ public interface IGroupService
     Task CreateStudentGroup(CreateStudentGroupRequest request, int currentUserId);
     Task CreateCouncilGroup(CreateCouncilGroupRequest request, int currentUserId);
     Task<IEnumerable<GroupResponse>> GetAllCouncilGroups();
+    Task ReInviteMember(ReInviteMemberRequest request, int currentUserId);
 }

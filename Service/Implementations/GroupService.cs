@@ -21,14 +21,16 @@ public class GroupService : IGroupService
     private readonly IGroupRepository _groupRepository;
     private readonly IMapper _mapper;
     private readonly IInvitationService _invitationService;
+    private readonly IInvitationRepository _invitationRepository;
 
     public GroupService(IUserRepository userRepository, IGroupRepository groupRepository, 
-        IMapper mapper, IInvitationService invitationService)
+        IMapper mapper, IInvitationService invitationService, IInvitationRepository invitationRepository)
     {
         _userRepository = userRepository;
         _groupRepository = groupRepository;
         _mapper = mapper;
         _invitationService = invitationService;
+        _invitationRepository = invitationRepository;
     }
     private async Task ValidateMemberInfo(string email, string fullName)
     {
@@ -421,6 +423,153 @@ public class GroupService : IGroupService
             }
             
             return groupResponses;
+        }
+        catch (Exception e)
+        {
+            throw new ServiceException(e.Message);
+        }
+    }
+
+    public async Task ReInviteMember(ReInviteMemberRequest request, int currentUserId)
+    {
+        try
+        {
+            // Check if group exists
+            var group = await _groupRepository.GetByIdAsync(request.GroupId);
+            if (group == null)
+            {
+                throw new ServiceException("Group not found.");
+            }
+
+            // Verify authorization
+            bool isAuthorized = group.CreatedBy == currentUserId;
+            if (!isAuthorized)
+            {
+                var userMembership = await _groupRepository.GetGroupMember(request.GroupId, currentUserId);
+                isAuthorized = userMembership != null && 
+                              userMembership.Status == (int)GroupMemberStatus.Active && 
+                              (userMembership.Role == (int)GroupMemberRoleEnum.Leader || 
+                               userMembership.Role == (int)GroupMemberRoleEnum.Supervisor);
+            }
+            if (!isAuthorized)
+            {
+                throw new ServiceException("You do not have permission to invite members to this group.");
+            }
+
+            // Validate member info
+            await ValidateMemberInfo(request.MemberEmail, request.MemberName);
+            var invitedUser = await _userRepository.GetUserByEmail(request.MemberEmail);
+
+            // Get all group members and pending invitations
+            var groupMembers = await _groupRepository.GetMembersByGroupId(request.GroupId);
+            var pendingInvitations = await _invitationRepository.GetPendingInvitationsByGroupId(request.GroupId);
+
+            if (group.GroupType == (int)GroupTypeEnum.Council)
+            {
+                // Count current active members for each role
+                int activeChairmanCount = groupMembers.Count(m => 
+                    m.Status == (int)GroupMemberStatus.Active && 
+                    m.Role == (int)GroupMemberRoleEnum.Council_Chairman);
+                
+                int activeSecretaryCount = groupMembers.Count(m => 
+                    m.Status == (int)GroupMemberStatus.Active && 
+                    m.Role == (int)GroupMemberRoleEnum.Secretary);
+                
+                int activeCouncilMemberCount = groupMembers.Count(m => 
+                    m.Status == (int)GroupMemberStatus.Active && 
+                    m.Role == (int)GroupMemberRoleEnum.Council_Member);
+
+                // Count pending invitations for each role
+                int pendingChairmanCount = pendingInvitations.Count(i => 
+                    i.InvitedRole == (int)GroupMemberRoleEnum.Council_Chairman);
+                
+                int pendingSecretaryCount = pendingInvitations.Count(i => 
+                    i.InvitedRole == (int)GroupMemberRoleEnum.Secretary);
+                
+                int pendingCouncilMemberCount = pendingInvitations.Count(i => 
+                    i.InvitedRole == (int)GroupMemberRoleEnum.Council_Member);
+
+                // Validate based on role
+                switch (request.Role)
+                {
+                    case (int)GroupMemberRoleEnum.Council_Chairman:
+                        if (activeChairmanCount + pendingChairmanCount >= 1)
+                        {
+                            throw new ServiceException("Cannot invite more chairman. The position is already filled or has a pending invitation.");
+                        }
+                        break;
+
+                    case (int)GroupMemberRoleEnum.Secretary:
+                        if (activeSecretaryCount + pendingSecretaryCount >= 1)
+                        {
+                            throw new ServiceException("Cannot invite more secretary. The position is already filled or has a pending invitation.");
+                        }
+                        break;
+
+                    case (int)GroupMemberRoleEnum.Council_Member:
+                        if (activeCouncilMemberCount + pendingCouncilMemberCount >= 3)
+                        {
+                            throw new ServiceException("Cannot invite more council members. All positions are filled or have pending invitations.");
+                        }
+                        break;
+
+                    default:
+                        throw new ServiceException("Invalid role for council group.");
+                }
+
+                // Validate that invited user is a lecturer
+                if (invitedUser.Role != (int)SystemRoleEnum.Lecturer)
+                {
+                    throw new ServiceException("Council members must be lecturers.");
+                }
+            }
+
+            // Check existing membership
+            var groupMember = await _groupRepository.GetGroupMember(request.GroupId, invitedUser.UserId);
+            if (groupMember != null)
+            {
+                if (groupMember.Status == (int)GroupMemberStatus.Active)
+                {
+                    throw new ServiceException("This user is already an active member of the group.");
+                }
+                if (groupMember.Status == (int)GroupMemberStatus.Pending)
+                {
+                    throw new ServiceException("This user already has a pending invitation to this group.");
+                }
+
+                groupMember.Status = (int)GroupMemberStatus.Pending;
+                groupMember.Role = request.Role;
+                await _groupRepository.UpdateMemberAsync(groupMember);
+            }
+            else
+            {
+                groupMember = new GroupMember
+                {
+                    GroupId = request.GroupId,
+                    UserId = invitedUser.UserId,
+                    Role = request.Role,
+                    Status = (int)GroupMemberStatus.Pending,
+                    JoinDate = null
+                };
+                await _groupRepository.AddMemberAsync(groupMember);
+            }
+
+            // Send invitation
+            string content = !string.IsNullOrEmpty(request.Message)
+                ? request.Message
+                : $"You have been invited to join the group '{group.GroupName}'.";
+
+            var invitationRequest = new SendInvitationRequest
+            {
+                Content = content,
+                InvitedUserId = invitedUser.UserId,
+                InvitedBy = currentUserId,
+                GroupId = request.GroupId,
+                InvitedRole = request.Role,
+                ProjectId = null
+            };
+
+            await _invitationService.SendInvitation(invitationRequest);
         }
         catch (Exception e)
         {
