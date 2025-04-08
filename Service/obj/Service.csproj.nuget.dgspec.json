@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "G:\\SEP490\\LRMS API\\Service\\Service.csproj": {}
+    "D:\\SPRING-25\\LRMS_BE_6_Git\\Service\\Service.csproj": {}
   },
   "projects": {
-    "G:\\SEP490\\LRMS API\\Domain\\Domain.csproj": {
+    "D:\\SPRING-25\\LRMS_BE_6_Git\\Domain\\Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "G:\\SEP490\\LRMS API\\Domain\\Domain.csproj",
+        "projectUniqueName": "D:\\SPRING-25\\LRMS_BE_6_Git\\Domain\\Domain.csproj",
         "projectName": "Domain",
-        "projectPath": "G:\\SEP490\\LRMS API\\Domain\\Domain.csproj",
-        "packagesPath": "C:\\Users\\23030\\.nuget\\packages\\",
-        "outputPath": "G:\\SEP490\\LRMS API\\Domain\\obj\\",
+        "projectPath": "D:\\SPRING-25\\LRMS_BE_6_Git\\Domain\\Domain.csproj",
+        "packagesPath": "C:\\Users\\84366\\.nuget\\packages\\",
+        "outputPath": "D:\\SPRING-25\\LRMS_BE_6_Git\\Domain\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\23030\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\84366\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -44,7 +44,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.100"
+        "SdkAnalysisLevel": "9.0.200"
       },
       "frameworks": {
         "net8.0": {
@@ -101,24 +101,24 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.103/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.201/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "G:\\SEP490\\LRMS API\\Repository\\Repository.csproj": {
+    "D:\\SPRING-25\\LRMS_BE_6_Git\\Repository\\Repository.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "G:\\SEP490\\LRMS API\\Repository\\Repository.csproj",
+        "projectUniqueName": "D:\\SPRING-25\\LRMS_BE_6_Git\\Repository\\Repository.csproj",
         "projectName": "Repository",
-        "projectPath": "G:\\SEP490\\LRMS API\\Repository\\Repository.csproj",
-        "packagesPath": "C:\\Users\\23030\\.nuget\\packages\\",
-        "outputPath": "G:\\SEP490\\LRMS API\\Repository\\obj\\",
+        "projectPath": "D:\\SPRING-25\\LRMS_BE_6_Git\\Repository\\Repository.csproj",
+        "packagesPath": "C:\\Users\\84366\\.nuget\\packages\\",
+        "outputPath": "D:\\SPRING-25\\LRMS_BE_6_Git\\Repository\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\23030\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\84366\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -133,8 +133,8 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "G:\\SEP490\\LRMS API\\Domain\\Domain.csproj": {
-                "projectPath": "G:\\SEP490\\LRMS API\\Domain\\Domain.csproj"
+              "D:\\SPRING-25\\LRMS_BE_6_Git\\Domain\\Domain.csproj": {
+                "projectPath": "D:\\SPRING-25\\LRMS_BE_6_Git\\Domain\\Domain.csproj"
               }
             }
           }
@@ -149,7 +149,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.100"
+        "SdkAnalysisLevel": "9.0.200"
       },
       "frameworks": {
         "net8.0": {
@@ -192,24 +192,24 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.103/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.201/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "G:\\SEP490\\LRMS API\\Service\\Service.csproj": {
+    "D:\\SPRING-25\\LRMS_BE_6_Git\\Service\\Service.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "G:\\SEP490\\LRMS API\\Service\\Service.csproj",
+        "projectUniqueName": "D:\\SPRING-25\\LRMS_BE_6_Git\\Service\\Service.csproj",
         "projectName": "Service",
-        "projectPath": "G:\\SEP490\\LRMS API\\Service\\Service.csproj",
-        "packagesPath": "C:\\Users\\23030\\.nuget\\packages\\",
-        "outputPath": "G:\\SEP490\\LRMS API\\Service\\obj\\",
+        "projectPath": "D:\\SPRING-25\\LRMS_BE_6_Git\\Service\\Service.csproj",
+        "packagesPath": "C:\\Users\\84366\\.nuget\\packages\\",
+        "outputPath": "D:\\SPRING-25\\LRMS_BE_6_Git\\Service\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\23030\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\84366\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -224,8 +224,8 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "G:\\SEP490\\LRMS API\\Repository\\Repository.csproj": {
-                "projectPath": "G:\\SEP490\\LRMS API\\Repository\\Repository.csproj"
+              "D:\\SPRING-25\\LRMS_BE_6_Git\\Repository\\Repository.csproj": {
+                "projectPath": "D:\\SPRING-25\\LRMS_BE_6_Git\\Repository\\Repository.csproj"
               }
             }
           }
@@ -240,7 +240,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.100"
+        "SdkAnalysisLevel": "9.0.200"
       },
       "frameworks": {
         "net8.0": {
@@ -267,7 +267,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.103/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.201/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
