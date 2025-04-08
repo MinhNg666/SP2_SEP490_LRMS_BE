@@ -9,5 +9,7 @@ namespace Domain.Constants
     public enum DocumentTypeEnum
     {
         ProjectProposal = 0,
+        Disbursement = 1,
+        CouncilApproval = 2,
     }
 }
