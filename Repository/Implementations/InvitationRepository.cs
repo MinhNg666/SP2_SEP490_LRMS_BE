@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using LRMS_API;
 using Microsoft.EntityFrameworkCore;
 using Repository.Interfaces;
+using Domain.Constants;
 
 namespace Repository.Implementations;
 
@@ -38,5 +39,13 @@ public class InvitationRepository : GenericRepository<Invitation>, IInvitationRe
     {
         _context.Invitations.Update(invitation);
         await _context.SaveChangesAsync();
+    }
+
+    public async Task<IEnumerable<Invitation>> GetPendingInvitationsByGroupId(int groupId)
+    {
+        return await _context.Invitations
+            .Where(i => i.GroupId == groupId && 
+                       i.Status == (int)InvitationEnum.Pending)
+            .ToListAsync();
     }
 }
