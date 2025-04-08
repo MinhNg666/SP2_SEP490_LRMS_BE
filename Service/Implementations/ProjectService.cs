@@ -14,15 +14,17 @@ public class ProjectService : IProjectService
     private readonly IS3Service _s3Service;
     private readonly IProjectRepository _projectRepository;
     private readonly IGroupRepository _groupRepository;
+    private readonly IMilestoneRepository _milestoneRepository;
     private readonly INotificationService _notificationService;
     private readonly IMapper _mapper;
 
     public ProjectService(IS3Service s3Service, IProjectRepository projectRepository, IGroupRepository groupRepository,
-        INotificationService notificationService, IMapper mapper)
+        IMilestoneRepository milestoneRepository, INotificationService notificationService, IMapper mapper)
     {
         _s3Service = s3Service;
         _projectRepository = projectRepository;
         _groupRepository = groupRepository;
+        _milestoneRepository = milestoneRepository;
         _notificationService = notificationService;
         _mapper = mapper;
     }
@@ -116,21 +118,24 @@ public class ProjectService : IProjectService
         };
 
         await _projectRepository.AddAsync(project);
+        // Tạo các milestone từ danh sách milestones trong request
+            foreach (var milestoneRequest in request.Milestones)
+            {
+                var milestone = new Milestone
+                {
+                    Title = milestoneRequest.Title,
+                    //Description = milestoneRequest.Title,
+                    StartDate = milestoneRequest.StartDate,
+                    EndDate = milestoneRequest.EndDate,
+                    Status = (int)MilestoneStatusEnum.In_progress,
+                    ProjectId = project.ProjectId,
+                    AssignBy = createdBy
+                };
+                await _milestoneRepository.AddMilestoneAsync(milestone);
+            }
         if (documentFile != null)
             {
                 var documentUrl = await _s3Service.UploadFileAsync(documentFile, $"projects/{project.ProjectId}/documents");
-                // 3. Tạo ProjectResource trước
-                // var projectResource = new ProjectResource
-                // {
-                //     ResourceName = documentFile.FileName,
-                //     ResourceType = 1, // Đặt loại resource là Document
-                //     ProjectId = project.ProjectId,
-                //     Acquired = true,
-                //     Quantity = 1
-                // };
-
-                // // 4. Lưu ProjectResource và lấy ID
-                // var resourceId = await _projectRepository.AddResourceAsync(projectResource);
                 var existingResource = await _projectRepository.GetResourceByNameAndProjectId(documentFile.FileName, project.ProjectId);
             
                 int resourceId;
@@ -204,64 +209,168 @@ public class ProjectService : IProjectService
         return true;
     }
 
-    public async Task<bool> ApproveProject(int projectId, int approvedBy)
+    public async Task<bool> ApproveProjectBySecretary(int projectId, int secretaryId, IFormFile documentFile)
     {
-        var project = await _projectRepository.GetByIdAsync(projectId);
-        if (project == null)
-            throw new ServiceException("Project not found");
-
-        project.Status = (int)ProjectStatusEnum.Approved;
-        project.ApprovedBy = approvedBy;
-        project.UpdatedAt = DateTime.Now;
-
-        await _projectRepository.UpdateAsync(project);
-
-        // Thông báo cho nhóm nghiên cứu
-        var researchGroup = await _groupRepository.GetByIdAsync(project.GroupId.Value);
-        var groupMembers = await _groupRepository.GetMembersByGroupId(project.GroupId.Value);
-
-        foreach (var member in groupMembers)
+        try
         {
-            var notificationRequest = new CreateNotificationRequest
+            if (documentFile == null)
+                throw new ServiceException("Vui lòng tải lên biên bản họp hội đồng");
+            // Lấy thông tin project
+            var project = await _projectRepository.GetByIdAsync(projectId);
+            if (project == null)
+                throw new ServiceException("Không tìm thấy project");
+
+            // Kiểm tra project có đang ở trạng thái chờ phê duyệt không
+            if (project.Status != (int)ProjectStatusEnum.Pending)
+                throw new ServiceException("Project không ở trạng thái chờ phê duyệt");
+
+            // Lấy thông tin người phê duyệt
+            var secretary = await _groupRepository.GetMemberByUserId(secretaryId);
+            if (secretary == null)
+                throw new ServiceException("Không tìm thấy thông tin người phê duyệt");
+
+            // Kiểm tra người phê duyệt có phải là thư ký hội đồng không
+            if (secretary.Role != (int)GroupMemberRoleEnum.Secretary)
+                throw new ServiceException("Bạn không có quyền phê duyệt project");
+
+            // Kiểm tra thư ký có cùng department với project không
+            var secretaryGroup = await _groupRepository.GetByIdAsync(secretary.GroupId.Value);
+            if (secretaryGroup.GroupDepartment != project.DepartmentId)
+                throw new ServiceException("Bạn không thuộc cùng phòng ban với project này");
+
+            // Upload document
+            var documentUrl = await _s3Service.UploadFileAsync(documentFile, $"projects/{projectId}/council-documents");
+            
+            // Tạo ProjectResource cho document
+            var projectResource = new ProjectResource
             {
-                UserId = member.UserId.Value,
-                Title = "Project Approved",
-                Message = $"Your research project '{project.ProjectName}' has been approved",
-                ProjectId = project.ProjectId
+                ResourceName = documentFile.FileName,
+                ResourceType = 1, // Document
+                ProjectId = projectId,
+                Acquired = true,
+                Quantity = 1
             };
+            var resourceId = await _projectRepository.AddResourceAsync(projectResource);
 
-            await _notificationService.CreateNotification(notificationRequest);
+            // Tạo Document record
+            var document = new Document
+            {
+                ProjectId = projectId,
+                DocumentUrl = documentUrl,
+                FileName = documentFile.FileName,
+                DocumentType = (int)DocumentTypeEnum.CouncilDecision,
+                UploadAt = DateTime.Now,
+                UploadedBy = secretaryId,
+                ProjectResourceId = resourceId
+            };
+            await _projectRepository.AddDocumentAsync(document);
+
+            // Cập nhật trạng thái project
+            project.Status = (int)ProjectStatusEnum.Approved;
+            await _projectRepository.UpdateAsync(project);
+
+            // Gửi thông báo cho nhóm nghiên cứu
+            var groupMembers = await _groupRepository.GetMembersByGroupId(project.GroupId.Value);
+            foreach (var member in groupMembers)
+            {
+                var notificationRequest = new CreateNotificationRequest
+                {
+                    UserId = member.UserId.Value,
+                    Title = "Project đã được phê duyệt",
+                    Message = $"Project '{project.ProjectName}' đã được phê duyệt bởi thư ký hội đồng",
+                    ProjectId = project.ProjectId
+                };
+                await _notificationService.CreateNotification(notificationRequest);
+            }
+
+            return true;
         }
-
-        return true;
+        catch (Exception ex)
+        {
+            throw new ServiceException($"Lỗi khi phê duyệt project: {ex.Message}");
+        }
     }
 
-    public async Task<bool> RejectProject(int projectId, int rejectedBy, string reason)
+    public async Task<bool> RejectProjectBySecretary(int projectId, int secretaryId, IFormFile documentFile)
     {
-        var project = await _projectRepository.GetByIdAsync(projectId);
-        if (project == null)
-            throw new ServiceException("Project not found");
-
-        project.Status = (int)ProjectStatusEnum.Rejected;
-        project.UpdatedAt = DateTime.Now;
-
-        await _projectRepository.UpdateAsync(project);
-
-        // Thông báo cho nhóm nghiên cứu
-        var groupMembers = await _groupRepository.GetMembersByGroupId(project.GroupId.Value);
-        foreach (var member in groupMembers)
+        try
         {
-            var notificationRequest = new CreateNotificationRequest
+            if (documentFile == null)
+                throw new ServiceException("Vui lòng tải lên biên bản họp hội đồng");
+
+            // Lấy thông tin project
+            var project = await _projectRepository.GetByIdAsync(projectId);
+            if (project == null)
+                throw new ServiceException("Không tìm thấy project");
+
+            // Kiểm tra project có đang ở trạng thái chờ phê duyệt không
+            if (project.Status != (int)ProjectStatusEnum.Pending)
+                throw new ServiceException("Project không ở trạng thái chờ phê duyệt");
+
+            // Lấy thông tin người phê duyệt
+            var secretary = await _groupRepository.GetMemberByUserId(secretaryId);
+            if (secretary == null)
+                throw new ServiceException("Không tìm thấy thông tin người phê duyệt");
+
+            // Kiểm tra người phê duyệt có phải là thư ký hội đồng không
+            if (secretary.Role != (int)GroupMemberRoleEnum.Secretary)
+                throw new ServiceException("Bạn không có quyền từ chối project");
+
+            // Kiểm tra thư ký có cùng department với project không
+            var secretaryGroup = await _groupRepository.GetByIdAsync(secretary.GroupId.Value);
+            if (secretaryGroup.GroupDepartment != project.DepartmentId)
+                throw new ServiceException("Bạn không thuộc cùng phòng ban với project này");
+
+            // Upload document
+            var documentUrl = await _s3Service.UploadFileAsync(documentFile, $"projects/{projectId}/council-documents");
+            
+            // Tạo ProjectResource cho document
+            var projectResource = new ProjectResource
             {
-                UserId = member.UserId.Value,
-                Title = "Project Rejected",
-                Message = $"Your research project '{project.ProjectName}' has been rejected. Reason: {reason}",
-                ProjectId = project.ProjectId
+                ResourceName = documentFile.FileName,
+                ResourceType = 1, // Document
+                ProjectId = projectId,
+                Acquired = true,
+                Quantity = 1
             };
+            var resourceId = await _projectRepository.AddResourceAsync(projectResource);
 
-            await _notificationService.CreateNotification(notificationRequest);
+            // Tạo Document record
+            var document = new Document
+            {
+                ProjectId = projectId,
+                DocumentUrl = documentUrl,
+                FileName = documentFile.FileName,
+                DocumentType = (int)DocumentTypeEnum.CouncilDecision,
+                UploadAt = DateTime.Now,
+                UploadedBy = secretaryId,
+                ProjectResourceId = resourceId
+            };
+            await _projectRepository.AddDocumentAsync(document);
+
+            // Cập nhật trạng thái project
+            project.Status = (int)ProjectStatusEnum.Rejected;
+            await _projectRepository.UpdateAsync(project);
+
+            // Gửi thông báo cho nhóm nghiên cứu
+            var groupMembers = await _groupRepository.GetMembersByGroupId(project.GroupId.Value);
+            foreach (var member in groupMembers)
+            {
+                var notificationRequest = new CreateNotificationRequest
+                {
+                    UserId = member.UserId.Value,
+                    Title = "Project đã bị từ chối",
+                    Message = $"Project '{project.ProjectName}' đã bị từ chối bởi hội đồng",
+                    ProjectId = project.ProjectId
+                };
+                await _notificationService.CreateNotification(notificationRequest);
+            }
+
+            return true;
         }
-
-        return true;
+        catch (Exception ex)
+        {
+            throw new ServiceException($"Lỗi khi từ chối project: {ex.Message}");
+        }
     }
 }

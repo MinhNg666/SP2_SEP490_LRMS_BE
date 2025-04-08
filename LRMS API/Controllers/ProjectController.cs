@@ -37,7 +37,6 @@ public class ProjectController : ApiBaseController
         }
     }
     [HttpGet("project/get-project-by-userId/{userId}")]
-    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetProjectsByUserId(int userId)
     {
         try
@@ -116,47 +115,48 @@ public class ProjectController : ApiBaseController
         }
     }
 
-    [HttpPost("project/approval-request")]
-    public async Task<IActionResult> SendProjectForApproval([FromBody] ProjectApprovalRequest request)
+    //[HttpPost("project/approval-request")]
+    //public async Task<IActionResult> SendProjectForApproval([FromBody] ProjectApprovalRequest request)
+    //{
+    //    try
+    //    {
+    //        var result = await _projectService.SendProjectForApproval(request);
+    //        return Ok(new { Success = result });
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        return BadRequest(ex.Message);
+    //    }
+    //}
+    [HttpPost("project/{projectId}/council-approve")]
+    [Authorize]
+    public async Task<IActionResult> ApproveProjectBySecretary(int projectId, IFormFile documentFile)
     {
         try
         {
-            var result = await _projectService.SendProjectForApproval(request);
-            return Ok(new { Success = result });
+            var secretaryId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            var result = await _projectService.ApproveProjectBySecretary(projectId, secretaryId, documentFile);
+            return Ok(new ApiResponse(StatusCodes.Status200OK, "Phê duyệt project thành công"));
         }
-        catch (Exception ex)
+        catch (ServiceException ex)
         {
-            return BadRequest(ex.Message);
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
         }
     }
 
-    [HttpPost("project/{projectId}/approve")]
-    public async Task<IActionResult> ApproveProject(int projectId)
+    [HttpPost("project/{projectId}/council-reject")]
+    [Authorize]
+    public async Task<IActionResult> RejectProjectBySecretary(int projectId, IFormFile documentFile)
     {
         try
         {
-            int currentUserId = int.Parse(User.Identity.Name);
-            var result = await _projectService.ApproveProject(projectId, currentUserId);
-            return Ok(new { Success = result });
+            var secretaryId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            var result = await _projectService.RejectProjectBySecretary(projectId, secretaryId, documentFile);
+            return Ok(new ApiResponse(StatusCodes.Status200OK, "Từ chối project thành công"));
         }
-        catch (Exception ex)
+        catch (ServiceException ex)
         {
-            return BadRequest(ex.Message);
-        }
-    }
-
-    [HttpPost("project/{projectId}/reject")]
-    public async Task<IActionResult> RejectProject(int projectId, [FromBody] string reason)
-    {
-        try
-        {
-            int currentUserId = int.Parse(User.Identity.Name);
-            var result = await _projectService.RejectProject(projectId, currentUserId, reason);
-            return Ok(new { Success = result });
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ex.Message);
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
         }
     }
 }
