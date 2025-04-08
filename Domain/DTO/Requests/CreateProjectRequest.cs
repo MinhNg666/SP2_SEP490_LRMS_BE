@@ -12,6 +12,7 @@ public class CreateProjectRequest
     // public int? Status { get; set; }
     public int GroupId { get; set; }
     public int DepartmentId { get; set; }
+    public int SequenceId { get; set; }
 
 
     //Document info

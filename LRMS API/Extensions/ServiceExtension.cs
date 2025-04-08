@@ -36,6 +36,7 @@ public static class ServiceExtension
         services.AddScoped<IDepartmentService, DepartmentService>();
         services.AddScoped<ITimelineService, TimelineService>();
         services.AddScoped<ITimelineSequenceService, TimelineSequenceService>();
+        services.AddScoped<IDocumentService, DocumentService>();
         //services.AddScoped<IPublicationService, PublicationService>();
         
         //Repository

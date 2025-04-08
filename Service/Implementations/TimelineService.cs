@@ -137,4 +137,33 @@ public class TimelineService : ITimelineService
             throw new ServiceException(e.Message);
         }
     }
+
+    public async Task<bool> IsValidTimeForAction(int timelineType, int? sequenceId = null)
+    {
+        try
+        {
+            var now = DateTime.Now;
+
+            var query = _context.Timelines
+                .Where(t => t.TimelineType == timelineType);
+
+            if (sequenceId.HasValue)
+            {
+                query = query.Where(t => t.SequenceId == sequenceId);
+            }
+
+            var timeline = await query
+                .OrderByDescending(t => t.CreatedAt)
+                .FirstOrDefaultAsync();
+
+            if (timeline == null)
+                throw new ServiceException("Timeline not found for this action");
+
+            return now >= timeline.StartDate && now <= timeline.EndDate;
+        }
+        catch (Exception e)
+        {
+            throw new ServiceException(e.Message);
+        }
+    }
 } 

@@ -16,15 +16,17 @@ public class ProjectService : IProjectService
     private readonly IGroupRepository _groupRepository;
     private readonly INotificationService _notificationService;
     private readonly IMapper _mapper;
+    private readonly ITimelineService _timelineService;
 
     public ProjectService(IS3Service s3Service, IProjectRepository projectRepository, IGroupRepository groupRepository,
-        INotificationService notificationService, IMapper mapper)
+        INotificationService notificationService, IMapper mapper, ITimelineService timelineService)
     {
         _s3Service = s3Service;
         _projectRepository = projectRepository;
         _groupRepository = groupRepository;
         _notificationService = notificationService;
         _mapper = mapper;
+        _timelineService = timelineService;
     }
     public async Task<IEnumerable<ProjectResponse>> GetAllProjects()
     {
@@ -94,6 +96,15 @@ public class ProjectService : IProjectService
     {
         try
         {
+            // Kiểm tra thời gian đăng ký
+            var isValidTime = await _timelineService.IsValidTimeForAction(
+                TimelineTypes.RegisterProject,
+                request.SequenceId
+            );
+
+            if (!isValidTime)
+                throw new ServiceException("Out of time for project registration");
+
             var existingProjects = await _projectRepository.GetAllProjectsWithDetailsAsync();
             if (existingProjects.Any(p => p.ProjectName.Equals(request.ProjectName, StringComparison.OrdinalIgnoreCase)))
             {
@@ -177,6 +188,15 @@ public class ProjectService : IProjectService
 
     public async Task<bool> SendProjectForApproval(ProjectApprovalRequest request)
     {
+        // Kiểm tra thời gian gửi phê duyệt
+        var isValidTime = await _timelineService.IsValidTimeForAction(
+            TimelineTypes.ReviewProject,
+            request.SequenceId
+        );
+
+        if (!isValidTime)
+            throw new ServiceException("Out of time for project review submission");
+
         var project = await _projectRepository.GetByIdAsync(request.ProjectId);
         if (project == null)
             throw new ServiceException("Project not found");
@@ -206,9 +226,18 @@ public class ProjectService : IProjectService
 
     public async Task<bool> ApproveProject(int projectId, int approvedBy)
     {
+        // Kiểm tra thời gian phê duyệt
         var project = await _projectRepository.GetByIdAsync(projectId);
         if (project == null)
             throw new ServiceException("Project not found");
+
+        var isValidTime = await _timelineService.IsValidTimeForAction(
+            TimelineTypes.ReviewProject,
+            project.SequenceId
+        );
+
+        if (!isValidTime)
+            throw new ServiceException("Out of time for project approval");
 
         project.Status = (int)ProjectStatusEnum.Approved;
         project.ApprovedBy = approvedBy;
@@ -238,9 +267,18 @@ public class ProjectService : IProjectService
 
     public async Task<bool> RejectProject(int projectId, int rejectedBy, string reason)
     {
+        // Kiểm tra thời gian từ chối
         var project = await _projectRepository.GetByIdAsync(projectId);
         if (project == null)
             throw new ServiceException("Project not found");
+
+        var isValidTime = await _timelineService.IsValidTimeForAction(
+            TimelineTypes.ReviewProject,
+            project.SequenceId
+        );
+
+        if (!isValidTime)
+            throw new ServiceException("Out of time for project rejection");
 
         project.Status = (int)ProjectStatusEnum.Rejected;
         project.UpdatedAt = DateTime.Now;
