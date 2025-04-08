@@ -4,5 +4,9 @@ using Repository.Implementations;
 namespace Repository.Interfaces;
 public interface IProjectRepository: IGenericRepository<Project>
 {
-
+    Task AddDocumentAsync(Document document);
+    Task<int> AddResourceAsync(ProjectResource resource);
+    Task<ProjectResource> GetResourceByNameAndProjectId(string resourceName, int projectId);
+    Task<IEnumerable<Project>> GetAllProjectsWithDetailsAsync();
+    Task<Project> GetProjectWithDetailsAsync(int projectId);
 }
