@@ -77,7 +77,7 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 builder.Services.AddDbContext<LRMSDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("LRMSDB")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 //builder.Services.AddScoped<IPublicationService, PublicationService>();
 builder.Services.AddAuthorization();

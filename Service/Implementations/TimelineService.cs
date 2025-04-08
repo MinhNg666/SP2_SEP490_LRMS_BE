@@ -34,6 +34,7 @@ public class TimelineService : ITimelineService
 
             var timeline = new Timeline
             {
+                SequenceId = request.SequenceId,
                 StartDate = request.StartDate.Value,
                 EndDate = request.EndDate.Value,
                 Event = request.Event,
@@ -46,10 +47,14 @@ public class TimelineService : ITimelineService
             await _context.SaveChangesAsync();
 
             var createdUser = request.CreatedBy != null ? await _context.Users.FindAsync(request.CreatedBy) : null;
+            var sequence = request.SequenceId != null ? await _context.Set<TimelineSequence>().FindAsync(request.SequenceId) : null;
             
             return new TimelineResponse
             {
                 Id = timeline.TimelineId,
+                SequenceId = timeline.SequenceId,
+                SequenceName = sequence?.SequenceName,
+                SequenceColor = sequence?.SequenceColor,
                 StartDate = timeline.StartDate,
                 EndDate = timeline.EndDate,
                 Event = timeline.Event,
@@ -72,12 +77,16 @@ public class TimelineService : ITimelineService
         {
             var timelines = await _context.Timelines
                 .Include(t => t.CreatedByNavigation)
+                .Include(t => t.Sequence)
                 .AsNoTracking()
                 .ToListAsync();
 
             return timelines.Select(t => new TimelineResponse
             {
                 Id = t.TimelineId,
+                SequenceId = t.SequenceId,
+                SequenceName = t.Sequence?.SequenceName,
+                SequenceColor = t.Sequence?.SequenceColor,
                 StartDate = t.StartDate,
                 EndDate = t.EndDate,
                 Event = t.Event,
@@ -100,6 +109,7 @@ public class TimelineService : ITimelineService
         {
             var timeline = await _context.Timelines
                 .Include(t => t.CreatedByNavigation)
+                .Include(t => t.Sequence)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(t => t.TimelineId == id);
 
@@ -109,6 +119,9 @@ public class TimelineService : ITimelineService
             return new TimelineResponse
             {
                 Id = timeline.TimelineId,
+                SequenceId = timeline.SequenceId,
+                SequenceName = timeline.Sequence?.SequenceName,
+                SequenceColor = timeline.Sequence?.SequenceColor,
                 StartDate = timeline.StartDate,
                 EndDate = timeline.EndDate,
                 Event = timeline.Event,
