@@ -33,7 +33,7 @@ public class GroupController : ApiBaseController
             return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, e.Message));
         }
     }
-    [HttpGet("groups/{groupid}")]
+    [HttpGet("groups/get-group-by-groupId/{groupid}")]
     public async Task<IActionResult> GetGroupById(int groupid)
     {
         try
@@ -47,7 +47,7 @@ public class GroupController : ApiBaseController
         }
     }
 
-    [HttpGet("groups/{userId}")]
+    [HttpGet("groups/get-group-by-userId/{userId}")]
     public async Task<ActionResult<IEnumerable<GroupResponse>>> GetGroupsByUserId(int userId)
     {
         try
