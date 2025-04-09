@@ -7,6 +7,7 @@ using Service.Exceptions;
 using Service.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Domain.DTO.Responses;
+using Microsoft.EntityFrameworkCore;
 
 namespace Service.Implementations;
 public class ProjectService : IProjectService
@@ -17,9 +18,10 @@ public class ProjectService : IProjectService
     private readonly IMilestoneRepository _milestoneRepository;
     private readonly INotificationService _notificationService;
     private readonly IMapper _mapper;
+    private readonly LRMSDbContext _context;
 
     public ProjectService(IS3Service s3Service, IProjectRepository projectRepository, IGroupRepository groupRepository,
-        IMilestoneRepository milestoneRepository, INotificationService notificationService, IMapper mapper)
+        IMilestoneRepository milestoneRepository, INotificationService notificationService, IMapper mapper, LRMSDbContext context)
     {
         _s3Service = s3Service;
         _projectRepository = projectRepository;
@@ -27,6 +29,7 @@ public class ProjectService : IProjectService
         _milestoneRepository = milestoneRepository;
         _notificationService = notificationService;
         _mapper = mapper;
+        _context = context;
     }
     public async Task<IEnumerable<ProjectResponse>> GetAllProjects()
     {
@@ -101,64 +104,99 @@ public class ProjectService : IProjectService
             {
                 throw new ServiceException($"'{request.ProjectName}' has already exist. Please choose a different name.");
             }
+            
+            // Find the current active registration timeline
+            var currentDate = DateTime.Now;
+            var activeRegistrationTimeline = await _context.Timelines
+                .Include(t => t.Sequence)
+                .Where(t => t.TimelineType == 1 && // Assuming 1 is registration type
+                       t.StartDate <= currentDate &&
+                       t.EndDate >= currentDate)
+                .FirstOrDefaultAsync();
+            
+            if (activeRegistrationTimeline == null)
+            {
+                throw new ServiceException("Project registration is not currently open. Please check the registration schedule.");
+            }
+            
+            // Use the sequence ID from the active timeline
+            int sequenceId = activeRegistrationTimeline.SequenceId.Value;
+            
+            // Create project with the automatically determined sequence ID
             var project = new Project
             {
-            ProjectName = request.ProjectName,
-            Description = request.Description,
-            Methodlogy = request.Methodology,
-            StartDate = request.StartDate,
-            EndDate = request.EndDate,
-            ApprovedBudget = request.ApprovedBudget,
-            Status = (int)ProjectStatusEnum.Pending,
-            CreatedAt = DateTime.Now,
-            CreatedBy = createdBy,
-            GroupId = request.GroupId,
-            DepartmentId = request.DepartmentId,
-            ProjectType = (int)ProjectTypeEnum.Research
-        };
+                ProjectName = request.ProjectName,
+                Description = request.Description,
+                Methodlogy = request.Methodology,
+                StartDate = request.StartDate?.Date,
+                EndDate = request.EndDate?.Date,
+                ApprovedBudget = request.ApprovedBudget,
+                SpentBudget = 0, // Initialize with 0
+                Status = (int)ProjectStatusEnum.Pending,
+                CreatedAt = DateTime.Now,
+                CreatedBy = createdBy,
+                GroupId = request.GroupId,
+                DepartmentId = request.DepartmentId,
+                ProjectType = (int)ProjectTypeEnum.Research,
+                SequenceId = sequenceId // Set the automatically determined sequence ID
+            };
 
-        await _projectRepository.AddAsync(project);
-        // Tạo các milestone từ danh sách milestones trong request
-            foreach (var milestoneRequest in request.Milestones)
+            await _projectRepository.AddAsync(project);
+            
+            // Tạo các milestone từ danh sách milestones trong request
+            if (request.Milestones != null && request.Milestones.Any())
             {
-                var milestone = new Milestone
+                foreach (var milestoneRequest in request.Milestones)
                 {
-                    Title = milestoneRequest.Title,
-                    //Description = milestoneRequest.Title,
-                    StartDate = milestoneRequest.StartDate,
-                    EndDate = milestoneRequest.EndDate,
-                    Status = (int)MilestoneStatusEnum.In_progress,
-                    ProjectId = project.ProjectId,
-                    AssignBy = createdBy
-                };
-                await _milestoneRepository.AddMilestoneAsync(milestone);
+                    var milestoneStartDate = milestoneRequest.StartDate.Date;
+                    var milestoneEndDate = milestoneRequest.EndDate.Date;
+                    
+                    if (milestoneStartDate < project.StartDate || milestoneEndDate > project.EndDate)
+                    {
+                        throw new ServiceException("Milestone dates must be within project start and end dates.");
+                    }
+                    
+                    var milestone = new Milestone
+                    {
+                        Title = milestoneRequest.Title,
+                        Description = milestoneRequest.Title,
+                        StartDate = milestoneStartDate,
+                        EndDate = milestoneEndDate,
+                        Status = (int)MilestoneStatusEnum.In_progress,
+                        ProjectId = project.ProjectId,
+                        AssignBy = createdBy
+                    };
+                    
+                    try
+                    {
+                        await _milestoneRepository.AddMilestoneAsync(milestone);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error creating milestone: {ex.Message}");
+                        throw new ServiceException($"Error creating milestone: {ex.Message}");
+                    }
+                }
             }
-        if (documentFile != null)
+            
+            if (documentFile != null)
             {
                 var documentUrl = await _s3Service.UploadFileAsync(documentFile, $"projects/{project.ProjectId}/documents");
-                var existingResource = await _projectRepository.GetResourceByNameAndProjectId(documentFile.FileName, project.ProjectId);
-            
-                int resourceId;
-                if (existingResource == null)
-                {
-                // Tạo ProjectResource mới nếu chưa tồn tại
-                    var projectResource = new ProjectResource
-                    {
-                        ResourceName = documentFile.FileName,
-                        ResourceType = 1, // Loại resource là Document
-                        ProjectId = project.ProjectId,
-                        Acquired = true,
-                        Quantity = 1
-                    };
                 
-                    resourceId = await _projectRepository.AddResourceAsync(projectResource);
-                }
-                else
+                // Create ProjectResource for document
+                var projectResource = new ProjectResource
                 {
-                // Sử dụng ID của resource đã tồn tại
-                resourceId = existingResource.ProjectResourceId;
-                }
-                // 5. Tạo document record với ProjectResourceId vừa tạo
+                    ResourceName = documentFile.FileName,
+                    ResourceType = 1, // Document type
+                    ProjectId = project.ProjectId,
+                    Acquired = true,
+                    Quantity = 1
+                };
+                
+                await _context.ProjectResources.AddAsync(projectResource);
+                await _context.SaveChangesAsync();
+                
+                // Create document with the resource
                 var document = new Document
                 {
                     ProjectId = project.ProjectId,
@@ -167,12 +205,17 @@ public class ProjectService : IProjectService
                     DocumentType = (int)DocumentTypeEnum.ProjectProposal,
                     UploadAt = DateTime.Now,
                     UploadedBy = createdBy,
-                    ProjectResourceId = resourceId,
+                    ProjectResourceId = projectResource.ProjectResourceId,
+                    // Since the conference_expense_id is non-nullable, we need to provide a dummy value
+                    // This needs database design modification ideally
+                    // ConferenceExpenseId = 1 // This needs to be addressed with a database structure change
                 };
 
-                await _projectRepository.AddDocumentAsync(document);
+                await _context.Documents.AddAsync(document);
+                await _context.SaveChangesAsync();
             }
-        return project.ProjectId;
+            
+            return project.ProjectId;
         }
         catch (Exception ex)
         {
