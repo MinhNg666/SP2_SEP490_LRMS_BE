@@ -911,3 +911,199 @@ ALTER TABLE Documents ALTER COLUMN conference_expense_id INT NULL;
 ALTER TABLE Documents ALTER COLUMN project_resource_id INT NULL;
 ALTER TABLE Documents ALTER COLUMN fund_disbursement_id INT NULL
 
+
+
+
+-- First check if TimelineSequence exists, if not, create it
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'TimelineSequence')
+BEGIN
+    CREATE TABLE [TimelineSequence] (
+        [sequence_id] INTEGER IDENTITY(1,1),
+        [sequence_name] NVARCHAR(255) NOT NULL,
+        [sequence_description] NVARCHAR(MAX) NULL,
+        [sequence_color] NVARCHAR(50) NULL,
+        [created_at] DATETIME NULL DEFAULT GETDATE(),
+        [updated_at] DATETIME NULL,
+        [created_by] INTEGER NOT NULL,
+        PRIMARY KEY([sequence_id]),
+        CONSTRAINT FK_TimelineSequence_Users FOREIGN KEY([created_by]) REFERENCES [Users]([user_id])
+    );
+    PRINT 'TimelineSequence table created.';
+END
+ELSE
+BEGIN
+    PRINT 'TimelineSequence table already exists.';
+END
+GO
+
+-- Add sequence_id column to Timeline table if it doesn't exist
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Timeline') AND name = 'sequence_id')
+BEGIN
+    -- First, check if there's data in the Timeline table
+    DECLARE @timelineCount INT;
+    SELECT @timelineCount = COUNT(*) FROM Timeline;
+    
+    IF @timelineCount > 0
+    BEGIN
+        PRINT 'Warning: Timeline table contains data. Adding nullable sequence_id column.';
+        ALTER TABLE Timeline ADD sequence_id INTEGER NULL;
+    END
+    ELSE
+    BEGIN
+        PRINT 'Timeline table is empty. Adding non-nullable sequence_id column.';
+        ALTER TABLE Timeline ADD sequence_id INTEGER NOT NULL;
+    END
+    
+    PRINT 'sequence_id column added to Timeline table.';
+END
+ELSE
+BEGIN
+    PRINT 'sequence_id column already exists in Timeline table.';
+END
+GO
+
+-- Add foreign key constraint from Timeline to TimelineSequence if it doesn't exist
+IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID('FK_Timeline_TimelineSequence') AND parent_object_id = OBJECT_ID('Timeline'))
+BEGIN
+    -- Check if we need to make sequence_id NOT NULL first
+    DECLARE @isNullable BIT;
+    SELECT @isNullable = is_nullable 
+    FROM sys.columns 
+    WHERE object_id = OBJECT_ID('Timeline') AND name = 'sequence_id';
+    
+    IF @isNullable = 1
+    BEGIN
+        -- If there's existing data, let's add default sequence_id values
+        DECLARE @timelineCount INT;
+        SELECT @timelineCount = COUNT(*) FROM Timeline WHERE sequence_id IS NULL;
+        
+        IF @timelineCount > 0
+        BEGIN
+            -- Insert a default sequence to use for existing timelines
+            IF NOT EXISTS (SELECT * FROM TimelineSequence WHERE sequence_name = 'Default Sequence')
+            BEGIN
+                INSERT INTO TimelineSequence (sequence_name, sequence_description, sequence_color, created_at, created_by)
+                VALUES ('Default Sequence', 'Default sequence for existing timelines', '#808080', GETDATE(), 1);
+                PRINT 'Default sequence created for existing timelines.';
+            END
+            
+            -- Get the ID of the default sequence
+            DECLARE @defaultSequenceId INT;
+            SELECT @defaultSequenceId = sequence_id FROM TimelineSequence WHERE sequence_name = 'Default Sequence';
+            
+            -- Update existing timelines with the default sequence
+            UPDATE Timeline SET sequence_id = @defaultSequenceId WHERE sequence_id IS NULL;
+            PRINT 'Existing timelines updated with default sequence_id.';
+            
+            -- Make the column NOT NULL
+            DECLARE @sql NVARCHAR(MAX);
+            SET @sql = 'ALTER TABLE Timeline ALTER COLUMN sequence_id INTEGER NOT NULL;';
+            EXEC sp_executesql @sql;
+            PRINT 'sequence_id column set to NOT NULL.';
+        END
+    END
+    
+    -- Now add the foreign key
+    ALTER TABLE Timeline
+    ADD CONSTRAINT FK_Timeline_TimelineSequence
+    FOREIGN KEY (sequence_id) REFERENCES TimelineSequence(sequence_id);
+    
+    PRINT 'FK_Timeline_TimelineSequence constraint added.';
+END
+ELSE
+BEGIN
+    PRINT 'FK_Timeline_TimelineSequence constraint already exists.';
+END
+GO
+
+-- Add sequence_id column to Projects table if it doesn't exist
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Projects') AND name = 'sequence_id')
+BEGIN
+    ALTER TABLE Projects ADD sequence_id INTEGER NULL;
+    PRINT 'sequence_id column added to Projects table.';
+END
+ELSE
+BEGIN
+    PRINT 'sequence_id column already exists in Projects table.';
+END
+GO
+
+-- Add foreign key constraint if it doesn't exist
+IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID('FK_Projects_TimelineSequence') AND parent_object_id = OBJECT_ID('Projects'))
+BEGIN
+    ALTER TABLE [Projects]
+    ADD CONSTRAINT FK_Projects_TimelineSequence
+    FOREIGN KEY([sequence_id]) REFERENCES [TimelineSequence]([sequence_id]);
+    
+    PRINT 'FK_Projects_TimelineSequence constraint added.';
+END
+ELSE
+BEGIN
+    PRINT 'FK_Projects_TimelineSequence constraint already exists.';
+END
+GO
+
+-- Insert sample data for TimelineSequence if not already present
+IF NOT EXISTS (SELECT * FROM TimelineSequence WHERE sequence_name = 'Research Project Cycle 2024')
+BEGIN
+    INSERT INTO [TimelineSequence] ([sequence_name], [sequence_description], [sequence_color], [created_at], [updated_at], [created_by])
+    VALUES 
+    ('Research Project Cycle 2024', 'Main timeline for research project management', '#FF5733', GETDATE(), GETDATE(), 1),
+    ('Fund Disbursement Cycle', 'Timeline for fund disbursement processes', '#33FF57', GETDATE(), GETDATE(), 1),
+    ('Conference Paper Cycle 2025', 'Timeline for conference paper submissions', '#3357FF', GETDATE(), GETDATE(), 1);
+    
+    PRINT 'Sample data inserted into TimelineSequence table.';
+END
+ELSE
+BEGIN
+    PRINT 'Sample data for TimelineSequence already exists.';
+END
+GO
+
+PRINT 'All updates completed successfully.';
+
+
+-- Add sequence_id column to Projects table if it doesn't exist
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Projects') AND name = 'sequence_id')
+BEGIN
+    ALTER TABLE Projects ADD sequence_id INTEGER NULL;
+END
+GO
+
+-- Add foreign key constraint if it doesn't exist
+IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID('FK_Projects_TimelineSequence') AND parent_object_id = OBJECT_ID('Projects'))
+BEGIN
+    ALTER TABLE [Projects]
+    ADD CONSTRAINT FK_Projects_TimelineSequence
+    FOREIGN KEY([sequence_id]) REFERENCES [TimelineSequence]([sequence_id]);
+END
+GO
+
+-- Insert sample data for TimelineSequence
+INSERT INTO [TimelineSequence] ([sequence_name], [sequence_description], [sequence_color], [created_at], [updated_at], [created_by])
+VALUES 
+('Research Project Cycle 2024', 'Main timeline for research project management', '#FF5733', GETDATE(), GETDATE(), 1),
+('Fund Disbursement Cycle', 'Timeline for fund disbursement processes', '#33FF57', GETDATE(), GETDATE(), 1),
+('Conference Paper Cycle 2025', 'Timeline for conference paper submissions', '#3357FF', GETDATE(), GETDATE(), 1);
+GO
+
+-- Insert sample data for Timeline
+INSERT INTO [Timeline] ([sequence_id], [start_date], [end_date], [event], [created_at], [update_at], [timeline_type], [created_by])
+VALUES 
+(1, '2025-06-01', '2025-06-15', 'Project Registration Period', GETDATE(), GETDATE(), 1, 1),
+(1, '2025-06-16', '2025-06-30', 'Review Period', GETDATE(), GETDATE(), 2, 1),
+(2, '2025-07-01', '2025-07-15', 'Fund Request Period', GETDATE(), GETDATE(), 1, 1),
+(2, '2025-07-16', '2025-07-31', 'Fund Approval Period', GETDATE(), GETDATE(), 2, 1),
+(3, '2025-08-01', '2025-08-15', 'Conference Paper Submissions', GETDATE(), GETDATE(), 1, 1),
+(3, '2025-08-16', '2025-08-31', 'Paper Review Period', GETDATE(), GETDATE(), 2, 1);
+GO
+
+-- Update existing timeline to include today's date
+UPDATE [LRMSDB].[dbo].[Timeline]
+SET [start_date] = DATEADD(day, -1, GETDATE()),  -- Yesterday
+    [end_date] = DATEADD(day, 14, GETDATE())     -- Two weeks from now
+WHERE [timeline_id] = 1 -- Replace with your actual timeline_id
+  AND [timeline_type] = 1; -- Registration type
+
+ 
+
