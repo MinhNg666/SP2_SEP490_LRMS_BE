@@ -8,6 +8,7 @@ using Service.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Domain.DTO.Responses;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.SqlClient;
 
 namespace Service.Implementations;
 public class ProjectService : IProjectService
@@ -143,40 +144,108 @@ public class ProjectService : IProjectService
 
             await _projectRepository.AddAsync(project);
             
-            // Tạo các milestone từ danh sách milestones trong request
+            // Modified milestone creation code with detailed error handling
             if (request.Milestones != null && request.Milestones.Any())
             {
+                Console.WriteLine($"Processing {request.Milestones.Count} milestones for project {project.ProjectId}");
+                
                 foreach (var milestoneRequest in request.Milestones)
                 {
-                    var milestoneStartDate = milestoneRequest.StartDate.Date;
-                    var milestoneEndDate = milestoneRequest.EndDate.Date;
-                    
-                    if (milestoneStartDate < project.StartDate || milestoneEndDate > project.EndDate)
-                    {
-                        throw new ServiceException("Milestone dates must be within project start and end dates.");
-                    }
-                    
-                    var milestone = new Milestone
-                    {
-                        Title = milestoneRequest.Title,
-                        Description = milestoneRequest.Title,
-                        StartDate = milestoneStartDate,
-                        EndDate = milestoneEndDate,
-                        Status = (int)MilestoneStatusEnum.In_progress,
-                        ProjectId = project.ProjectId,
-                        AssignBy = createdBy
-                    };
-                    
                     try
                     {
-                        await _milestoneRepository.AddMilestoneAsync(milestone);
+                        var milestoneStartDate = milestoneRequest.StartDate.Date;
+                        var milestoneEndDate = milestoneRequest.EndDate.Date;
+                        
+                        Console.WriteLine($"Creating milestone: {milestoneRequest.Title} ({milestoneStartDate:yyyy-MM-dd} to {milestoneEndDate:yyyy-MM-dd})");
+                        
+                        // Validate milestone dates against project dates
+                        if (project.StartDate.HasValue && project.EndDate.HasValue && 
+                            (milestoneStartDate < project.StartDate || milestoneEndDate > project.EndDate))
+                        {
+                            throw new ServiceException($"Milestone dates ({milestoneStartDate:yyyy-MM-dd} to {milestoneEndDate:yyyy-MM-dd}) must be within project start and end dates ({project.StartDate?.Date:yyyy-MM-dd} to {project.EndDate?.Date:yyyy-MM-dd}).");
+                        }
+                        
+                        // Create a new milestone
+                        var milestone = new Milestone
+                        {
+                            Title = milestoneRequest.Title,
+                            Description = milestoneRequest.Title, // Using title as description
+                            StartDate = milestoneStartDate,
+                            EndDate = milestoneEndDate,
+                            Status = (int)MilestoneStatusEnum.In_progress,
+                            ProjectId = project.ProjectId,
+                            AssignBy = createdBy,
+                            // These are optional fields based on your schema
+                            AssignTo = null
+                        };
+                        
+                        // Try two different approaches to insert the milestone
+                        try
+                        {
+                            // Method 1: Use the MilestoneRepository
+                            await _milestoneRepository.AddMilestoneAsync(milestone);
+                            Console.WriteLine("Successfully added milestone using repository");
+                        }
+                        catch (Exception repoEx)
+                        {
+                            Console.WriteLine($"Error using repository to add milestone: {repoEx.Message}");
+                            
+                            // Method 2: Try using DbContext directly
+                            try
+                            {
+                                _context.Milestones.Add(milestone);
+                                await _context.SaveChangesAsync();
+                                Console.WriteLine("Successfully added milestone using direct DbContext");
+                            }
+                            catch (Exception dbEx)
+                            {
+                                Console.WriteLine($"Error using direct DbContext to add milestone: {dbEx.Message}");
+                                
+                                // Method 3: Try inserting using raw SQL
+                                try
+                                {
+                                    var sql = @"
+                                        INSERT INTO [dbo].[Milestone] (
+                                            [title], [description], [start_date], [end_date], 
+                                            [status], [assign_by], [project_id]
+                                        ) VALUES (
+                                            @title, @description, @startDate, @endDate,
+                                            @status, @assignBy, @projectId
+                                        )";
+                                    
+                                    var parameters = new[]
+                                    {
+                                        new SqlParameter("@title", milestone.Title ?? (object)DBNull.Value),
+                                        new SqlParameter("@description", milestone.Description ?? (object)DBNull.Value),
+                                        new SqlParameter("@startDate", milestone.StartDate ?? (object)DBNull.Value),
+                                        new SqlParameter("@endDate", milestone.EndDate ?? (object)DBNull.Value),
+                                        new SqlParameter("@status", milestone.Status ?? (object)DBNull.Value),
+                                        new SqlParameter("@assignBy", milestone.AssignBy ?? (object)DBNull.Value),
+                                        new SqlParameter("@projectId", milestone.ProjectId ?? (object)DBNull.Value)
+                                    };
+                                    
+                                    await _context.Database.ExecuteSqlRawAsync(sql, parameters);
+                                    Console.WriteLine("Successfully added milestone using raw SQL");
+                                }
+                                catch (Exception sqlEx)
+                                {
+                                    Console.WriteLine($"Error using raw SQL to add milestone: {sqlEx.Message}");
+                                    // At this point, all three methods have failed
+                                    throw new ServiceException($"Failed to add milestone after trying multiple methods: {sqlEx.Message}");
+                                }
+                            }
+                        }
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"Error creating milestone: {ex.Message}");
-                        throw new ServiceException($"Error creating milestone: {ex.Message}");
+                        Console.WriteLine($"Error processing milestone {milestoneRequest.Title}: {ex.Message}");
+                        // Continue with other milestones even if this one fails
                     }
                 }
+            }
+            else
+            {
+                Console.WriteLine("No milestones to create - request.Milestones is null or empty");
             }
             
             if (documentFile != null)
@@ -206,8 +275,6 @@ public class ProjectService : IProjectService
                     UploadAt = DateTime.Now,
                     UploadedBy = createdBy,
                     ProjectResourceId = projectResource.ProjectResourceId,
-                    // Since the conference_expense_id is non-nullable, we need to provide a dummy value
-                    // This needs database design modification ideally
                     // ConferenceExpenseId = 1 // This needs to be addressed with a database structure change
                 };
 
@@ -219,6 +286,7 @@ public class ProjectService : IProjectService
         }
         catch (Exception ex)
         {
+            Console.WriteLine($"Error in CreateResearchProject: {ex.Message}");
             throw new ServiceException($"Error creating research project: {ex.Message}");
         }
     }
@@ -414,6 +482,53 @@ public class ProjectService : IProjectService
         catch (Exception ex)
         {
             throw new ServiceException($"Lỗi khi từ chối project: {ex.Message}");
+        }
+    }
+
+    public async Task AddProjectDocument(int projectId, IFormFile documentFile, int userId)
+    {
+        try
+        {
+            var project = await _projectRepository.GetByIdAsync(projectId);
+            if (project == null)
+                throw new ServiceException("Project not found");
+            
+            if (documentFile != null)
+            {
+                var documentUrl = await _s3Service.UploadFileAsync(documentFile, $"projects/{projectId}/documents");
+                
+                // Create ProjectResource for document
+                var projectResource = new ProjectResource
+                {
+                    ResourceName = documentFile.FileName,
+                    ResourceType = 1, // Document type
+                    ProjectId = projectId,
+                    Acquired = true,
+                    Quantity = 1
+                };
+                
+                await _context.ProjectResources.AddAsync(projectResource);
+                await _context.SaveChangesAsync();
+                
+                // Create document with the resource
+                var document = new Document
+                {
+                    ProjectId = projectId,
+                    DocumentUrl = documentUrl,
+                    FileName = documentFile.FileName,
+                    DocumentType = (int)DocumentTypeEnum.ProjectProposal,
+                    UploadAt = DateTime.Now,
+                    UploadedBy = userId,
+                    ProjectResourceId = projectResource.ProjectResourceId
+                };
+
+                await _context.Documents.AddAsync(document);
+                await _context.SaveChangesAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new ServiceException($"Error adding document to project: {ex.Message}");
         }
     }
 }

@@ -2,6 +2,7 @@
 public enum MilestoneStatusEnum
 {
     In_progress=0,
-    Completed= 1,
-    Overdued = 2,
+    Pending = 1,
+    Completed = 2,
+    Overdued = 3,
 }
