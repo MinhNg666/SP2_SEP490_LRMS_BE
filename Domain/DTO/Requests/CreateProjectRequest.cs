@@ -13,6 +13,7 @@ public class CreateProjectRequest
     public int DepartmentId { get; set; }
     public List<MilestoneRequest> Milestones { get; set; }
 }
+
 public class MilestoneRequest
 {
     public string Title { get; set; }

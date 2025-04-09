@@ -38,8 +38,11 @@ public class ResponseMappingProfile : Profile
         CreateMap<Project, ProjectResponse>()
             .ForMember(dest => dest.GroupName, opt => opt.MapFrom(src => src.Group.GroupName))
             .ForMember(dest => dest.DepartmentId, opt => opt.MapFrom(src => src.Department.DepartmentId))
-            .ForMember(dest => dest.Documents, opt => opt.MapFrom(src => src.Documents));
+            .ForMember(dest => dest.Documents, opt => opt.MapFrom(src => src.Documents))
+            .ForMember(dest => dest.Milestones, opt => opt.MapFrom(src => src.Milestones))
+            .ForMember(dest => dest.Methodology, opt => opt.MapFrom(src => src.Methodlogy));
             
         CreateMap<Document, DocumentResponse>();
+        CreateMap<Milestone, MilestoneResponse>();
     } 
 }

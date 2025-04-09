@@ -18,16 +18,23 @@ public class ProjectController : ApiBaseController
         _projectService = projectService;
     }
     [HttpGet("project/list-all-project")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Lecturer,Office")]
     public async Task<IActionResult> GetAllProjects()
     {
         try
         {
-            if (!User.IsInRole("Admin"))
+            // Get the current user's role
+            var userRole = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+            
+            // Check if the user has one of the allowed roles
+            if (!(userRole == SystemRoleEnum.Admin.ToString() || 
+                  userRole == SystemRoleEnum.Lecturer.ToString() || 
+                  userRole == SystemRoleEnum.Office.ToString()))
             {
                 return StatusCode(StatusCodes.Status403Forbidden,
-                    new ApiResponse(StatusCodes.Status403Forbidden,"You are not allowed to use this feature"));
+                    new ApiResponse(StatusCodes.Status403Forbidden, "You are not allowed to use this feature"));
             }
+            
             var projects = await _projectService.GetAllProjects();
             return Ok(new ApiResponse(StatusCodes.Status200OK, "Projects retrieved successfully", projects));
         }
@@ -93,21 +100,38 @@ public class ProjectController : ApiBaseController
         }
     }
     [HttpPost("project/register-research-project")]
-    public async Task<IActionResult> CreateResearchProject([FromForm] CreateProjectRequest request, IFormFile documentFile)
+    [Authorize]
+    public async Task<IActionResult> CreateResearchProject([FromBody] CreateProjectRequest request)
     {
         try
         {
-            if (documentFile != null)
-            {
-                var allowedExtensions = new[] { ".pdf", ".doc", ".docx" };
-                var fileExtension = Path.GetExtension(documentFile.FileName).ToLowerInvariant();
-                if (!allowedExtensions.Contains(fileExtension))
-                return BadRequest("Only PDF, DOC, and DOCX files are allowed");
-            }
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-            var projectId = await _projectService.CreateResearchProject(request, documentFile, userId);
+            var projectId = await _projectService.CreateResearchProject(request, null, userId);
             var response = new ApiResponse(StatusCodes.Status200OK, $"Project has been registered. Project ID: {projectId}");
             return Ok(response);
+        }
+        catch (ServiceException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("project/{projectId}/upload-document")]
+    public async Task<IActionResult> UploadProjectDocument(int projectId, IFormFile documentFile)
+    {
+        try
+        {
+            if (documentFile == null)
+                return BadRequest("No file uploaded");
+            
+            var allowedExtensions = new[] { ".pdf", ".doc", ".docx" };
+            var fileExtension = Path.GetExtension(documentFile.FileName).ToLowerInvariant();
+            if (!allowedExtensions.Contains(fileExtension))
+                return BadRequest("Only PDF, DOC, and DOCX files are allowed");
+            
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            await _projectService.AddProjectDocument(projectId, documentFile, userId);
+            return Ok(new ApiResponse(StatusCodes.Status200OK, "Document uploaded successfully"));
         }
         catch (ServiceException ex)
         {
