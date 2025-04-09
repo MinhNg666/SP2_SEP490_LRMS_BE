@@ -898,7 +898,11 @@ BEGIN
     ALTER TABLE Users ADD LastLogin datetime2 NULL;
 END
 
---  20 ( updated 8/4/2025)
+--  20 Remember to run these SQL script when you pull the new code ( updated 4/4/2025)
+ALTER TABLE Documents ALTER COLUMN conference_expense_id INT NULL;
+ALTER TABLE Documents ALTER COLUMN project_resource_id INT NULL;
+ALTER TABLE Documents ALTER COLUMN fund_disbursement_id INT NULL;
+
 ALTER TABLE Documents DROP CONSTRAINT CHK_Documents_References;
 ALTER TABLE Documents ADD CONSTRAINT CHK_Documents_References 
 CHECK (project_resource_id IS NOT NULL);

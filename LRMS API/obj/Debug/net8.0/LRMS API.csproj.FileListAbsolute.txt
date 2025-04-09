@@ -158,6 +158,7 @@ D:\Programming\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\refint\LRMS 
 D:\Programming\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\LRMS API.pdb
 D:\Programming\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\LRMS API.genruntimeconfig.cache
 D:\Programming\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\ref\LRMS API.dll
+S_BE_6_Git\LRMS API\obj\Debug\net8.0\ref\LRMS API.dll
 D:\Programming\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\AWSSDK.Core.dll
 D:\Programming\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\AWSSDK.Extensions.NETCore.Setup.dll
 D:\Programming\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\AWSSDK.S3.dll

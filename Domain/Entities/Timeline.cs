@@ -1,11 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace LRMS_API;
 
 public partial class Timeline
 {
+    [Key]
     public int TimelineId { get; set; }
+
+    [ForeignKey("Sequence")]
+    public int? SequenceId { get; set; }
 
     public DateTime? StartDate { get; set; }
 
@@ -22,4 +28,6 @@ public partial class Timeline
     public int? CreatedBy { get; set; }
 
     public virtual User? CreatedByNavigation { get; set; }
+
+    public virtual TimelineSequence? Sequence { get; set; }
 }
