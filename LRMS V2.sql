@@ -1105,5 +1105,8 @@ SET [start_date] = DATEADD(day, -1, GETDATE()),  -- Yesterday
 WHERE [timeline_id] = 1 -- Replace with your actual timeline_id
   AND [timeline_type] = 1; -- Registration type
 
+
+
+
  
 

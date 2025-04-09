@@ -18,16 +18,23 @@ public class ProjectController : ApiBaseController
         _projectService = projectService;
     }
     [HttpGet("project/list-all-project")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Lecturer,Office")]
     public async Task<IActionResult> GetAllProjects()
     {
         try
         {
-            if (!User.IsInRole("Admin"))
+            // Get the current user's role
+            var userRole = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+            
+            // Check if the user has one of the allowed roles
+            if (!(userRole == SystemRoleEnum.Admin.ToString() || 
+                  userRole == SystemRoleEnum.Lecturer.ToString() || 
+                  userRole == SystemRoleEnum.Office.ToString()))
             {
                 return StatusCode(StatusCodes.Status403Forbidden,
-                    new ApiResponse(StatusCodes.Status403Forbidden,"You are not allowed to use this feature"));
+                    new ApiResponse(StatusCodes.Status403Forbidden, "You are not allowed to use this feature"));
             }
+            
             var projects = await _projectService.GetAllProjects();
             return Ok(new ApiResponse(StatusCodes.Status200OK, "Projects retrieved successfully", projects));
         }
@@ -93,6 +100,7 @@ public class ProjectController : ApiBaseController
         }
     }
     [HttpPost("project/register-research-project")]
+    [Authorize]
     public async Task<IActionResult> CreateResearchProject([FromBody] CreateProjectRequest request)
     {
         try
