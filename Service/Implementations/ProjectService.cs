@@ -531,4 +531,196 @@ public class ProjectService : IProjectService
             throw new ServiceException($"Error adding document to project: {ex.Message}");
         }
     }
+
+    public async Task<ProjectDetailResponse> GetProjectDetails(int projectId)
+    {
+        try
+        {
+            // Get project with all related entities
+            var project = await _context.Projects
+                .Include(p => p.Documents)
+                .Include(p => p.Group)
+                    .ThenInclude(g => g.GroupDepartmentNavigation)
+                .Include(p => p.Group)
+                    .ThenInclude(g => g.GroupMembers)
+                        .ThenInclude(gm => gm.User)
+                .Include(p => p.Department)
+                .Include(p => p.Milestones)
+                .Include(p => p.CreatedByNavigation)
+                .Include(p => p.ApprovedByNavigation)
+                    .ThenInclude(gm => gm.User)
+                .FirstOrDefaultAsync(p => p.ProjectId == projectId);
+
+            if (project == null)
+                throw new ServiceException("Project not found");
+
+            // Map to base ProjectResponse
+            var projectResponse = _mapper.Map<ProjectResponse>(project);
+            
+            // Create and populate the detailed response
+            var detailedResponse = new ProjectDetailResponse
+            {
+                // Copy all base properties
+                ProjectId = projectResponse.ProjectId,
+                ProjectName = projectResponse.ProjectName,
+                ProjectType = projectResponse.ProjectType,
+                Description = projectResponse.Description,
+                ApprovedBudget = projectResponse.ApprovedBudget,
+                Status = projectResponse.Status,
+                StartDate = projectResponse.StartDate,
+                EndDate = projectResponse.EndDate,
+                CreatedAt = projectResponse.CreatedAt,
+                UpdatedAt = projectResponse.UpdatedAt,
+                Methodology = projectResponse.Methodology,
+                CreatedBy = projectResponse.CreatedBy,
+                ApprovedBy = projectResponse.ApprovedBy,
+                GroupId = projectResponse.GroupId,
+                GroupName = projectResponse.GroupName,
+                DepartmentId = projectResponse.DepartmentId,
+                Documents = projectResponse.Documents,
+                Milestones = projectResponse.Milestones,
+                
+                // Add enhanced creator info
+                CreatedByUser = project.CreatedByNavigation != null ? new UserShortInfo
+                {
+                    UserId = project.CreatedByNavigation.UserId,
+                    Username = project.CreatedByNavigation.Username,
+                    FullName = project.CreatedByNavigation.FullName,
+                    Email = project.CreatedByNavigation.Email
+                } : null,
+                
+                // Add enhanced approver info
+                ApprovedByUser = project.ApprovedByNavigation?.User != null ? new UserShortInfo
+                {
+                    UserId = project.ApprovedByNavigation.User.UserId,
+                    Username = project.ApprovedByNavigation.User.Username,
+                    FullName = project.ApprovedByNavigation.User.FullName,
+                    Email = project.ApprovedByNavigation.User.Email
+                } : null,
+                
+                // Add enhanced group info
+                Group = project.Group != null ? new GroupDetailInfo
+                {
+                    GroupId = project.Group.GroupId,
+                    GroupName = project.Group.GroupName,
+                    GroupType = project.Group.GroupType ?? 0,
+                    CurrentMember = project.Group.CurrentMember ?? 0,
+                    MaxMember = project.Group.MaxMember ?? 0,
+                    GroupDepartment = project.Group.GroupDepartment,
+                    DepartmentName = project.Group?.GroupDepartmentNavigation?.DepartmentName,
+                    Members = _mapper.Map<IEnumerable<GroupMemberResponse>>(
+                        project.Group.GroupMembers.Where(gm => gm.Status == (int)GroupMemberStatus.Active))
+                } : null,
+                
+                // Add enhanced department info
+                Department = project.Department != null ? new DepartmentResponse
+                {
+                    DepartmentId = project.Department.DepartmentId,
+                    DepartmentName = project.Department.DepartmentName
+                } : null
+            };
+            
+            return detailedResponse;
+        }
+        catch (Exception ex)
+        {
+            throw new ServiceException($"Error getting project details: {ex.Message}");
+        }
+    }
+
+    public async Task<IEnumerable<ProjectListResponse>> GetUserPendingProjectsList(int userId)
+    {
+        try
+        {
+            // Get user's groups
+            var userGroups = await _groupRepository.GetGroupsByUserId(userId);
+            if (!userGroups.Any())
+            {
+                return Enumerable.Empty<ProjectListResponse>();
+            }
+
+            // Get projects for user's groups with Pending status
+            var groupIds = userGroups.Select(g => g.GroupId);
+            var projects = await _context.Projects
+                .Include(p => p.CreatedByNavigation)
+                .Include(p => p.Group)
+                .Include(p => p.Department)
+                .Where(p => 
+                    p.GroupId.HasValue && 
+                    groupIds.Contains(p.GroupId.Value) && 
+                    p.Status == (int)ProjectStatusEnum.Pending)
+                .ToListAsync();
+
+            return projects.Select(p => new ProjectListResponse
+            {
+                ProjectId = p.ProjectId,
+                ProjectName = p.ProjectName,
+                Description = p.Description,
+                Status = p.Status,
+                ApprovedBudget = Convert.ToDouble(p.ApprovedBudget ?? 0),
+                StartDate = p.StartDate ?? DateTime.MinValue,
+                EndDate = p.EndDate ?? DateTime.MinValue,
+                CreatedAt = p.CreatedAt ?? DateTime.MinValue,
+                CreatedBy = p.CreatedBy ?? 0,
+                CreatorName = p.CreatedByNavigation?.FullName ?? "Unknown",
+                CreatorEmail = p.CreatedByNavigation?.Email ?? "Unknown",
+                GroupId = p.GroupId,
+                GroupName = p.Group?.GroupName ?? "Unknown",
+                DepartmentId = p.DepartmentId,
+                DepartmentName = p.Department?.DepartmentName ?? "Unknown"
+            }).ToList();
+        }
+        catch (Exception ex)
+        {
+            throw new ServiceException($"Error getting user's pending projects: {ex.Message}");
+        }
+    }
+
+    public async Task<IEnumerable<ProjectListResponse>> GetUserApprovedProjectsList(int userId)
+    {
+        try
+        {
+            // Get user's groups
+            var userGroups = await _groupRepository.GetGroupsByUserId(userId);
+            if (!userGroups.Any())
+            {
+                return Enumerable.Empty<ProjectListResponse>();
+            }
+
+            // Get projects for user's groups with Approved status
+            var groupIds = userGroups.Select(g => g.GroupId);
+            var projects = await _context.Projects
+                .Include(p => p.CreatedByNavigation)
+                .Include(p => p.Group)
+                .Include(p => p.Department)
+                .Where(p => 
+                    p.GroupId.HasValue && 
+                    groupIds.Contains(p.GroupId.Value) && 
+                    p.Status == (int)ProjectStatusEnum.Approved)
+                .ToListAsync();
+
+            return projects.Select(p => new ProjectListResponse
+            {
+                ProjectId = p.ProjectId,
+                ProjectName = p.ProjectName,
+                Description = p.Description,
+                Status = p.Status,
+                ApprovedBudget = Convert.ToDouble(p.ApprovedBudget ?? 0),
+                StartDate = p.StartDate ?? DateTime.MinValue,
+                EndDate = p.EndDate ?? DateTime.MinValue,
+                CreatedAt = p.CreatedAt ?? DateTime.MinValue,
+                CreatedBy = p.CreatedBy ?? 0,
+                CreatorName = p.CreatedByNavigation?.FullName ?? "Unknown",
+                CreatorEmail = p.CreatedByNavigation?.Email ?? "Unknown",
+                GroupId = p.GroupId,
+                GroupName = p.Group?.GroupName ?? "Unknown",
+                DepartmentId = p.DepartmentId,
+                DepartmentName = p.Department?.DepartmentName ?? "Unknown"
+            }).ToList();
+        }
+        catch (Exception ex)
+        {
+            throw new ServiceException($"Error getting user's approved projects: {ex.Message}");
+        }
+    }
 }

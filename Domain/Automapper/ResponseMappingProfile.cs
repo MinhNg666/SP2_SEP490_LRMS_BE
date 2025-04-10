@@ -18,7 +18,10 @@ public class ResponseMappingProfile : Profile
             .ForMember(dest => dest.RefreshToken, opt => opt.Ignore())
             .ReverseMap();
         CreateMap<Group, GroupResponse>()
-            .ForMember(dest => dest.Members, opt => opt.MapFrom(src => src.GroupMembers));
+            .ForMember(dest => dest.Members, opt => opt.MapFrom(src => src.GroupMembers))
+            .ForMember(dest => dest.DepartmentName, opt => 
+                opt.MapFrom(src => src.GroupDepartmentNavigation != null ? 
+                    src.GroupDepartmentNavigation.DepartmentName : null));
 
         CreateMap<GroupMember, GroupMemberResponse>()
             .ForMember(dest => dest.MemberName, opt => 

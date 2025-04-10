@@ -685,7 +685,51 @@ VALUES
 ('office3', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Joseph Office', 'office3@example.com', '0123456303', 4, NULL, 1, GETDATE(), GETDATE(), 2),
 ('office4', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Dorothy Office', 'office4@example.com', '0123456304', 4, NULL, 1, GETDATE(), GETDATE(), 2);
 
+   USE LRMSDB;
+-- Add Researchers (5 per department)
+INSERT INTO [Users] ([username], [password], [full_name], [email], [phone], [role], [level], [status], [created_at], [updated_at], [department_id])
+VALUES 
+-- Department 1: Information Technology
+('researcher1', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Alex Thompson', 'researcher1@example.com', '0190456701', 5, 2, 1, GETDATE(), GETDATE(), 1),
+('researcher2', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Olivia Parker', 'researcher2@example.com', '0190456702', 5, 1, 1, GETDATE(), GETDATE(), 1),
+('researcher3', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Ethan Ross', 'researcher3@example.com', '0190456703', 5, 3, 1, GETDATE(), GETDATE(), 1),
+('researcher4', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Maya Wilson', 'researcher4@example.com', '0190456704', 5, 2, 1, GETDATE(), GETDATE(), 1),
+('researcher5', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Justin Cooper', 'researcher5@example.com', '0190456705', 5, 1, 1, GETDATE(), GETDATE(), 1),
 
+-- Department 2: Computer Science
+('researcher6', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Daniel Kim', 'researcher6@example.com', '0190456706', 5, 2, 1, GETDATE(), GETDATE(), 2),
+('researcher7', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Sophia Chen', 'researcher7@example.com', '0190456707', 5, 1, 1, GETDATE(), GETDATE(), 2),
+('researcher8', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Lucas Martinez', 'researcher8@example.com', '0190456708', 5, 3, 1, GETDATE(), GETDATE(), 2),
+('researcher9', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Ava Johnson', 'researcher9@example.com', '0190456709', 5, 2, 1, GETDATE(), GETDATE(), 2),
+('researcher10', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Nathan Brown', 'researcher10@example.com', '0190456710', 5, 1, 1, GETDATE(), GETDATE(), 2),
+
+-- Department 3: Software Engineering
+('researcher11', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Nathan Singh', 'researcher11@example.com', '0190456711', 5, 2, 1, GETDATE(), GETDATE(), 3),
+('researcher12', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Emma Patel', 'researcher12@example.com', '0190456712', 5, 1, 1, GETDATE(), GETDATE(), 3),
+('researcher13', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Wyatt Davis', 'researcher13@example.com', '0190456713', 5, 3, 1, GETDATE(), GETDATE(), 3),
+('researcher14', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Abigail Taylor', 'researcher14@example.com', '0190456714', 5, 2, 1, GETDATE(), GETDATE(), 3),
+('researcher15', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Owen Garcia', 'researcher15@example.com', '0190456715', 5, 1, 1, GETDATE(), GETDATE(), 3),
+
+-- Department 4: Artificial Intelligence
+('researcher16', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Ryan Zhang', 'researcher16@example.com', '0190456716', 5, 2, 1, GETDATE(), GETDATE(), 4),
+('researcher17', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Isabella Wong', 'researcher17@example.com', '0190456717', 5, 1, 1, GETDATE(), GETDATE(), 4),
+('researcher18', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Caleb Anderson', 'researcher18@example.com', '0190456718', 5, 3, 1, GETDATE(), GETDATE(), 4),
+('researcher19', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Grace Phillips', 'researcher19@example.com', '0190456719', 5, 2, 1, GETDATE(), GETDATE(), 4),
+('researcher20', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Jackson Lee', 'researcher20@example.com', '0190456720', 5, 1, 1, GETDATE(), GETDATE(), 4),
+
+-- Department 5: Data Science
+('researcher21', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Marcus Johnson', 'researcher21@example.com', '0190456721', 5, 2, 1, GETDATE(), GETDATE(), 5),
+('researcher22', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Jasmine Lee', 'researcher22@example.com', '0190456722', 5, 1, 1, GETDATE(), GETDATE(), 5),
+('researcher23', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Dylan Walker', 'researcher23@example.com', '0190456723', 5, 3, 1, GETDATE(), GETDATE(), 5),
+('researcher24', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Lily Robinson', 'researcher24@example.com', '0190456724', 5, 2, 1, GETDATE(), GETDATE(), 5),
+('researcher25', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Gabriel Wright', 'researcher25@example.com', '0190456725', 5, 1, 1, GETDATE(), GETDATE(), 5),
+
+-- Department 6: Network Security
+('researcher26', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Hannah Evans', 'researcher26@example.com', '0190456726', 5, 2, 1, GETDATE(), GETDATE(), 6),
+('researcher27', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Carter Scott', 'researcher27@example.com', '0190456727', 5, 1, 1, GETDATE(), GETDATE(), 6),
+('researcher28', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Zoe Thomas', 'researcher28@example.com', '0190456728', 5, 3, 1, GETDATE(), GETDATE(), 6),
+('researcher29', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Luke King', 'researcher29@example.com', '0190456729', 5, 2, 1, GETDATE(), GETDATE(), 6),
+('researcher30', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Chloe Mitchell', 'researcher30@example.com', '0190456730', 5, 1, 1, GETDATE(), GETDATE(), 6);
 
 
 
