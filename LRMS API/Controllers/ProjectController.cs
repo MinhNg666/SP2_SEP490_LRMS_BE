@@ -6,6 +6,7 @@ using Service.Implementations;
 using Service.Interfaces;
 using Domain.DTO.Common;
 using Microsoft.AspNetCore.Authorization;
+using Domain.Constants;
 
 namespace LRMS_API.Controllers;
 [ApiController]
@@ -177,6 +178,82 @@ public class ProjectController : ApiBaseController
             var secretaryId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
             var result = await _projectService.RejectProjectBySecretary(projectId, secretaryId, documentFile);
             return Ok(new ApiResponse(StatusCodes.Status200OK, "Từ chối project thành công"));
+        }
+        catch (ServiceException ex)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
+        }
+    }
+
+    [HttpGet("project/details/{projectId}")]
+    public async Task<IActionResult> GetProjectDetails(int projectId)
+    {
+        try
+        {
+            var projectDetails = await _projectService.GetProjectDetails(projectId);
+            return Ok(new ApiResponse(StatusCodes.Status200OK, "Project details retrieved successfully", projectDetails));
+        }
+        catch (ServiceException ex)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
+        }
+    }
+
+    [HttpGet("users/{userId}/projects/pending")]
+    public async Task<IActionResult> GetUserPendingProjects(int userId)
+    {
+        try
+        {
+            var projects = await _projectService.GetUserPendingProjectsList(userId);
+            return Ok(new ApiResponse(StatusCodes.Status200OK, "Pending projects retrieved successfully", projects));
+        }
+        catch (ServiceException ex)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
+        }
+    }
+
+    [HttpGet("users/{userId}/projects/approved")]
+    public async Task<IActionResult> GetUserApprovedProjects(int userId)
+    {
+        try
+        {
+            var projects = await _projectService.GetUserApprovedProjectsList(userId);
+            return Ok(new ApiResponse(StatusCodes.Status200OK, "Approved projects retrieved successfully", projects));
+        }
+        catch (ServiceException ex)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
+        }
+    }
+
+    [HttpGet("projects/me/pending")]
+    [Authorize]
+    public async Task<IActionResult> GetMyPendingProjects()
+    {
+        try
+        {
+            var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            var projects = await _projectService.GetUserPendingProjectsList(currentUserId);
+            
+            return Ok(new ApiResponse(StatusCodes.Status200OK, "Your pending projects retrieved successfully", projects));
+        }
+        catch (ServiceException ex)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
+        }
+    }
+
+    [HttpGet("projects/me/approved")]
+    [Authorize]
+    public async Task<IActionResult> GetMyApprovedProjects()
+    {
+        try
+        {
+            var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            var projects = await _projectService.GetUserApprovedProjectsList(currentUserId);
+            
+            return Ok(new ApiResponse(StatusCodes.Status200OK, "Your approved projects retrieved successfully", projects));
         }
         catch (ServiceException ex)
         {

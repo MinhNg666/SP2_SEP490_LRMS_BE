@@ -35,6 +35,7 @@ public class GroupRepository : GenericRepository<Group>, IGroupRepository
             return await _context.Groups
                 .Include(g => g.GroupMembers)
                     .ThenInclude(gm => gm.User)
+                .Include(g => g.GroupDepartmentNavigation)
                 .SingleOrDefaultAsync(g => g.GroupId == id);
         }
         catch (Exception ex)
@@ -50,6 +51,7 @@ public class GroupRepository : GenericRepository<Group>, IGroupRepository
             return await _context.Groups
                 .Include(g => g.GroupMembers)
                     .ThenInclude(gm => gm.User)
+                .Include(g => g.GroupDepartmentNavigation)
                 .ToListAsync();
         }
         catch (Exception ex)
@@ -62,6 +64,7 @@ public class GroupRepository : GenericRepository<Group>, IGroupRepository
         return await _context.Groups
             .Include(g => g.GroupMembers)
                 .ThenInclude(gm => gm.User)
+            .Include(g => g.GroupDepartmentNavigation)
             .Where(g => 
                 g.CreatedBy == userId || // Include groups created by this user
                 g.GroupMembers.Any(gm => gm.UserId == userId && gm.Status == (int)GroupMemberStatus.Active)

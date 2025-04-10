@@ -30,12 +30,19 @@ public class UserRepository : GenericRepository<User>, IUserRepository
     public async Task<IEnumerable<UserGroupResponse>> GetUserGroups(int userId)
     {
         return await _context.GroupMembers
+            .Include(gm => gm.Group)
+            .Include(gm => gm.Group.GroupDepartmentNavigation)
             .Where(gm => gm.UserId == userId && gm.Status == (int)GroupMemberStatus.Active)
             .Select(gm => new UserGroupResponse
             {
                 GroupId = gm.GroupId,
                 GroupName = gm.Group.GroupName,
-                Role = gm.Role
+                Role = gm.Role,
+                GroupType = gm.Group.GroupType,
+                DepartmentId = gm.Group.GroupType == (int)GroupTypeEnum.Council ? gm.Group.GroupDepartment : null,
+                DepartmentName = gm.Group.GroupType == (int)GroupTypeEnum.Council && gm.Group.GroupDepartmentNavigation != null 
+                    ? gm.Group.GroupDepartmentNavigation.DepartmentName 
+                    : null
             }).ToListAsync();
     }
 

@@ -15,4 +15,6 @@ public class GroupResponse
     public int GroupType { get; set; }
     public DateTime CreatedAt { get; set; }
     public IEnumerable<GroupMemberResponse> Members { get; set; }
+    public int? GroupDepartment { get; set; }
+    public string DepartmentName { get; set; }
 }
