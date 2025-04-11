@@ -14,6 +14,7 @@ public class CreateProjectRequest
     public List<MilestoneRequest> Milestones { get; set; }
     public int SequenceId { get; set; }
 }
+
 public class MilestoneRequest
 {
     public string Title { get; set; }

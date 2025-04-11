@@ -133,6 +133,12 @@ public class GroupService : IGroupService
                 // Count only active members for CurrentMember
                 groupResponse.CurrentMember = members.Count(m => m.Status == (int)GroupMemberStatus.Active);
                 
+                // Set the department name if available
+                if (group.GroupDepartmentNavigation != null)
+                {
+                    groupResponse.DepartmentName = group.GroupDepartmentNavigation.DepartmentName;
+                }
+                
                 groupResponses.Add(groupResponse);
             }
 

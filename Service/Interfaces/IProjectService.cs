@@ -14,4 +14,8 @@ public interface IProjectService
     Task<IEnumerable<ProjectResponse>> GetProjectsByUserId(int userId);
     Task<bool> ApproveProjectBySecretary(int projectId, int secretaryId, IFormFile documentFile);
     Task<bool> RejectProjectBySecretary(int projectId, int secretaryId, IFormFile documentFile);
+    Task AddProjectDocument(int projectId, IFormFile documentFile, int userId);
+    Task<ProjectDetailResponse> GetProjectDetails(int projectId);
+    Task<IEnumerable<ProjectListResponse>> GetUserPendingProjectsList(int userId);
+    Task<IEnumerable<ProjectListResponse>> GetUserApprovedProjectsList(int userId);
 }
