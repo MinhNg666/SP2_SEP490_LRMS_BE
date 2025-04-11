@@ -1149,6 +1149,13 @@ SET [start_date] = DATEADD(day, -1, GETDATE()),  -- Yesterday
 WHERE [timeline_id] = 1 -- Replace with your actual timeline_id
   AND [timeline_type] = 1; -- Registration type
 
+--  Update timeline table with status attribute
+  ALTER TABLE [dbo].[Timeline] 
+ADD [status] INT NULL DEFAULT 0;
+
+-- Update timeline sequence table with status attribute
+ALTER TABLE [dbo].[TimelineSequence] 
+ADD [status] INT NULL DEFAULT 1;
 
 
 

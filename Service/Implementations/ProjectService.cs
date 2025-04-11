@@ -110,7 +110,7 @@ public class ProjectService : IProjectService
             var currentDate = DateTime.Now;
             var activeRegistrationTimeline = await _context.Timelines
                 .Include(t => t.Sequence)
-                .Where(t => t.TimelineType == 1 && // Assuming 1 is registration type
+                .Where(t => t.TimelineType == (int)TimelineTypeEnum.ProjectRegistration &&
                        t.StartDate <= currentDate &&
                        t.EndDate >= currentDate)
                 .FirstOrDefaultAsync();
