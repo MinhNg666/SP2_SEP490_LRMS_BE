@@ -17,7 +17,17 @@ public class GroupRepository : GenericRepository<Group>, IGroupRepository
     {
         _context = context;
     }
-
+    public async Task<GroupMember> GetMemberByUserId(int userId)
+    {
+        return await _context.GroupMembers
+            .Include(gm => gm.User)
+            .FirstOrDefaultAsync(gm => gm.UserId == userId);
+    }
+    public async Task<User> GetUserById(int userId)
+    {
+        return await _context.Users
+            .FirstOrDefaultAsync(u => u.UserId == userId);
+    }
     public override async Task<Group> GetByIdAsync(int id)
     {
         try 

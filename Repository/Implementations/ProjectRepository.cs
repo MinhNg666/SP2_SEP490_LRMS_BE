@@ -73,4 +73,10 @@ public class ProjectRepository: GenericRepository<Project>, IProjectRepository
             .Include(p => p.Department)
             .FirstOrDefaultAsync(p => p.ProjectId == projectId);
     }
+    public async Task<int> AddMilestoneAsync(Milestone milestone)
+   {
+       await _context.Milestones.AddAsync(milestone);
+       await _context.SaveChangesAsync();
+       return milestone.MilestoneId; // Hoặc ID của milestone nếu có
+   }
 }
