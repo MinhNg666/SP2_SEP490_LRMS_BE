@@ -264,7 +264,7 @@ public class ProjectService : IProjectService
                 var documentUrl = await _s3Service.UploadFileAsync(documentFile, $"projects/{project.ProjectId}/documents");
                 
                 // Create ProjectResource for document
-                var projectResource = new ProjectResource
+                    var projectResource = new ProjectResource
                     {
                         ResourceName = documentFile.FileName,
                     ResourceType = 1, // Document type
