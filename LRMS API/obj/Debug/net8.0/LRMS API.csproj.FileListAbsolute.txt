@@ -162,13 +162,6 @@ S_BE_6_Git\LRMS API\obj\Debug\net8.0\ref\LRMS API.dll
 D:\Programming\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\AWSSDK.Core.dll
 D:\Programming\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\AWSSDK.Extensions.NETCore.Setup.dll
 D:\Programming\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\AWSSDK.S3.dll
-D:\SPRING-25\LRMS_BE_6_Git\LRMS API\obj\Debug\net8.0\LRMS API.csproj.AssemblyReference.cache
-D:\SPRING-25\LRMS_BE_6_Git\LRMS API\obj\Debug\net8.0\LRMS API.GeneratedMSBuildEditorConfig.editorconfig
-D:\SPRING-25\LRMS_BE_6_Git\LRMS API\obj\Debug\net8.0\LRMS API.AssemblyInfoInputs.cache
-D:\SPRING-25\LRMS_BE_6_Git\LRMS API\obj\Debug\net8.0\LRMS API.AssemblyInfo.cs
-D:\SPRING-25\LRMS_BE_6_Git\LRMS API\obj\Debug\net8.0\LRMS API.csproj.CoreCompileInputs.cache
-D:\SPRING-25\LRMS_BE_6_Git\LRMS API\obj\Debug\net8.0\LRMS API.MvcApplicationPartsAssemblyInfo.cache
-D:\SPRING-25\LRMS_BE_6_Git\LRMS API\obj\Debug\net8.0\LRMS API.sourcelink.json
 D:\SPRING-25\LRMS_BE_6_Git\LRMS API\bin\Debug\net8.0\appsettings.Development.json
 D:\SPRING-25\LRMS_BE_6_Git\LRMS API\bin\Debug\net8.0\LRMS API.staticwebassets.endpoints.json
 D:\SPRING-25\LRMS_BE_6_Git\LRMS API\bin\Debug\net8.0\LRMS API.exe
@@ -307,6 +300,14 @@ D:\SPRING-25\LRMS_BE_6_Git\LRMS API\bin\Debug\net8.0\Service.dll
 D:\SPRING-25\LRMS_BE_6_Git\LRMS API\bin\Debug\net8.0\Service.pdb
 D:\SPRING-25\LRMS_BE_6_Git\LRMS API\bin\Debug\net8.0\Domain.pdb
 D:\SPRING-25\LRMS_BE_6_Git\LRMS API\bin\Debug\net8.0\Repository.pdb
+D:\SPRING-25\LRMS_BE_6_Git\LRMS API\obj\Debug\net8.0\LRMS API.csproj.AssemblyReference.cache
+D:\SPRING-25\LRMS_BE_6_Git\LRMS API\obj\Debug\net8.0\LRMS API.GeneratedMSBuildEditorConfig.editorconfig
+D:\SPRING-25\LRMS_BE_6_Git\LRMS API\obj\Debug\net8.0\LRMS API.AssemblyInfoInputs.cache
+D:\SPRING-25\LRMS_BE_6_Git\LRMS API\obj\Debug\net8.0\LRMS API.AssemblyInfo.cs
+D:\SPRING-25\LRMS_BE_6_Git\LRMS API\obj\Debug\net8.0\LRMS API.csproj.CoreCompileInputs.cache
+D:\SPRING-25\LRMS_BE_6_Git\LRMS API\obj\Debug\net8.0\LRMS API.MvcApplicationPartsAssemblyInfo.cs
+D:\SPRING-25\LRMS_BE_6_Git\LRMS API\obj\Debug\net8.0\LRMS API.MvcApplicationPartsAssemblyInfo.cache
+D:\SPRING-25\LRMS_BE_6_Git\LRMS API\obj\Debug\net8.0\LRMS API.sourcelink.json
 D:\SPRING-25\LRMS_BE_6_Git\LRMS API\obj\Debug\net8.0\scopedcss\bundle\LRMS API.styles.css
 D:\SPRING-25\LRMS_BE_6_Git\LRMS API\obj\Debug\net8.0\staticwebassets.build.json
 D:\SPRING-25\LRMS_BE_6_Git\LRMS API\obj\Debug\net8.0\staticwebassets.development.json
@@ -324,4 +325,3 @@ D:\SPRING-25\LRMS_BE_6_Git\LRMS API\obj\Debug\net8.0\refint\LRMS API.dll
 D:\SPRING-25\LRMS_BE_6_Git\LRMS API\obj\Debug\net8.0\LRMS API.pdb
 D:\SPRING-25\LRMS_BE_6_Git\LRMS API\obj\Debug\net8.0\LRMS API.genruntimeconfig.cache
 D:\SPRING-25\LRMS_BE_6_Git\LRMS API\obj\Debug\net8.0\ref\LRMS API.dll
-D:\SPRING-25\LRMS_BE_6_Git\LRMS API\obj\Debug\net8.0\LRMS API.MvcApplicationPartsAssemblyInfo.cs
