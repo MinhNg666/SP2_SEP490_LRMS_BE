@@ -11,5 +11,7 @@ namespace Domain.Constants
         ProjectProposal = 0,
         Disbursement = 1,
         CouncilDecision = 2,
+        ConferenceProposal = 3,
+        JournalPaper = 4,
     }
 }
