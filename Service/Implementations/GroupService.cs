@@ -133,6 +133,12 @@ public class GroupService : IGroupService
                 // Count only active members for CurrentMember
                 groupResponse.CurrentMember = members.Count(m => m.Status == (int)GroupMemberStatus.Active);
                 
+                // Set the department name if available
+                if (group.GroupDepartmentNavigation != null)
+                {
+                    groupResponse.DepartmentName = group.GroupDepartmentNavigation.DepartmentName;
+                }
+                
                 groupResponses.Add(groupResponse);
             }
 
@@ -521,6 +527,121 @@ public class GroupService : IGroupService
                 if (invitedUser.Role != (int)SystemRoleEnum.Lecturer)
                 {
                     throw new ServiceException("Council members must be lecturers.");
+                }
+            }
+            else if (group.GroupType == (int)GroupTypeEnum.Student) 
+            {
+                // Get information about the creator
+                var creator = await _userRepository.GetByIdAsync(group.CreatedBy.Value);
+                bool isStudentCreated = creator.Role == (int)SystemRoleEnum.Student;
+                
+                // Count current active members by role
+                int activeSupervisorCount = groupMembers.Count(m => 
+                    m.Status == (int)GroupMemberStatus.Active && 
+                    m.Role == (int)GroupMemberRoleEnum.Supervisor);
+                
+                int activeLeaderCount = groupMembers.Count(m => 
+                    m.Status == (int)GroupMemberStatus.Active && 
+                    m.Role == (int)GroupMemberRoleEnum.Leader);
+                
+                int activeMemberCount = groupMembers.Count(m => 
+                    m.Status == (int)GroupMemberStatus.Active && 
+                    m.Role == (int)GroupMemberRoleEnum.Member);
+                
+                // Count pending invitations by role
+                int pendingSupervisorCount = pendingInvitations.Count(i => 
+                    i.InvitedRole == (int)GroupMemberRoleEnum.Supervisor);
+                
+                int pendingLeaderCount = pendingInvitations.Count(i => 
+                    i.InvitedRole == (int)GroupMemberRoleEnum.Leader);
+                
+                int pendingMemberCount = pendingInvitations.Count(i => 
+                    i.InvitedRole == (int)GroupMemberRoleEnum.Member);
+                
+                // Calculate total student members (leaders + regular members)
+                int totalActiveStudentMembers = activeLeaderCount + activeMemberCount;
+                int totalPendingStudentMembers = pendingLeaderCount + pendingMemberCount;
+                
+                // Different validations based on group creator
+                if (isStudentCreated)
+                {
+                    // Student-created group: max 2 supervisors + 5 students (1 leader + 4 members)
+                    // Validate based on role
+                    switch (request.Role)
+                    {
+                        case (int)GroupMemberRoleEnum.Supervisor:
+                            // Check if invited user is a lecturer
+                            if (invitedUser.Role != (int)SystemRoleEnum.Lecturer)
+                            {
+                                throw new ServiceException("Supervisors must be lecturers.");
+                            }
+                            
+                            // Check supervisor count
+                            if (activeSupervisorCount + pendingSupervisorCount >= 2)
+                            {
+                                throw new ServiceException("Cannot invite more supervisors. The group already has the maximum number of supervisors (2) active or pending.");
+                            }
+                            break;
+                            
+                        case (int)GroupMemberRoleEnum.Leader:
+                            // Check if there's already a leader
+                            if (activeLeaderCount + pendingLeaderCount >= 1)
+                            {
+                                throw new ServiceException("Cannot invite more leaders. The group already has a leader active or pending.");
+                            }
+                            
+                            // Check student count (including this new leader)
+                            if (totalActiveStudentMembers + totalPendingStudentMembers >= 5)
+                            {
+                                throw new ServiceException("Cannot invite more student members. The group already has the maximum number of student members (5) active or pending.");
+                            }
+                            break;
+                            
+                        case (int)GroupMemberRoleEnum.Member:
+                            // Check student count
+                            if (totalActiveStudentMembers + totalPendingStudentMembers >= 5)
+                            {
+                                throw new ServiceException("Cannot invite more members. The group already has the maximum number of student members (5) active or pending.");
+                            }
+                            break;
+                            
+                        default:
+                            throw new ServiceException("Invalid role for student research group.");
+                    }
+                }
+                else
+                {
+                    // Lecturer-created group: max 10 members (1 leader + 9 members)
+                    // Total member count (all roles)
+                    int totalActiveMembers = groupMembers.Count(m => m.Status == (int)GroupMemberStatus.Active);
+                    int totalPendingMembers = pendingInvitations.Count();
+                    
+                    // Validate total count first
+                    if (totalActiveMembers + totalPendingMembers >= 10)
+                    {
+                        throw new ServiceException("Cannot invite more members. The group already has the maximum number of members (10) active or pending.");
+                    }
+                    
+                    // Validate based on role
+                    switch (request.Role)
+                    {
+                        case (int)GroupMemberRoleEnum.Leader:
+                            if (activeLeaderCount + pendingLeaderCount >= 1)
+                            {
+                                throw new ServiceException("Cannot invite more leaders. The group already has a leader active or pending.");
+                            }
+                            break;
+                            
+                        case (int)GroupMemberRoleEnum.Supervisor:
+                            throw new ServiceException("Lecturer-created research groups cannot have supervisors.");
+                            
+                        case (int)GroupMemberRoleEnum.Member:
+                            // Already checked the total count above
+                            break;
+                            
+                        default:
+                            throw new ServiceException("Invalid role for student research group.");
+                    }
                 }
             }
 

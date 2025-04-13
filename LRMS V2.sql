@@ -685,7 +685,51 @@ VALUES
 ('office3', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Joseph Office', 'office3@example.com', '0123456303', 4, NULL, 1, GETDATE(), GETDATE(), 2),
 ('office4', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Dorothy Office', 'office4@example.com', '0123456304', 4, NULL, 1, GETDATE(), GETDATE(), 2);
 
+   USE LRMSDB;
+-- Add Researchers (5 per department)
+INSERT INTO [Users] ([username], [password], [full_name], [email], [phone], [role], [level], [status], [created_at], [updated_at], [department_id])
+VALUES 
+-- Department 1: Information Technology
+('researcher1', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Alex Thompson', 'researcher1@example.com', '0190456701', 5, 2, 1, GETDATE(), GETDATE(), 1),
+('researcher2', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Olivia Parker', 'researcher2@example.com', '0190456702', 5, 1, 1, GETDATE(), GETDATE(), 1),
+('researcher3', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Ethan Ross', 'researcher3@example.com', '0190456703', 5, 3, 1, GETDATE(), GETDATE(), 1),
+('researcher4', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Maya Wilson', 'researcher4@example.com', '0190456704', 5, 2, 1, GETDATE(), GETDATE(), 1),
+('researcher5', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Justin Cooper', 'researcher5@example.com', '0190456705', 5, 1, 1, GETDATE(), GETDATE(), 1),
 
+-- Department 2: Computer Science
+('researcher6', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Daniel Kim', 'researcher6@example.com', '0190456706', 5, 2, 1, GETDATE(), GETDATE(), 2),
+('researcher7', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Sophia Chen', 'researcher7@example.com', '0190456707', 5, 1, 1, GETDATE(), GETDATE(), 2),
+('researcher8', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Lucas Martinez', 'researcher8@example.com', '0190456708', 5, 3, 1, GETDATE(), GETDATE(), 2),
+('researcher9', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Ava Johnson', 'researcher9@example.com', '0190456709', 5, 2, 1, GETDATE(), GETDATE(), 2),
+('researcher10', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Nathan Brown', 'researcher10@example.com', '0190456710', 5, 1, 1, GETDATE(), GETDATE(), 2),
+
+-- Department 3: Software Engineering
+('researcher11', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Nathan Singh', 'researcher11@example.com', '0190456711', 5, 2, 1, GETDATE(), GETDATE(), 3),
+('researcher12', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Emma Patel', 'researcher12@example.com', '0190456712', 5, 1, 1, GETDATE(), GETDATE(), 3),
+('researcher13', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Wyatt Davis', 'researcher13@example.com', '0190456713', 5, 3, 1, GETDATE(), GETDATE(), 3),
+('researcher14', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Abigail Taylor', 'researcher14@example.com', '0190456714', 5, 2, 1, GETDATE(), GETDATE(), 3),
+('researcher15', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Owen Garcia', 'researcher15@example.com', '0190456715', 5, 1, 1, GETDATE(), GETDATE(), 3),
+
+-- Department 4: Artificial Intelligence
+('researcher16', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Ryan Zhang', 'researcher16@example.com', '0190456716', 5, 2, 1, GETDATE(), GETDATE(), 4),
+('researcher17', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Isabella Wong', 'researcher17@example.com', '0190456717', 5, 1, 1, GETDATE(), GETDATE(), 4),
+('researcher18', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Caleb Anderson', 'researcher18@example.com', '0190456718', 5, 3, 1, GETDATE(), GETDATE(), 4),
+('researcher19', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Grace Phillips', 'researcher19@example.com', '0190456719', 5, 2, 1, GETDATE(), GETDATE(), 4),
+('researcher20', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Jackson Lee', 'researcher20@example.com', '0190456720', 5, 1, 1, GETDATE(), GETDATE(), 4),
+
+-- Department 5: Data Science
+('researcher21', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Marcus Johnson', 'researcher21@example.com', '0190456721', 5, 2, 1, GETDATE(), GETDATE(), 5),
+('researcher22', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Jasmine Lee', 'researcher22@example.com', '0190456722', 5, 1, 1, GETDATE(), GETDATE(), 5),
+('researcher23', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Dylan Walker', 'researcher23@example.com', '0190456723', 5, 3, 1, GETDATE(), GETDATE(), 5),
+('researcher24', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Lily Robinson', 'researcher24@example.com', '0190456724', 5, 2, 1, GETDATE(), GETDATE(), 5),
+('researcher25', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Gabriel Wright', 'researcher25@example.com', '0190456725', 5, 1, 1, GETDATE(), GETDATE(), 5),
+
+-- Department 6: Network Security
+('researcher26', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Hannah Evans', 'researcher26@example.com', '0190456726', 5, 2, 1, GETDATE(), GETDATE(), 6),
+('researcher27', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Carter Scott', 'researcher27@example.com', '0190456727', 5, 1, 1, GETDATE(), GETDATE(), 6),
+('researcher28', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Zoe Thomas', 'researcher28@example.com', '0190456728', 5, 3, 1, GETDATE(), GETDATE(), 6),
+('researcher29', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Luke King', 'researcher29@example.com', '0190456729', 5, 2, 1, GETDATE(), GETDATE(), 6),
+('researcher30', '$2a$11$ioVSpEVBZDeUgJLi0399K.g7O5CYHzablfqJESjL7FW0SJuGrbyWC', 'Chloe Mitchell', 'researcher30@example.com', '0190456730', 5, 1, 1, GETDATE(), GETDATE(), 6);
 
 
 
@@ -898,7 +942,215 @@ BEGIN
     ALTER TABLE Users ADD LastLogin datetime2 NULL;
 END
 
---  20 ( updated 8/4/2025)
+--  20 Remember to run these SQL script when you pull the new code ( updated 4/4/2025)
+ALTER TABLE Documents ALTER COLUMN conference_expense_id INT NULL;
+ALTER TABLE Documents ALTER COLUMN project_resource_id INT NULL;
+ALTER TABLE Documents ALTER COLUMN fund_disbursement_id INT NULL;
+
 ALTER TABLE Documents DROP CONSTRAINT CHK_Documents_References;
 ALTER TABLE Documents ADD CONSTRAINT CHK_Documents_References 
 CHECK (project_resource_id IS NOT NULL);
+
+ALTER TABLE Documents ALTER COLUMN conference_expense_id INT NULL;
+ALTER TABLE Documents ALTER COLUMN project_resource_id INT NULL;
+ALTER TABLE Documents ALTER COLUMN fund_disbursement_id INT NULL
+
+
+
+
+-- First check if TimelineSequence exists, if not, create it
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'TimelineSequence')
+BEGIN
+    CREATE TABLE [TimelineSequence] (
+        [sequence_id] INTEGER IDENTITY(1,1),
+        [sequence_name] NVARCHAR(255) NOT NULL,
+        [sequence_description] NVARCHAR(MAX) NULL,
+        [sequence_color] NVARCHAR(50) NULL,
+        [created_at] DATETIME NULL DEFAULT GETDATE(),
+        [updated_at] DATETIME NULL,
+        [created_by] INTEGER NOT NULL,
+        PRIMARY KEY([sequence_id]),
+        CONSTRAINT FK_TimelineSequence_Users FOREIGN KEY([created_by]) REFERENCES [Users]([user_id])
+    );
+    PRINT 'TimelineSequence table created.';
+END
+ELSE
+BEGIN
+    PRINT 'TimelineSequence table already exists.';
+END
+GO
+
+-- Add sequence_id column to Timeline table if it doesn't exist
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Timeline') AND name = 'sequence_id')
+BEGIN
+    -- First, check if there's data in the Timeline table
+    DECLARE @timelineCount INT;
+    SELECT @timelineCount = COUNT(*) FROM Timeline;
+    
+    IF @timelineCount > 0
+    BEGIN
+        PRINT 'Warning: Timeline table contains data. Adding nullable sequence_id column.';
+        ALTER TABLE Timeline ADD sequence_id INTEGER NULL;
+    END
+    ELSE
+    BEGIN
+        PRINT 'Timeline table is empty. Adding non-nullable sequence_id column.';
+        ALTER TABLE Timeline ADD sequence_id INTEGER NOT NULL;
+    END
+    
+    PRINT 'sequence_id column added to Timeline table.';
+END
+ELSE
+BEGIN
+    PRINT 'sequence_id column already exists in Timeline table.';
+END
+GO
+
+-- Add foreign key constraint from Timeline to TimelineSequence if it doesn't exist
+IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID('FK_Timeline_TimelineSequence') AND parent_object_id = OBJECT_ID('Timeline'))
+BEGIN
+    -- Check if we need to make sequence_id NOT NULL first
+    DECLARE @isNullable BIT;
+    SELECT @isNullable = is_nullable 
+    FROM sys.columns 
+    WHERE object_id = OBJECT_ID('Timeline') AND name = 'sequence_id';
+    
+    IF @isNullable = 1
+    BEGIN
+        -- If there's existing data, let's add default sequence_id values
+        DECLARE @timelineCount INT;
+        SELECT @timelineCount = COUNT(*) FROM Timeline WHERE sequence_id IS NULL;
+        
+        IF @timelineCount > 0
+        BEGIN
+            -- Insert a default sequence to use for existing timelines
+            IF NOT EXISTS (SELECT * FROM TimelineSequence WHERE sequence_name = 'Default Sequence')
+            BEGIN
+                INSERT INTO TimelineSequence (sequence_name, sequence_description, sequence_color, created_at, created_by)
+                VALUES ('Default Sequence', 'Default sequence for existing timelines', '#808080', GETDATE(), 1);
+                PRINT 'Default sequence created for existing timelines.';
+            END
+            
+            -- Get the ID of the default sequence
+            DECLARE @defaultSequenceId INT;
+            SELECT @defaultSequenceId = sequence_id FROM TimelineSequence WHERE sequence_name = 'Default Sequence';
+            
+            -- Update existing timelines with the default sequence
+            UPDATE Timeline SET sequence_id = @defaultSequenceId WHERE sequence_id IS NULL;
+            PRINT 'Existing timelines updated with default sequence_id.';
+            
+            -- Make the column NOT NULL
+            DECLARE @sql NVARCHAR(MAX);
+            SET @sql = 'ALTER TABLE Timeline ALTER COLUMN sequence_id INTEGER NOT NULL;';
+            EXEC sp_executesql @sql;
+            PRINT 'sequence_id column set to NOT NULL.';
+        END
+    END
+    
+    -- Now add the foreign key
+    ALTER TABLE Timeline
+    ADD CONSTRAINT FK_Timeline_TimelineSequence
+    FOREIGN KEY (sequence_id) REFERENCES TimelineSequence(sequence_id);
+    
+    PRINT 'FK_Timeline_TimelineSequence constraint added.';
+END
+ELSE
+BEGIN
+    PRINT 'FK_Timeline_TimelineSequence constraint already exists.';
+END
+GO
+
+-- Add sequence_id column to Projects table if it doesn't exist
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Projects') AND name = 'sequence_id')
+BEGIN
+    ALTER TABLE Projects ADD sequence_id INTEGER NULL;
+    PRINT 'sequence_id column added to Projects table.';
+END
+ELSE
+BEGIN
+    PRINT 'sequence_id column already exists in Projects table.';
+END
+GO
+
+-- Add foreign key constraint if it doesn't exist
+IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID('FK_Projects_TimelineSequence') AND parent_object_id = OBJECT_ID('Projects'))
+BEGIN
+    ALTER TABLE [Projects]
+    ADD CONSTRAINT FK_Projects_TimelineSequence
+    FOREIGN KEY([sequence_id]) REFERENCES [TimelineSequence]([sequence_id]);
+    
+    PRINT 'FK_Projects_TimelineSequence constraint added.';
+END
+ELSE
+BEGIN
+    PRINT 'FK_Projects_TimelineSequence constraint already exists.';
+END
+GO
+
+-- Insert sample data for TimelineSequence if not already present
+IF NOT EXISTS (SELECT * FROM TimelineSequence WHERE sequence_name = 'Research Project Cycle 2024')
+BEGIN
+    INSERT INTO [TimelineSequence] ([sequence_name], [sequence_description], [sequence_color], [created_at], [updated_at], [created_by])
+    VALUES 
+    ('Research Project Cycle 2024', 'Main timeline for research project management', '#FF5733', GETDATE(), GETDATE(), 1),
+    ('Fund Disbursement Cycle', 'Timeline for fund disbursement processes', '#33FF57', GETDATE(), GETDATE(), 1),
+    ('Conference Paper Cycle 2025', 'Timeline for conference paper submissions', '#3357FF', GETDATE(), GETDATE(), 1);
+    
+    PRINT 'Sample data inserted into TimelineSequence table.';
+END
+ELSE
+BEGIN
+    PRINT 'Sample data for TimelineSequence already exists.';
+END
+GO
+
+PRINT 'All updates completed successfully.';
+
+
+-- Add sequence_id column to Projects table if it doesn't exist
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Projects') AND name = 'sequence_id')
+BEGIN
+    ALTER TABLE Projects ADD sequence_id INTEGER NULL;
+END
+GO
+
+-- Add foreign key constraint if it doesn't exist
+IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID('FK_Projects_TimelineSequence') AND parent_object_id = OBJECT_ID('Projects'))
+BEGIN
+    ALTER TABLE [Projects]
+    ADD CONSTRAINT FK_Projects_TimelineSequence
+    FOREIGN KEY([sequence_id]) REFERENCES [TimelineSequence]([sequence_id]);
+END
+GO
+
+-- Insert sample data for TimelineSequence
+INSERT INTO [TimelineSequence] ([sequence_name], [sequence_description], [sequence_color], [created_at], [updated_at], [created_by])
+VALUES 
+('Research Project Cycle 2024', 'Main timeline for research project management', '#FF5733', GETDATE(), GETDATE(), 1),
+('Fund Disbursement Cycle', 'Timeline for fund disbursement processes', '#33FF57', GETDATE(), GETDATE(), 1),
+('Conference Paper Cycle 2025', 'Timeline for conference paper submissions', '#3357FF', GETDATE(), GETDATE(), 1);
+GO
+
+-- Insert sample data for Timeline
+INSERT INTO [Timeline] ([sequence_id], [start_date], [end_date], [event], [created_at], [update_at], [timeline_type], [created_by])
+VALUES 
+(1, '2025-06-01', '2025-06-15', 'Project Registration Period', GETDATE(), GETDATE(), 1, 1),
+(1, '2025-06-16', '2025-06-30', 'Review Period', GETDATE(), GETDATE(), 2, 1),
+(2, '2025-07-01', '2025-07-15', 'Fund Request Period', GETDATE(), GETDATE(), 1, 1),
+(2, '2025-07-16', '2025-07-31', 'Fund Approval Period', GETDATE(), GETDATE(), 2, 1),
+(3, '2025-08-01', '2025-08-15', 'Conference Paper Submissions', GETDATE(), GETDATE(), 1, 1),
+(3, '2025-08-16', '2025-08-31', 'Paper Review Period', GETDATE(), GETDATE(), 2, 1);
+GO
+
+-- Update existing timeline to include today's date
+UPDATE [LRMSDB].[dbo].[Timeline]
+SET [start_date] = DATEADD(day, -1, GETDATE()),  -- Yesterday
+    [end_date] = DATEADD(day, 14, GETDATE())     -- Two weeks from now
+WHERE [timeline_id] = 1 -- Replace with your actual timeline_id
+  AND [timeline_type] = 1; -- Registration type
+
+
+
+
+ 
+

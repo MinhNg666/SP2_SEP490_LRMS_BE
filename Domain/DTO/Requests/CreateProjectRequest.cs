@@ -9,12 +9,15 @@ public class CreateProjectRequest
     public DateTime? StartDate { get; set; }
     public DateTime? EndDate { get; set; }
     public decimal? ApprovedBudget { get; set; }
-    // public int? Status { get; set; }
     public int GroupId { get; set; }
     public int DepartmentId { get; set; }
+    public List<MilestoneRequest> Milestones { get; set; }
+    public int SequenceId { get; set; }
+}
 
-
-    //Document info
-    public int? ProjectResourceId { get; set; }
-    //public int? DocumentType { get; set; }
+public class MilestoneRequest
+{
+    public string Title { get; set; }
+    public DateTime StartDate { get; set; }
+    public DateTime EndDate { get; set; }
 }

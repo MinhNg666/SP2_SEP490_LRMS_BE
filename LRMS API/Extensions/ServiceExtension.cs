@@ -34,8 +34,14 @@ public static class ServiceExtension
         services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<IProjectService, ProjectService>();
         services.AddScoped<IDepartmentService, DepartmentService>();
+        services.AddScoped<IS3Service, S3Service>();
         services.AddScoped<ITimelineService, TimelineService>();
         services.AddScoped<ITimelineSequenceService, TimelineSequenceService>();
+        services.AddScoped<IDocumentService, DocumentService>();
+        services.AddScoped<IConferenceService, ConferenceService>();
+        services.AddScoped<IConferenceRepository, ConferenceRepository>();
+        services.AddScoped<IJournalService, JournalService>();
+        services.AddScoped<IJournalRepository, JournalRepository>();
         //services.AddScoped<IPublicationService, PublicationService>();
         
         //Repository
@@ -45,8 +51,11 @@ public static class ServiceExtension
         services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<IProjectRepository, ProjectRepository>();
         services.AddScoped<IDepartmentRepository, DepartmentRepository>();
+        services.AddScoped<IMilestoneRepository, MilestoneRepository>();
         services.AddScoped<ITimelineSequenceRepository, TimelineSequenceRepository>();
         services.AddScoped<IS3Service, S3Service>();
+        services.AddScoped<IJournalRepository, JournalRepository>();
+        services.AddScoped<IConferenceRepository, ConferenceRepository>();
 
         return services;
     }

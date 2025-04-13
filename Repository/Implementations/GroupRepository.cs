@@ -17,7 +17,17 @@ public class GroupRepository : GenericRepository<Group>, IGroupRepository
     {
         _context = context;
     }
-
+    public async Task<GroupMember> GetMemberByUserId(int userId)
+    {
+        return await _context.GroupMembers
+            .Include(gm => gm.User)
+            .FirstOrDefaultAsync(gm => gm.UserId == userId);
+    }
+    public async Task<User> GetUserById(int userId)
+    {
+        return await _context.Users
+            .FirstOrDefaultAsync(u => u.UserId == userId);
+    }
     public override async Task<Group> GetByIdAsync(int id)
     {
         try 
@@ -25,6 +35,7 @@ public class GroupRepository : GenericRepository<Group>, IGroupRepository
             return await _context.Groups
                 .Include(g => g.GroupMembers)
                     .ThenInclude(gm => gm.User)
+                .Include(g => g.GroupDepartmentNavigation)
                 .SingleOrDefaultAsync(g => g.GroupId == id);
         }
         catch (Exception ex)
@@ -40,6 +51,7 @@ public class GroupRepository : GenericRepository<Group>, IGroupRepository
             return await _context.Groups
                 .Include(g => g.GroupMembers)
                     .ThenInclude(gm => gm.User)
+                .Include(g => g.GroupDepartmentNavigation)
                 .ToListAsync();
         }
         catch (Exception ex)
@@ -52,6 +64,7 @@ public class GroupRepository : GenericRepository<Group>, IGroupRepository
         return await _context.Groups
             .Include(g => g.GroupMembers)
                 .ThenInclude(gm => gm.User)
+            .Include(g => g.GroupDepartmentNavigation)
             .Where(g => 
                 g.CreatedBy == userId || // Include groups created by this user
                 g.GroupMembers.Any(gm => gm.UserId == userId && gm.Status == (int)GroupMemberStatus.Active)

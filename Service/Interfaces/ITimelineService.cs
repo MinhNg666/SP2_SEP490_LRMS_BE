@@ -10,4 +10,5 @@ public interface ITimelineService
     Task<TimelineResponse> CreateTimeline(TimelineRequest request);
     Task<IEnumerable<TimelineResponse>> GetAllTimelines();
     Task<TimelineResponse> GetTimelineById(int id);
+    Task<bool> IsValidTimeForAction(int timelineType, int? sequenceId = null);
 } 

@@ -62,6 +62,7 @@ public class ProjectRepository: GenericRepository<Project>, IProjectRepository
             .Include(p => p.Documents)
             .Include(p => p.Group)
             .Include(p => p.Department)
+            .Include(p => p.Milestones)
             .ToListAsync();
     }
     
@@ -71,6 +72,13 @@ public class ProjectRepository: GenericRepository<Project>, IProjectRepository
             .Include(p => p.Documents)
             .Include(p => p.Group)
             .Include(p => p.Department)
+            .Include(p => p.Milestones)
             .FirstOrDefaultAsync(p => p.ProjectId == projectId);
     }
+    public async Task<int> AddMilestoneAsync(Milestone milestone)
+   {
+       await _context.Milestones.AddAsync(milestone);
+       await _context.SaveChangesAsync();
+       return milestone.MilestoneId; // Hoặc ID của milestone nếu có
+   }
 }

@@ -8,11 +8,14 @@ public interface IProjectService
 {
     Task<int> CreateResearchProject(CreateProjectRequest request, IFormFile documentFile, int createdBy);
     Task<bool> SendProjectForApproval(ProjectApprovalRequest request);
-    Task<bool> ApproveProject(int projectId, int approvedBy);
-    Task<bool> RejectProject(int projectId, int rejectedBy, string reason);
-
     Task<IEnumerable<ProjectResponse>> GetAllProjects(); 
     Task<ProjectResponse> GetProjectById(int projectId);
     Task<IEnumerable<ProjectResponse>> GetProjectsByDepartmentId(int departmentId);
     Task<IEnumerable<ProjectResponse>> GetProjectsByUserId(int userId);
+    Task<bool> ApproveProjectBySecretary(int projectId, int secretaryId, IFormFile documentFile);
+    Task<bool> RejectProjectBySecretary(int projectId, int secretaryId, IFormFile documentFile);
+    Task AddProjectDocument(int projectId, IFormFile documentFile, int userId);
+    Task<ProjectDetailResponse> GetProjectDetails(int projectId);
+    Task<IEnumerable<ProjectListResponse>> GetUserPendingProjectsList(int userId);
+    Task<IEnumerable<ProjectListResponse>> GetUserApprovedProjectsList(int userId);
 }
