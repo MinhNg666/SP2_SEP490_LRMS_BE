@@ -326,6 +326,43 @@ public class ProjectService : IProjectService
         {
             if (documentFile == null)
                 throw new ServiceException("Vui lòng tải lên biên bản họp hội đồng");
+
+            // Add this debugging code to the start of ApproveProjectBySecretary method
+            var currentDate = DateTime.Now.Date;
+            var allReviewTimelines = await _context.Timelines
+                .Where(t => t.TimelineType == (int)TimelineTypeEnum.ReviewPeriod)
+                .ToListAsync();
+
+            Console.WriteLine($"Current date: {currentDate}");
+            Console.WriteLine($"Found {allReviewTimelines.Count} review timelines");
+
+            foreach (var timeline in allReviewTimelines)
+            {
+                Console.WriteLine($"Timeline ID: {timeline.TimelineId}");
+                Console.WriteLine($"Start Date: {timeline.StartDate}, End Date: {timeline.EndDate}");
+                Console.WriteLine($"Status: {timeline.Status}");
+                Console.WriteLine($"Date check: {timeline.StartDate <= currentDate && timeline.EndDate >= currentDate}");
+                Console.WriteLine($"Status check: {timeline.Status == (int)TimelineStatusEnum.Active}");
+                Console.WriteLine($"Full check: {timeline.TimelineType == (int)TimelineTypeEnum.ReviewPeriod && 
+                              timeline.StartDate <= currentDate && 
+                              timeline.EndDate >= currentDate && 
+                              timeline.Status == (int)TimelineStatusEnum.Active}");
+            }
+
+            // Then continue with your existing code
+            var activeReviewTimeline = await _context.Timelines
+                .Include(t => t.Sequence)
+                .Where(t => t.TimelineType == (int)TimelineTypeEnum.ReviewPeriod && 
+                       t.StartDate.HasValue && t.StartDate.Value.Date <= currentDate &&
+                       t.EndDate.HasValue && t.EndDate.Value.Date >= currentDate &&
+                       t.Status.HasValue && t.Status.Value == (int)TimelineStatusEnum.Active)
+                .FirstOrDefaultAsync();
+            
+            if (activeReviewTimeline == null)
+            {
+                throw new ServiceException("Project review is not currently open. Please check the review schedule.");
+            }
+
             // Lấy thông tin project
             var project = await _projectRepository.GetByIdAsync(projectId);
             if (project == null)
@@ -408,6 +445,42 @@ public class ProjectService : IProjectService
         {
             if (documentFile == null)
                 throw new ServiceException("Vui lòng tải lên biên bản họp hội đồng");
+
+            // Add this debugging code to the start of RejectProjectBySecretary method
+            var currentDate = DateTime.Now.Date;
+            var allReviewTimelines = await _context.Timelines
+                .Where(t => t.TimelineType == (int)TimelineTypeEnum.ReviewPeriod)
+                .ToListAsync();
+
+            Console.WriteLine($"Current date: {currentDate}");
+            Console.WriteLine($"Found {allReviewTimelines.Count} review timelines");
+
+            foreach (var timeline in allReviewTimelines)
+            {
+                Console.WriteLine($"Timeline ID: {timeline.TimelineId}");
+                Console.WriteLine($"Start Date: {timeline.StartDate}, End Date: {timeline.EndDate}");
+                Console.WriteLine($"Status: {timeline.Status}");
+                Console.WriteLine($"Date check: {timeline.StartDate <= currentDate && timeline.EndDate >= currentDate}");
+                Console.WriteLine($"Status check: {timeline.Status == (int)TimelineStatusEnum.Active}");
+                Console.WriteLine($"Full check: {timeline.TimelineType == (int)TimelineTypeEnum.ReviewPeriod && 
+                              timeline.StartDate <= currentDate && 
+                              timeline.EndDate >= currentDate && 
+                              timeline.Status == (int)TimelineStatusEnum.Active}");
+            }
+
+            // Then continue with your existing code
+            var activeReviewTimeline = await _context.Timelines
+                .Include(t => t.Sequence)
+                .Where(t => t.TimelineType == (int)TimelineTypeEnum.ReviewPeriod && 
+                       t.StartDate.HasValue && t.StartDate.Value.Date <= currentDate &&
+                       t.EndDate.HasValue && t.EndDate.Value.Date >= currentDate &&
+                       t.Status.HasValue && t.Status.Value == (int)TimelineStatusEnum.Active)
+                .FirstOrDefaultAsync();
+            
+            if (activeReviewTimeline == null)
+            {
+                throw new ServiceException("Project review is not currently open. Please check the review schedule.");
+            }
 
             // Lấy thông tin project
             var project = await _projectRepository.GetByIdAsync(projectId);
