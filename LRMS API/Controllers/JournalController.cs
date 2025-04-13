@@ -25,8 +25,8 @@ public class JournalController : ApiBaseController
         try
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-            var journalId = await _journalService.CreateJournal(request, userId);
-            var response = new ApiResponse(StatusCodes.Status200OK, $"Journal has been registered. Journal ID: {journalId}");
+            var journal = await _journalService.CreateJournal(request, userId);
+            var response = new ApiResponse(StatusCodes.Status200OK, $"Journal has been registered. Journal ID: {journal.JournalId}", journal);
             return Ok(response);
         }
         catch (ServiceException ex)

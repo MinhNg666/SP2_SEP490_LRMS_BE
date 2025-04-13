@@ -36,7 +36,7 @@ public class ConferenceService : IConferenceService
         _context = context;
     }
 
-    public async Task<int> CreateConference(CreateConferenceRequest request, int createdBy)
+    public async Task<ConferenceResponse> CreateConference(CreateConferenceRequest request, int createdBy)
     {
         try
         {
@@ -71,7 +71,9 @@ public class ConferenceService : IConferenceService
 
             await _conferenceRepository.AddExpenseAsync(expense);
 
-            return conference.ConferenceId;
+            // Lấy thông tin conference vừa tạo kèm theo project và expense
+            var createdConference = await _conferenceRepository.GetConferenceWithDetailsAsync(conference.ConferenceId);
+            return _mapper.Map<ConferenceResponse>(createdConference);
         }
         catch (Exception ex)
         {

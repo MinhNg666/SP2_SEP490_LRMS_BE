@@ -25,8 +25,8 @@ public class ConferenceController : ApiBaseController
         try
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-            var conferenceId = await _conferenceService.CreateConference(request, userId);
-            var response = new ApiResponse(StatusCodes.Status200OK, $"Conference has been registered. Conference ID: {conferenceId}");
+            var conference = await _conferenceService.CreateConference(request, userId);
+            var response = new ApiResponse(StatusCodes.Status200OK, $"Conference has been registered. Conference ID: {conference.ConferenceId}", conference);
             return Ok(response);
         }
         catch (ServiceException ex)

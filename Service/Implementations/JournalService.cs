@@ -36,7 +36,7 @@ public class JournalService : IJournalService
         _context = context;
     }
 
-    public async Task<int> CreateJournal(CreateJournalRequest request, int createdBy)
+    public async Task<JournalResponse> CreateJournal(CreateJournalRequest request, int createdBy)
     {
         try
         {
@@ -60,8 +60,10 @@ public class JournalService : IJournalService
             };
 
             await _journalRepository.AddAsync(journal);
-
-            return journal.JournalId;
+            
+            // Lấy thông tin journal vừa tạo kèm theo project
+            var createdJournal = await _journalRepository.GetJournalWithDetailsAsync(journal.JournalId);
+            return _mapper.Map<JournalResponse>(createdJournal);
         }
         catch (Exception ex)
         {
