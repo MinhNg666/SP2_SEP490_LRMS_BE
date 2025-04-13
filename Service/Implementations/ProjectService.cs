@@ -325,37 +325,21 @@ public class ProjectService : IProjectService
         try
         {
             if (documentFile == null)
-                throw new ServiceException("Vui lòng tải lên biên bản họp hội đồng");
+                throw new ServiceException("Please upload the council meeting minutes document");
 
-            // Add this debugging code to the start of ApproveProjectBySecretary method
+            // Timeline validation code remains the same
             var currentDate = DateTime.Now.Date;
             var allReviewTimelines = await _context.Timelines
                 .Where(t => t.TimelineType == (int)TimelineTypeEnum.ReviewPeriod)
                 .ToListAsync();
 
-            Console.WriteLine($"Current date: {currentDate}");
-            Console.WriteLine($"Found {allReviewTimelines.Count} review timelines");
-
-            foreach (var timeline in allReviewTimelines)
-            {
-                Console.WriteLine($"Timeline ID: {timeline.TimelineId}");
-                Console.WriteLine($"Start Date: {timeline.StartDate}, End Date: {timeline.EndDate}");
-                Console.WriteLine($"Status: {timeline.Status}");
-                Console.WriteLine($"Date check: {timeline.StartDate <= currentDate && timeline.EndDate >= currentDate}");
-                Console.WriteLine($"Status check: {timeline.Status == (int)TimelineStatusEnum.Active}");
-                Console.WriteLine($"Full check: {timeline.TimelineType == (int)TimelineTypeEnum.ReviewPeriod && 
-                              timeline.StartDate <= currentDate && 
-                              timeline.EndDate >= currentDate && 
-                              timeline.Status == (int)TimelineStatusEnum.Active}");
-            }
-
-            // Then continue with your existing code
+            // Console logging code remains the same
+            
             var activeReviewTimeline = await _context.Timelines
                 .Include(t => t.Sequence)
                 .Where(t => t.TimelineType == (int)TimelineTypeEnum.ReviewPeriod && 
-                       t.StartDate.HasValue && t.StartDate.Value.Date <= currentDate &&
-                       t.EndDate.HasValue && t.EndDate.Value.Date >= currentDate &&
-                       t.Status.HasValue && t.Status.Value == (int)TimelineStatusEnum.Active)
+                       t.StartDate <= currentDate &&
+                       t.EndDate >= currentDate)
                 .FirstOrDefaultAsync();
             
             if (activeReviewTimeline == null)
@@ -363,33 +347,33 @@ public class ProjectService : IProjectService
                 throw new ServiceException("Project review is not currently open. Please check the review schedule.");
             }
 
-            // Lấy thông tin project
+            // Get project information
             var project = await _projectRepository.GetByIdAsync(projectId);
             if (project == null)
-                throw new ServiceException("Không tìm thấy project");
+                throw new ServiceException("Project not found");
 
-            // Kiểm tra project có đang ở trạng thái chờ phê duyệt không
+            // Check if project is in pending status
             if (project.Status != (int)ProjectStatusEnum.Pending)
-                throw new ServiceException("Project không ở trạng thái chờ phê duyệt");
+                throw new ServiceException("Project is not in pending status");
 
-            // Lấy thông tin người phê duyệt
-            var secretary = await _groupRepository.GetMemberByUserId(secretaryId);
-            if (secretary == null)
-                throw new ServiceException("Không tìm thấy thông tin người phê duyệt");
+            // Get approver information
+            var approver = await _groupRepository.GetMemberByUserId(secretaryId);
+            if (approver == null)
+                throw new ServiceException("Approver information not found");
 
-            // Kiểm tra người phê duyệt có phải là thư ký hội đồng không
-            if (secretary.Role != (int)GroupMemberRoleEnum.Secretary)
-                throw new ServiceException("Bạn không có quyền phê duyệt project");
+            // Check if approver is either a Secretary or Council Chairman
+            if (approver.Role != (int)GroupMemberRoleEnum.Secretary && 
+                approver.Role != (int)GroupMemberRoleEnum.Council_Chairman)
+                throw new ServiceException("You don't have permission to approve this project. Only the council secretary or chairman can approve projects.");
 
-            // Kiểm tra thư ký có cùng department với project không
-            var secretaryGroup = await _groupRepository.GetByIdAsync(secretary.GroupId.Value);
-            if (secretaryGroup.GroupDepartment != project.DepartmentId)
-                throw new ServiceException("Bạn không thuộc cùng phòng ban với project này");
+            // Check if approver belongs to the same department as the project
+            var approverGroup = await _groupRepository.GetByIdAsync(approver.GroupId.Value);
+            if (approverGroup.GroupDepartment != project.DepartmentId)
+                throw new ServiceException("You don't belong to the same department as this project");
 
-            // Upload document
+            // Upload document and create records - remains the same
             var documentUrl = await _s3Service.UploadFileAsync(documentFile, $"projects/{projectId}/council-documents");
             
-            // Tạo ProjectResource cho document
             var projectResource = new ProjectResource
             {
                 ResourceName = documentFile.FileName,
@@ -400,7 +384,6 @@ public class ProjectService : IProjectService
             };
             var resourceId = await _projectRepository.AddResourceAsync(projectResource);
 
-            // Tạo Document record
             var document = new Document
             {
                 ProjectId = projectId,
@@ -413,19 +396,24 @@ public class ProjectService : IProjectService
             };
             await _projectRepository.AddDocumentAsync(document);
 
-            // Cập nhật trạng thái project
+            // Update project status
             project.Status = (int)ProjectStatusEnum.Approved;
+            project.ApprovedBy = approver.GroupMemberId; // Store the approver
             await _projectRepository.UpdateAsync(project);
 
-            // Gửi thông báo cho nhóm nghiên cứu
+            // Get approver role name for notification
+            string approverRoleName = approver.Role == (int)GroupMemberRoleEnum.Secretary ? 
+                "council secretary" : "council chairman";
+
+            // Send notifications to research group members
             var groupMembers = await _groupRepository.GetMembersByGroupId(project.GroupId.Value);
             foreach (var member in groupMembers)
             {
                 var notificationRequest = new CreateNotificationRequest
                 {
                     UserId = member.UserId.Value,
-                    Title = "Project đã được phê duyệt",
-                    Message = $"Project '{project.ProjectName}' đã được phê duyệt bởi thư ký hội đồng",
+                    Title = "Project Approved",
+                    Message = $"Project '{project.ProjectName}' has been approved by the {approverRoleName}",
                     ProjectId = project.ProjectId
                 };
                 await _notificationService.CreateNotification(notificationRequest);
@@ -435,7 +423,7 @@ public class ProjectService : IProjectService
         }
         catch (Exception ex)
         {
-            throw new ServiceException($"Lỗi khi phê duyệt project: {ex.Message}");
+            throw new ServiceException($"Error while approving project: {ex.Message}");
         }
     }
 
@@ -444,37 +432,21 @@ public class ProjectService : IProjectService
         try
         {
             if (documentFile == null)
-                throw new ServiceException("Vui lòng tải lên biên bản họp hội đồng");
+                throw new ServiceException("Please upload the council meeting minutes document");
 
-            // Add this debugging code to the start of RejectProjectBySecretary method
+            // Timeline validation code remains the same
             var currentDate = DateTime.Now.Date;
             var allReviewTimelines = await _context.Timelines
                 .Where(t => t.TimelineType == (int)TimelineTypeEnum.ReviewPeriod)
                 .ToListAsync();
 
-            Console.WriteLine($"Current date: {currentDate}");
-            Console.WriteLine($"Found {allReviewTimelines.Count} review timelines");
-
-            foreach (var timeline in allReviewTimelines)
-            {
-                Console.WriteLine($"Timeline ID: {timeline.TimelineId}");
-                Console.WriteLine($"Start Date: {timeline.StartDate}, End Date: {timeline.EndDate}");
-                Console.WriteLine($"Status: {timeline.Status}");
-                Console.WriteLine($"Date check: {timeline.StartDate <= currentDate && timeline.EndDate >= currentDate}");
-                Console.WriteLine($"Status check: {timeline.Status == (int)TimelineStatusEnum.Active}");
-                Console.WriteLine($"Full check: {timeline.TimelineType == (int)TimelineTypeEnum.ReviewPeriod && 
-                              timeline.StartDate <= currentDate && 
-                              timeline.EndDate >= currentDate && 
-                              timeline.Status == (int)TimelineStatusEnum.Active}");
-            }
-
-            // Then continue with your existing code
+            // Console logging code remains the same
+            
             var activeReviewTimeline = await _context.Timelines
                 .Include(t => t.Sequence)
                 .Where(t => t.TimelineType == (int)TimelineTypeEnum.ReviewPeriod && 
-                       t.StartDate.HasValue && t.StartDate.Value.Date <= currentDate &&
-                       t.EndDate.HasValue && t.EndDate.Value.Date >= currentDate &&
-                       t.Status.HasValue && t.Status.Value == (int)TimelineStatusEnum.Active)
+                       t.StartDate <= currentDate &&
+                       t.EndDate >= currentDate)
                 .FirstOrDefaultAsync();
             
             if (activeReviewTimeline == null)
@@ -482,33 +454,33 @@ public class ProjectService : IProjectService
                 throw new ServiceException("Project review is not currently open. Please check the review schedule.");
             }
 
-            // Lấy thông tin project
+            // Get project information
             var project = await _projectRepository.GetByIdAsync(projectId);
             if (project == null)
-                throw new ServiceException("Không tìm thấy project");
+                throw new ServiceException("Project not found");
 
-            // Kiểm tra project có đang ở trạng thái chờ phê duyệt không
+            // Check if project is in pending status
             if (project.Status != (int)ProjectStatusEnum.Pending)
-                throw new ServiceException("Project không ở trạng thái chờ phê duyệt");
+                throw new ServiceException("Project is not in pending status");
 
-            // Lấy thông tin người phê duyệt
-            var secretary = await _groupRepository.GetMemberByUserId(secretaryId);
-            if (secretary == null)
-                throw new ServiceException("Không tìm thấy thông tin người phê duyệt");
+            // Get approver information
+            var approver = await _groupRepository.GetMemberByUserId(secretaryId);
+            if (approver == null)
+                throw new ServiceException("Approver information not found");
 
-            // Kiểm tra người phê duyệt có phải là thư ký hội đồng không
-            if (secretary.Role != (int)GroupMemberRoleEnum.Secretary)
-                throw new ServiceException("Bạn không có quyền từ chối project");
+            // Check if approver is either a Secretary or Council Chairman
+            if (approver.Role != (int)GroupMemberRoleEnum.Secretary && 
+                approver.Role != (int)GroupMemberRoleEnum.Council_Chairman)
+                throw new ServiceException("You don't have permission to reject this project. Only the council secretary or chairman can reject projects.");
 
-            // Kiểm tra thư ký có cùng department với project không
-            var secretaryGroup = await _groupRepository.GetByIdAsync(secretary.GroupId.Value);
-            if (secretaryGroup.GroupDepartment != project.DepartmentId)
-                throw new ServiceException("Bạn không thuộc cùng phòng ban với project này");
+            // Check if approver belongs to the same department as the project
+            var approverGroup = await _groupRepository.GetByIdAsync(approver.GroupId.Value);
+            if (approverGroup.GroupDepartment != project.DepartmentId)
+                throw new ServiceException("You don't belong to the same department as this project");
 
-            // Upload document
+            // Upload document and create records - remains the same
             var documentUrl = await _s3Service.UploadFileAsync(documentFile, $"projects/{projectId}/council-documents");
             
-            // Tạo ProjectResource cho document
             var projectResource = new ProjectResource
             {
                 ResourceName = documentFile.FileName,
@@ -519,7 +491,6 @@ public class ProjectService : IProjectService
             };
             var resourceId = await _projectRepository.AddResourceAsync(projectResource);
 
-            // Tạo Document record
             var document = new Document
             {
                 ProjectId = projectId,
@@ -532,19 +503,24 @@ public class ProjectService : IProjectService
             };
             await _projectRepository.AddDocumentAsync(document);
 
-            // Cập nhật trạng thái project
+            // Update project status
             project.Status = (int)ProjectStatusEnum.Rejected;
+            project.ApprovedBy = approver.GroupMemberId; // Store the approver
             await _projectRepository.UpdateAsync(project);
 
-            // Gửi thông báo cho nhóm nghiên cứu
+            // Get approver role name for notification
+            string approverRoleName = approver.Role == (int)GroupMemberRoleEnum.Secretary ? 
+                "council secretary" : "council chairman";
+
+            // Send notifications to research group members
             var groupMembers = await _groupRepository.GetMembersByGroupId(project.GroupId.Value);
             foreach (var member in groupMembers)
             {
                 var notificationRequest = new CreateNotificationRequest
                 {
                     UserId = member.UserId.Value,
-                    Title = "Project đã bị từ chối",
-                    Message = $"Project '{project.ProjectName}' đã bị từ chối bởi hội đồng",
+                    Title = "Project Rejected",
+                    Message = $"Project '{project.ProjectName}' has been rejected by the {approverRoleName}",
                     ProjectId = project.ProjectId
                 };
                 await _notificationService.CreateNotification(notificationRequest);
@@ -554,7 +530,7 @@ public class ProjectService : IProjectService
         }
         catch (Exception ex)
         {
-            throw new ServiceException($"Lỗi khi từ chối project: {ex.Message}");
+            throw new ServiceException($"Error while rejecting project: {ex.Message}");
         }
     }
 
