@@ -12,6 +12,7 @@ public class CreateProjectRequest
     public int GroupId { get; set; }
     public int DepartmentId { get; set; }
     public List<MilestoneRequest> Milestones { get; set; }
+    public int SequenceId { get; set; }
 }
 
 public class MilestoneRequest

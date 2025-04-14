@@ -20,9 +20,10 @@ public class ProjectService : IProjectService
     private readonly INotificationService _notificationService;
     private readonly IMapper _mapper;
     private readonly LRMSDbContext _context;
+    private readonly ITimelineService _timelineService;
 
     public ProjectService(IS3Service s3Service, IProjectRepository projectRepository, IGroupRepository groupRepository,
-        IMilestoneRepository milestoneRepository, INotificationService notificationService, IMapper mapper, LRMSDbContext context)
+        IMilestoneRepository milestoneRepository, INotificationService notificationService, IMapper mapper, LRMSDbContext context, ITimelineService timelineService)
     {
         _s3Service = s3Service;
         _projectRepository = projectRepository;
@@ -31,6 +32,7 @@ public class ProjectService : IProjectService
         _notificationService = notificationService;
         _mapper = mapper;
         _context = context;
+        _timelineService = timelineService;
     }
     public async Task<IEnumerable<ProjectResponse>> GetAllProjects()
     {
@@ -100,6 +102,15 @@ public class ProjectService : IProjectService
     {
         try
         {
+            // Kiểm tra thời gian đăng ký
+            var isValidTime = await _timelineService.IsValidTimeForAction(
+                TimelineTypes.RegisterProject,
+                request.SequenceId
+            );
+
+            if (!isValidTime)
+                throw new ServiceException("Out of time for project registration");
+
             var existingProjects = await _projectRepository.GetAllProjectsWithDetailsAsync();
             if (existingProjects.Any(p => p.ProjectName.Equals(request.ProjectName, StringComparison.OrdinalIgnoreCase)))
             {
@@ -126,23 +137,23 @@ public class ProjectService : IProjectService
             // Create project with the automatically determined sequence ID
             var project = new Project
             {
-                ProjectName = request.ProjectName,
-                Description = request.Description,
-                Methodlogy = request.Methodology,
+            ProjectName = request.ProjectName,
+            Description = request.Description,
+            Methodlogy = request.Methodology,
                 StartDate = request.StartDate?.Date,
                 EndDate = request.EndDate?.Date,
-                ApprovedBudget = request.ApprovedBudget,
+            ApprovedBudget = request.ApprovedBudget,
                 SpentBudget = 0, // Initialize with 0
-                Status = (int)ProjectStatusEnum.Pending,
-                CreatedAt = DateTime.Now,
-                CreatedBy = createdBy,
-                GroupId = request.GroupId,
-                DepartmentId = request.DepartmentId,
+            Status = (int)ProjectStatusEnum.Pending,
+            CreatedAt = DateTime.Now,
+            CreatedBy = createdBy,
+            GroupId = request.GroupId,
+            DepartmentId = request.DepartmentId,
                 ProjectType = (int)ProjectTypeEnum.Research,
                 SequenceId = sequenceId // Set the automatically determined sequence ID
-            };
+        };
 
-            await _projectRepository.AddAsync(project);
+        await _projectRepository.AddAsync(project);
             
             // Modified milestone creation code with detailed error handling
             if (request.Milestones != null && request.Milestones.Any())
@@ -248,19 +259,19 @@ public class ProjectService : IProjectService
                 Console.WriteLine("No milestones to create - request.Milestones is null or empty");
             }
             
-            if (documentFile != null)
+        if (documentFile != null)
             {
                 var documentUrl = await _s3Service.UploadFileAsync(documentFile, $"projects/{project.ProjectId}/documents");
                 
                 // Create ProjectResource for document
-                var projectResource = new ProjectResource
-                {
-                    ResourceName = documentFile.FileName,
+                    var projectResource = new ProjectResource
+                    {
+                        ResourceName = documentFile.FileName,
                     ResourceType = 1, // Document type
-                    ProjectId = project.ProjectId,
-                    Acquired = true,
-                    Quantity = 1
-                };
+                        ProjectId = project.ProjectId,
+                        Acquired = true,
+                        Quantity = 1
+                    };
                 
                 await _context.ProjectResources.AddAsync(projectResource);
                 await _context.SaveChangesAsync();
@@ -282,7 +293,7 @@ public class ProjectService : IProjectService
                 await _context.SaveChangesAsync();
             }
             
-            return project.ProjectId;
+        return project.ProjectId;
         }
         catch (Exception ex)
         {
@@ -293,6 +304,15 @@ public class ProjectService : IProjectService
 
     public async Task<bool> SendProjectForApproval(ProjectApprovalRequest request)
     {
+        // Kiểm tra thời gian gửi phê duyệt
+        var isValidTime = await _timelineService.IsValidTimeForAction(
+            TimelineTypes.ReviewProject,
+            request.SequenceId
+        );
+
+        if (!isValidTime)
+            throw new ServiceException("Out of time for project review submission");
+
         var project = await _projectRepository.GetByIdAsync(request.ProjectId);
         if (project == null)
             throw new ServiceException("Project not found");
@@ -327,8 +347,8 @@ public class ProjectService : IProjectService
             if (documentFile == null)
                 throw new ServiceException("Vui lòng tải lên biên bản họp hội đồng");
             // Lấy thông tin project
-            var project = await _projectRepository.GetByIdAsync(projectId);
-            if (project == null)
+        var project = await _projectRepository.GetByIdAsync(projectId);
+        if (project == null)
                 throw new ServiceException("Không tìm thấy project");
 
             // Kiểm tra project có đang ở trạng thái chờ phê duyệt không
@@ -377,24 +397,24 @@ public class ProjectService : IProjectService
             await _projectRepository.AddDocumentAsync(document);
 
             // Cập nhật trạng thái project
-            project.Status = (int)ProjectStatusEnum.Approved;
-            await _projectRepository.UpdateAsync(project);
+        project.Status = (int)ProjectStatusEnum.Approved;
+        await _projectRepository.UpdateAsync(project);
 
             // Gửi thông báo cho nhóm nghiên cứu
-            var groupMembers = await _groupRepository.GetMembersByGroupId(project.GroupId.Value);
-            foreach (var member in groupMembers)
+        var groupMembers = await _groupRepository.GetMembersByGroupId(project.GroupId.Value);
+        foreach (var member in groupMembers)
+        {
+            var notificationRequest = new CreateNotificationRequest
             {
-                var notificationRequest = new CreateNotificationRequest
-                {
-                    UserId = member.UserId.Value,
+                UserId = member.UserId.Value,
                     Title = "Project đã được phê duyệt",
                     Message = $"Project '{project.ProjectName}' đã được phê duyệt bởi thư ký hội đồng",
-                    ProjectId = project.ProjectId
-                };
-                await _notificationService.CreateNotification(notificationRequest);
-            }
+                ProjectId = project.ProjectId
+            };
+            await _notificationService.CreateNotification(notificationRequest);
+        }
 
-            return true;
+        return true;
         }
         catch (Exception ex)
         {
@@ -410,8 +430,8 @@ public class ProjectService : IProjectService
                 throw new ServiceException("Vui lòng tải lên biên bản họp hội đồng");
 
             // Lấy thông tin project
-            var project = await _projectRepository.GetByIdAsync(projectId);
-            if (project == null)
+        var project = await _projectRepository.GetByIdAsync(projectId);
+        if (project == null)
                 throw new ServiceException("Không tìm thấy project");
 
             // Kiểm tra project có đang ở trạng thái chờ phê duyệt không
@@ -460,24 +480,24 @@ public class ProjectService : IProjectService
             await _projectRepository.AddDocumentAsync(document);
 
             // Cập nhật trạng thái project
-            project.Status = (int)ProjectStatusEnum.Rejected;
-            await _projectRepository.UpdateAsync(project);
+        project.Status = (int)ProjectStatusEnum.Rejected;
+        await _projectRepository.UpdateAsync(project);
 
             // Gửi thông báo cho nhóm nghiên cứu
-            var groupMembers = await _groupRepository.GetMembersByGroupId(project.GroupId.Value);
-            foreach (var member in groupMembers)
+        var groupMembers = await _groupRepository.GetMembersByGroupId(project.GroupId.Value);
+        foreach (var member in groupMembers)
+        {
+            var notificationRequest = new CreateNotificationRequest
             {
-                var notificationRequest = new CreateNotificationRequest
-                {
-                    UserId = member.UserId.Value,
+                UserId = member.UserId.Value,
                     Title = "Project đã bị từ chối",
                     Message = $"Project '{project.ProjectName}' đã bị từ chối bởi hội đồng",
-                    ProjectId = project.ProjectId
-                };
-                await _notificationService.CreateNotification(notificationRequest);
-            }
+                ProjectId = project.ProjectId
+            };
+            await _notificationService.CreateNotification(notificationRequest);
+        }
 
-            return true;
+        return true;
         }
         catch (Exception ex)
         {
