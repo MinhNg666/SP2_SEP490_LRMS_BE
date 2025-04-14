@@ -99,15 +99,30 @@ public class ConferenceService : IConferenceService
             // Upload file
             var documentUrl = await _s3Service.UploadFileAsync(documentFile, $"conferences/{conferenceId}/documents");
 
+            // Tạo ProjectResource cho document
+            var projectResource = new ProjectResource
+            {
+                ResourceName = documentFile.FileName,
+                ResourceType = 1, // Document type
+                ProjectId = conference.ProjectId.Value,
+                Acquired = true,
+                Quantity = 1
+            };
+            
+            await _context.ProjectResources.AddAsync(projectResource);
+            await _context.SaveChangesAsync();
+
             // Tạo document
             var document = new Document
             {
                 ConferenceExpenseId = expense.ExpenseId,
+                ProjectId = conference.ProjectId,
                 DocumentUrl = documentUrl,
                 FileName = documentFile.FileName,
                 DocumentType = (int)DocumentTypeEnum.ConferenceProposal,
                 UploadAt = DateTime.Now,
-                UploadedBy = userId
+                UploadedBy = userId,
+                ProjectResourceId = projectResource.ProjectResourceId
             };
 
             await _context.Documents.AddAsync(document);
