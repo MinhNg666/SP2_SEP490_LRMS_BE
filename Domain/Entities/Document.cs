@@ -17,8 +17,6 @@ public partial class Document
 
     public int? ProjectId { get; set; }
 
-    public int? MilestoneId { get; set; }
-
     public int? ProjectResourceId { get; set; }
 
     public int? ConferenceExpenseId { get; set; }
@@ -27,15 +25,17 @@ public partial class Document
 
     public int? UploadedBy { get; set; }
 
+    public int? ProjectPhaseId { get; set; }
+
     public virtual ConferenceExpense ConferenceExpense { get; set; } = null!;
 
     public virtual FundDisbursement? FundDisbursement { get; set; }
-
-    public virtual Milestone? Milestone { get; set; }
 
     public virtual Project? Project { get; set; }
 
     public virtual ProjectResource ProjectResource { get; set; } = null!;
 
     public virtual User? UploadedByNavigation { get; set; }
+
+    public virtual ProjectPhase? ProjectPhase { get; set; }
 }

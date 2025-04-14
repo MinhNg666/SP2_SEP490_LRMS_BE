@@ -26,6 +26,6 @@ namespace Domain.DTO.Responses
         public string GroupName { get; set; }
         public int? DepartmentId { get; set; }
         public ICollection<DocumentResponse> Documents { get; set; }
-        public ICollection<MilestoneResponse> Milestones { get; set; }
+        public ICollection<ProjectPhaseResponse> ProjectPhases { get; set; }
     }
 }

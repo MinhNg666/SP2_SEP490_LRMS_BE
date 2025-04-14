@@ -1157,6 +1157,39 @@ ADD [status] INT NULL DEFAULT 0;
 ALTER TABLE [dbo].[TimelineSequence] 
 ADD [status] INT NULL DEFAULT 1;
 
+-- 1. Rename the table
+EXEC sp_rename 'Milestone', 'ProjectPhase';
+
+  -- Rename primary key column from milestone_id to project_phase_id
+EXEC sp_rename 'ProjectPhase.milestone_id', 'project_phase_id', 'COLUMN';
+
+-- For the Documents table (if it references milestone_id)
+-- 1. First, find the constraint name
+DECLARE @FK_Documents_Milestone varchar(128)
+SELECT @FK_Documents_Milestone = name FROM sys.foreign_keys 
+WHERE parent_object_id = OBJECT_ID('Documents')
+AND referenced_object_id = OBJECT_ID('ProjectPhase');
+
+-- 2. Drop the foreign key constraint if it exists
+IF @FK_Documents_Milestone IS NOT NULL
+BEGIN
+    DECLARE @sql nvarchar(500) = N'ALTER TABLE Documents DROP CONSTRAINT ' + @FK_Documents_Milestone;
+    EXEC sp_executesql @sql;
+END
+
+-- 3. Rename the column in Documents table (if it exists)
+IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Documents') AND name = 'milestone_id')
+BEGIN
+    EXEC sp_rename 'Documents.milestone_id', 'project_phase_id', 'COLUMN';
+END
+
+-- 4. Re-create the foreign key constraint with the new name
+IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Documents') AND name = 'project_phase_id')
+BEGIN
+    ALTER TABLE Documents ADD CONSTRAINT FK_Documents_ProjectPhase
+    FOREIGN KEY (project_phase_id) REFERENCES ProjectPhase(project_phase_id);
+END
+
 
 
  

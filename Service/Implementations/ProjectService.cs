@@ -16,18 +16,18 @@ public class ProjectService : IProjectService
     private readonly IS3Service _s3Service;
     private readonly IProjectRepository _projectRepository;
     private readonly IGroupRepository _groupRepository;
-    private readonly IMilestoneRepository _milestoneRepository;
+    private readonly IProjectPhaseRepository _projectPhaseRepository;
     private readonly INotificationService _notificationService;
     private readonly IMapper _mapper;
     private readonly LRMSDbContext _context;
 
     public ProjectService(IS3Service s3Service, IProjectRepository projectRepository, IGroupRepository groupRepository,
-        IMilestoneRepository milestoneRepository, INotificationService notificationService, IMapper mapper, LRMSDbContext context)
+        IProjectPhaseRepository projectPhaseRepository, INotificationService notificationService, IMapper mapper, LRMSDbContext context)
     {
         _s3Service = s3Service;
         _projectRepository = projectRepository;
         _groupRepository = groupRepository;
-        _milestoneRepository = milestoneRepository;
+        _projectPhaseRepository = projectPhaseRepository;
         _notificationService = notificationService;
         _mapper = mapper;
         _context = context;
@@ -144,68 +144,68 @@ public class ProjectService : IProjectService
 
             await _projectRepository.AddAsync(project);
             
-            // Modified milestone creation code with detailed error handling
-            if (request.Milestones != null && request.Milestones.Any())
+            // Modified project phase creation code with detailed error handling
+            if (request.ProjectPhases != null && request.ProjectPhases.Any())
             {
-                Console.WriteLine($"Processing {request.Milestones.Count} milestones for project {project.ProjectId}");
+                Console.WriteLine($"Processing {request.ProjectPhases.Count} project phases for project {project.ProjectId}");
                 
-                foreach (var milestoneRequest in request.Milestones)
+                foreach (var phaseRequest in request.ProjectPhases)
                 {
                     try
                     {
-                        var milestoneStartDate = milestoneRequest.StartDate.Date;
-                        var milestoneEndDate = milestoneRequest.EndDate.Date;
+                        var phaseStartDate = phaseRequest.StartDate.Date;
+                        var phaseEndDate = phaseRequest.EndDate.Date;
                         
-                        Console.WriteLine($"Creating milestone: {milestoneRequest.Title} ({milestoneStartDate:yyyy-MM-dd} to {milestoneEndDate:yyyy-MM-dd})");
+                        Console.WriteLine($"Creating project phase: {phaseRequest.Title} ({phaseStartDate:yyyy-MM-dd} to {phaseEndDate:yyyy-MM-dd})");
                         
-                        // Validate milestone dates against project dates
+                        // Validate phase dates against project dates
                         if (project.StartDate.HasValue && project.EndDate.HasValue && 
-                            (milestoneStartDate < project.StartDate || milestoneEndDate > project.EndDate))
+                            (phaseStartDate < project.StartDate || phaseEndDate > project.EndDate))
                         {
-                            throw new ServiceException($"Milestone dates ({milestoneStartDate:yyyy-MM-dd} to {milestoneEndDate:yyyy-MM-dd}) must be within project start and end dates ({project.StartDate?.Date:yyyy-MM-dd} to {project.EndDate?.Date:yyyy-MM-dd}).");
+                            throw new ServiceException($"Project phase dates ({phaseStartDate:yyyy-MM-dd} to {phaseEndDate:yyyy-MM-dd}) must be within project start and end dates ({project.StartDate?.Date:yyyy-MM-dd} to {project.EndDate?.Date:yyyy-MM-dd}).");
                         }
                         
-                        // Create a new milestone
-                        var milestone = new Milestone
+                        // Create a new project phase
+                        var projectPhase = new ProjectPhase
                         {
-                            Title = milestoneRequest.Title,
-                            Description = milestoneRequest.Title, // Using title as description
-                            StartDate = milestoneStartDate,
-                            EndDate = milestoneEndDate,
-                            Status = (int)MilestoneStatusEnum.In_progress,
+                            Title = phaseRequest.Title,
+                            Description = phaseRequest.Title, // Using title as description
+                            StartDate = phaseStartDate,
+                            EndDate = phaseEndDate,
+                            Status = (int)ProjectPhaseStatusEnum.In_progress,
                             ProjectId = project.ProjectId,
                             AssignBy = createdBy,
                             // These are optional fields based on your schema
                             AssignTo = null
                         };
                         
-                        // Try two different approaches to insert the milestone
+                        // Try two different approaches to insert the project phase
                         try
                         {
-                            // Method 1: Use the MilestoneRepository
-                            await _milestoneRepository.AddMilestoneAsync(milestone);
-                            Console.WriteLine("Successfully added milestone using repository");
+                            // Method 1: Use the ProjectPhaseRepository
+                            await _projectPhaseRepository.AddProjectPhaseAsync(projectPhase);
+                            Console.WriteLine("Successfully added project phase using repository");
                         }
                         catch (Exception repoEx)
                         {
-                            Console.WriteLine($"Error using repository to add milestone: {repoEx.Message}");
+                            Console.WriteLine($"Error using repository to add project phase: {repoEx.Message}");
                             
                             // Method 2: Try using DbContext directly
                             try
                             {
-                                _context.Milestones.Add(milestone);
+                                _context.ProjectPhases.Add(projectPhase);
                                 await _context.SaveChangesAsync();
-                                Console.WriteLine("Successfully added milestone using direct DbContext");
+                                Console.WriteLine("Successfully added project phase using direct DbContext");
                             }
                             catch (Exception dbEx)
                             {
-                                Console.WriteLine($"Error using direct DbContext to add milestone: {dbEx.Message}");
+                                Console.WriteLine($"Error using direct DbContext to add project phase: {dbEx.Message}");
                                 
                                 // Method 3: Try inserting using raw SQL
                                 try
                                 {
                                     var sql = @"
-                                        INSERT INTO [dbo].[Milestone] (
+                                        INSERT INTO [dbo].[ProjectPhase] (
                                             [title], [description], [start_date], [end_date], 
                                             [status], [assign_by], [project_id]
                                         ) VALUES (
@@ -215,37 +215,37 @@ public class ProjectService : IProjectService
                                     
                                     var parameters = new[]
                                     {
-                                        new SqlParameter("@title", milestone.Title ?? (object)DBNull.Value),
-                                        new SqlParameter("@description", milestone.Description ?? (object)DBNull.Value),
-                                        new SqlParameter("@startDate", milestone.StartDate ?? (object)DBNull.Value),
-                                        new SqlParameter("@endDate", milestone.EndDate ?? (object)DBNull.Value),
-                                        new SqlParameter("@status", milestone.Status ?? (object)DBNull.Value),
-                                        new SqlParameter("@assignBy", milestone.AssignBy ?? (object)DBNull.Value),
-                                        new SqlParameter("@projectId", milestone.ProjectId ?? (object)DBNull.Value)
+                                        new SqlParameter("@title", projectPhase.Title ?? (object)DBNull.Value),
+                                        new SqlParameter("@description", projectPhase.Description ?? (object)DBNull.Value),
+                                        new SqlParameter("@startDate", projectPhase.StartDate ?? (object)DBNull.Value),
+                                        new SqlParameter("@endDate", projectPhase.EndDate ?? (object)DBNull.Value),
+                                        new SqlParameter("@status", projectPhase.Status ?? (object)DBNull.Value),
+                                        new SqlParameter("@assignBy", projectPhase.AssignBy ?? (object)DBNull.Value),
+                                        new SqlParameter("@projectId", projectPhase.ProjectId ?? (object)DBNull.Value)
                                     };
                                     
                                     await _context.Database.ExecuteSqlRawAsync(sql, parameters);
-                                    Console.WriteLine("Successfully added milestone using raw SQL");
+                                    Console.WriteLine("Successfully added project phase using raw SQL");
                                 }
                                 catch (Exception sqlEx)
                                 {
-                                    Console.WriteLine($"Error using raw SQL to add milestone: {sqlEx.Message}");
+                                    Console.WriteLine($"Error using raw SQL to add project phase: {sqlEx.Message}");
                                     // At this point, all three methods have failed
-                                    throw new ServiceException($"Failed to add milestone after trying multiple methods: {sqlEx.Message}");
+                                    throw new ServiceException($"Failed to add project phase after trying multiple methods: {sqlEx.Message}");
                                 }
                             }
                         }
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"Error processing milestone {milestoneRequest.Title}: {ex.Message}");
-                        // Continue with other milestones even if this one fails
+                        Console.WriteLine($"Error processing project phase {phaseRequest.Title}: {ex.Message}");
+                        // Continue with other phases even if this one fails
                     }
                 }
             }
             else
             {
-                Console.WriteLine("No milestones to create - request.Milestones is null or empty");
+                Console.WriteLine("No project phases to create - request.ProjectPhases is null or empty");
             }
             
             if (documentFile != null)
@@ -594,7 +594,7 @@ public class ProjectService : IProjectService
                     .ThenInclude(g => g.GroupMembers)
                         .ThenInclude(gm => gm.User)
                 .Include(p => p.Department)
-                .Include(p => p.Milestones)
+                .Include(p => p.ProjectPhases)
                 .Include(p => p.CreatedByNavigation)
                 .Include(p => p.ApprovedByNavigation)
                     .ThenInclude(gm => gm.User)
@@ -627,7 +627,7 @@ public class ProjectService : IProjectService
                 GroupName = projectResponse.GroupName,
                 DepartmentId = projectResponse.DepartmentId,
                 Documents = projectResponse.Documents,
-                Milestones = projectResponse.Milestones,
+                ProjectPhases = projectResponse.ProjectPhases,
                 
                 // Add enhanced creator info
                 CreatedByUser = project.CreatedByNavigation != null ? new UserShortInfo

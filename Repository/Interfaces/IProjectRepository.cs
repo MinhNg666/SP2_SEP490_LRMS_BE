@@ -4,7 +4,7 @@ using Repository.Implementations;
 namespace Repository.Interfaces;
 public interface IProjectRepository: IGenericRepository<Project>
 {
-    Task<int> AddMilestoneAsync(Milestone milestone);
+    Task<int> AddProjectPhaseAsync(ProjectPhase projectPhase);
     Task AddDocumentAsync(Document document);
     Task<int> AddResourceAsync(ProjectResource resource);
     Task<ProjectResource> GetResourceByNameAndProjectId(string resourceName, int projectId);
