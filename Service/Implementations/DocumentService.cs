@@ -17,32 +17,25 @@ public class DocumentService : IDocumentService
     private readonly LRMSDbContext _context;
     private readonly IMapper _mapper;
     private readonly IS3Service _s3Service;
-    private readonly ITimelineService _timelineService;
+
 
     public DocumentService(
         LRMSDbContext context,
         IMapper mapper,
-        IS3Service s3Service,
-        ITimelineService timelineService)
+
+        IS3Service s3Service)
+
     {
         _context = context;
         _mapper = mapper;
         _s3Service = s3Service;
-        _timelineService = timelineService;
+
     }
 
     public async Task<DocumentResponse> SubmitDocument(int projectId, IFormFile file, int documentType, int uploadedBy, int? sequenceId)
     {
         try
         {
-            // Kiểm tra thời gian nộp tài liệu
-            var isValidTime = await _timelineService.IsValidTimeForAction(
-                TimelineTypes.SubmitDocument,
-                sequenceId
-            );
-
-            if (!isValidTime)
-                throw new ServiceException("Out of time for document submission");
 
             // Upload file lên S3
             var documentUrl = await _s3Service.UploadFileAsync(file, $"projects/{projectId}/documents");

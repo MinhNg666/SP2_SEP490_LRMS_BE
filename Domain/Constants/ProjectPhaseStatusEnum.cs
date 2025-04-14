@@ -1,5 +1,5 @@
 ﻿namespace Domain.Constants;
-public enum MilestoneStatusEnum
+public enum ProjectPhaseStatusEnum
 {
     In_progress=0,
     Pending = 1,

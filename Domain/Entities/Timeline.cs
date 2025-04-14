@@ -25,6 +25,8 @@ public partial class Timeline
 
     public int? TimelineType { get; set; }
 
+    public int? Status { get; set; }
+
     public int? CreatedBy { get; set; }
 
     public virtual User? CreatedByNavigation { get; set; }

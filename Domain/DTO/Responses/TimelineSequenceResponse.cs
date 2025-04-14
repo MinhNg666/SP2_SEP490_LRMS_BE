@@ -8,6 +8,8 @@ public class TimelineSequenceResponse
     public string? SequenceName { get; set; }
     public string? SequenceDescription { get; set; }
     public string? SequenceColor { get; set; }
+    public int? Status { get; set; }
+    public string? StatusName { get; set; }
     public DateTime? CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public int? CreatedBy { get; set; }

@@ -11,11 +11,12 @@ public class CreateProjectRequest
     public decimal? ApprovedBudget { get; set; }
     public int GroupId { get; set; }
     public int DepartmentId { get; set; }
-    public List<MilestoneRequest> Milestones { get; set; }
-    public int SequenceId { get; set; }
+
+    public List<ProjectPhaseRequest> ProjectPhases { get; set; }
+
 }
 
-public class MilestoneRequest
+public class ProjectPhaseRequest
 {
     public string Title { get; set; }
     public DateTime StartDate { get; set; }

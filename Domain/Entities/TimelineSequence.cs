@@ -15,6 +15,8 @@ public partial class TimelineSequence
 
     public string? SequenceColor { get; set; }
 
+    public int? Status { get; set; }
+
     public DateTime? CreatedAt { get; set; }
 
     public DateTime? UpdatedAt { get; set; }
