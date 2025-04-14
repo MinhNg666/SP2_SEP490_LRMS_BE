@@ -18,20 +18,25 @@ public class DocumentService : IDocumentService
     private readonly IMapper _mapper;
     private readonly IS3Service _s3Service;
 
+
     public DocumentService(
         LRMSDbContext context,
         IMapper mapper,
+
         IS3Service s3Service)
+
     {
         _context = context;
         _mapper = mapper;
         _s3Service = s3Service;
+
     }
 
     public async Task<DocumentResponse> SubmitDocument(int projectId, IFormFile file, int documentType, int uploadedBy, int? sequenceId)
     {
         try
         {
+
             // Upload file lên S3
             var documentUrl = await _s3Service.UploadFileAsync(file, $"projects/{projectId}/documents");
 

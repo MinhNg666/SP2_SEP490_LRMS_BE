@@ -11,7 +11,9 @@ public class CreateProjectRequest
     public decimal? ApprovedBudget { get; set; }
     public int GroupId { get; set; }
     public int DepartmentId { get; set; }
+
     public List<ProjectPhaseRequest> ProjectPhases { get; set; }
+
 }
 
 public class ProjectPhaseRequest

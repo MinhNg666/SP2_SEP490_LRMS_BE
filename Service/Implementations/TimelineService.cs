@@ -167,6 +167,7 @@ public class TimelineService : ITimelineService
         }
     }
 
+
     public async Task<IEnumerable<TimelineResponse>> GetTimelinesBySequenceId(int sequenceId)
     {
         try
@@ -252,6 +253,7 @@ public class TimelineService : ITimelineService
                 CreatedBy = timeline.CreatedBy,
                 CreatedByName = updatedUser?.FullName ?? "Unknown"
             };
+
         }
         catch (Exception e)
         {

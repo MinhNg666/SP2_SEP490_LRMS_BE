@@ -20,9 +20,12 @@ public class ProjectService : IProjectService
     private readonly INotificationService _notificationService;
     private readonly IMapper _mapper;
     private readonly LRMSDbContext _context;
+    private readonly ITimelineService _timelineService;
 
     public ProjectService(IS3Service s3Service, IProjectRepository projectRepository, IGroupRepository groupRepository,
+
         IProjectPhaseRepository projectPhaseRepository, INotificationService notificationService, IMapper mapper, LRMSDbContext context)
+
     {
         _s3Service = s3Service;
         _projectRepository = projectRepository;
@@ -31,6 +34,7 @@ public class ProjectService : IProjectService
         _notificationService = notificationService;
         _mapper = mapper;
         _context = context;
+        _timelineService = timelineService;
     }
     public async Task<IEnumerable<ProjectResponse>> GetAllProjects()
     {
@@ -100,6 +104,15 @@ public class ProjectService : IProjectService
     {
         try
         {
+            // Kiểm tra thời gian đăng ký
+            var isValidTime = await _timelineService.IsValidTimeForAction(
+                TimelineTypes.RegisterProject,
+                request.SequenceId
+            );
+
+            if (!isValidTime)
+                throw new ServiceException("Out of time for project registration");
+
             var existingProjects = await _projectRepository.GetAllProjectsWithDetailsAsync();
             if (existingProjects.Any(p => p.ProjectName.Equals(request.ProjectName, StringComparison.OrdinalIgnoreCase)))
             {
@@ -293,6 +306,15 @@ public class ProjectService : IProjectService
 
     public async Task<bool> SendProjectForApproval(ProjectApprovalRequest request)
     {
+        // Kiểm tra thời gian gửi phê duyệt
+        var isValidTime = await _timelineService.IsValidTimeForAction(
+            TimelineTypes.ReviewProject,
+            request.SequenceId
+        );
+
+        if (!isValidTime)
+            throw new ServiceException("Out of time for project review submission");
+
         var project = await _projectRepository.GetByIdAsync(request.ProjectId);
         if (project == null)
             throw new ServiceException("Project not found");
@@ -325,6 +347,7 @@ public class ProjectService : IProjectService
         try
         {
             if (documentFile == null)
+
                 throw new ServiceException("Please upload the council meeting minutes document");
 
             // Timeline validation code remains the same
@@ -351,6 +374,7 @@ public class ProjectService : IProjectService
             var project = await _projectRepository.GetByIdAsync(projectId);
             if (project == null)
                 throw new ServiceException("Project not found");
+
 
             // Check if project is in pending status
             if (project.Status != (int)ProjectStatusEnum.Pending)
@@ -396,6 +420,7 @@ public class ProjectService : IProjectService
             };
             await _projectRepository.AddDocumentAsync(document);
 
+
             // Update project status
             project.Status = (int)ProjectStatusEnum.Approved;
             project.ApprovedBy = approver.GroupMemberId; // Store the approver
@@ -419,6 +444,7 @@ public class ProjectService : IProjectService
                 await _notificationService.CreateNotification(notificationRequest);
             }
 
+
         return true;
         }
         catch (Exception ex)
@@ -433,6 +459,7 @@ public class ProjectService : IProjectService
         {
             if (documentFile == null)
                 throw new ServiceException("Please upload the council meeting minutes document");
+
 
             // Timeline validation code remains the same
             var currentDate = DateTime.Now.Date;
@@ -458,6 +485,7 @@ public class ProjectService : IProjectService
             var project = await _projectRepository.GetByIdAsync(projectId);
             if (project == null)
                 throw new ServiceException("Project not found");
+
 
             // Check if project is in pending status
             if (project.Status != (int)ProjectStatusEnum.Pending)
@@ -525,6 +553,7 @@ public class ProjectService : IProjectService
                 };
                 await _notificationService.CreateNotification(notificationRequest);
             }
+
 
         return true;
         }

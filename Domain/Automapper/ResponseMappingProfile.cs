@@ -47,7 +47,10 @@ public class ResponseMappingProfile : Profile
             .ForMember(dest => dest.Methodology, opt => opt.MapFrom(src => src.Methodlogy));
             
         CreateMap<Document, DocumentResponse>();
+
         CreateMap<ProjectPhase, ProjectPhaseResponse>();
+
+
         CreateMap<Journal, JournalResponse>()
             .ForMember(dest => dest.ProjectName, opt => 
                 opt.MapFrom(src => src.Project == null ? string.Empty : src.Project.ProjectName))
