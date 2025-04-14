@@ -126,23 +126,23 @@ public class ProjectService : IProjectService
             // Create project with the automatically determined sequence ID
             var project = new Project
             {
-                ProjectName = request.ProjectName,
-                Description = request.Description,
-                Methodlogy = request.Methodology,
+            ProjectName = request.ProjectName,
+            Description = request.Description,
+            Methodlogy = request.Methodology,
                 StartDate = request.StartDate?.Date,
                 EndDate = request.EndDate?.Date,
-                ApprovedBudget = request.ApprovedBudget,
+            ApprovedBudget = request.ApprovedBudget,
                 SpentBudget = 0, // Initialize with 0
-                Status = (int)ProjectStatusEnum.Pending,
-                CreatedAt = DateTime.Now,
-                CreatedBy = createdBy,
-                GroupId = request.GroupId,
-                DepartmentId = request.DepartmentId,
+            Status = (int)ProjectStatusEnum.Pending,
+            CreatedAt = DateTime.Now,
+            CreatedBy = createdBy,
+            GroupId = request.GroupId,
+            DepartmentId = request.DepartmentId,
                 ProjectType = (int)ProjectTypeEnum.Research,
                 SequenceId = sequenceId // Set the automatically determined sequence ID
-            };
+        };
 
-            await _projectRepository.AddAsync(project);
+        await _projectRepository.AddAsync(project);
             
             // Modified project phase creation code with detailed error handling
             if (request.ProjectPhases != null && request.ProjectPhases.Any())
@@ -248,19 +248,19 @@ public class ProjectService : IProjectService
                 Console.WriteLine("No project phases to create - request.ProjectPhases is null or empty");
             }
             
-            if (documentFile != null)
+        if (documentFile != null)
             {
                 var documentUrl = await _s3Service.UploadFileAsync(documentFile, $"projects/{project.ProjectId}/documents");
                 
                 // Create ProjectResource for document
-                var projectResource = new ProjectResource
-                {
-                    ResourceName = documentFile.FileName,
+                    var projectResource = new ProjectResource
+                    {
+                        ResourceName = documentFile.FileName,
                     ResourceType = 1, // Document type
-                    ProjectId = project.ProjectId,
-                    Acquired = true,
-                    Quantity = 1
-                };
+                        ProjectId = project.ProjectId,
+                        Acquired = true,
+                        Quantity = 1
+                    };
                 
                 await _context.ProjectResources.AddAsync(projectResource);
                 await _context.SaveChangesAsync();
@@ -282,7 +282,7 @@ public class ProjectService : IProjectService
                 await _context.SaveChangesAsync();
             }
             
-            return project.ProjectId;
+        return project.ProjectId;
         }
         catch (Exception ex)
         {
@@ -419,7 +419,7 @@ public class ProjectService : IProjectService
                 await _notificationService.CreateNotification(notificationRequest);
             }
 
-            return true;
+        return true;
         }
         catch (Exception ex)
         {
@@ -526,7 +526,7 @@ public class ProjectService : IProjectService
                 await _notificationService.CreateNotification(notificationRequest);
             }
 
-            return true;
+        return true;
         }
         catch (Exception ex)
         {
