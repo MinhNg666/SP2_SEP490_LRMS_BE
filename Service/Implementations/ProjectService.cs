@@ -800,4 +800,49 @@ public class ProjectService : IProjectService
             throw new ServiceException($"Error getting user's approved projects: {ex.Message}");
         }
     }
+
+    public async Task<bool> UpdateProjectPhaseStatus(int projectPhaseId, int status, int userId)
+    {
+        try
+        {
+            // Validate the status is in the enum range
+            if (!Enum.IsDefined(typeof(ProjectPhaseStatusEnum), status))
+                throw new ServiceException($"Invalid status value: {status}");
+            
+            // Get the project phase
+            var projectPhase = await _context.ProjectPhases
+                .Include(p => p.Project)
+                .FirstOrDefaultAsync(p => p.ProjectPhaseId == projectPhaseId);
+            
+            if (projectPhase == null)
+                throw new ServiceException("Project phase not found");
+            
+            // Get the project
+            var project = projectPhase.Project;
+            if (project == null)
+                throw new ServiceException("Project not found for this phase");
+            
+            // Check if user is a member of the project group
+            var userGroups = await _groupRepository.GetGroupsByUserId(userId);
+            var groupIds = userGroups.Select(g => g.GroupId);
+            
+            if (!project.GroupId.HasValue || !groupIds.Contains(project.GroupId.Value))
+                throw new ServiceException("You don't have permission to update this project phase");
+            
+            // Check if the project is approved (can't modify phases of pending or rejected projects)
+            if (project.Status != (int)ProjectStatusEnum.Approved)
+                throw new ServiceException("Cannot update phases of projects that are not approved");
+            
+            // Update the status
+            var result = await _projectPhaseRepository.UpdateProjectPhaseStatusAsync(projectPhaseId, status);
+            if (!result)
+                throw new ServiceException("Failed to update project phase status");
+            
+            return true;
+        }
+        catch (Exception ex)
+        {
+            throw new ServiceException($"Error updating project phase status: {ex.Message}");
+        }
+    }
 }

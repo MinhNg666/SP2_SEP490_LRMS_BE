@@ -260,4 +260,24 @@ public class ProjectController : ApiBaseController
             return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
         }
     }
+
+    [HttpPut("project-phases/{projectPhaseId}/status")]
+    [Authorize]
+    public async Task<IActionResult> UpdateProjectPhaseStatus(int projectPhaseId, [FromBody] UpdateProjectPhaseStatusRequest request)
+    {
+        try
+        {
+            if (projectPhaseId != request.ProjectPhaseId)
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Project phase IDs do not match"));
+            
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            var result = await _projectService.UpdateProjectPhaseStatus(projectPhaseId, request.Status, userId);
+            
+            return Ok(new ApiResponse(StatusCodes.Status200OK, "Project phase status updated successfully"));
+        }
+        catch (ServiceException ex)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
+        }
+    }
 }

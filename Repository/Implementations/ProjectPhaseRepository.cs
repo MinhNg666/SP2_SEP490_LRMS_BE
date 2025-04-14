@@ -17,4 +17,24 @@ public class ProjectPhaseRepository : GenericRepository<ProjectPhase>, IProjectP
         await _context.SaveChangesAsync();
         return projectPhase.ProjectPhaseId;
     }
+
+    public async Task<bool> UpdateProjectPhaseStatusAsync(int projectPhaseId, int status)
+    {
+        try
+        {
+            var projectPhase = await _context.ProjectPhases.FindAsync(projectPhaseId);
+            if (projectPhase == null)
+                return false;
+            
+            projectPhase.Status = status;
+            _context.ProjectPhases.Update(projectPhase);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error updating project phase status: {ex.Message}");
+            return false;
+        }
+    }
 }
