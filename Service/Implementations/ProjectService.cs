@@ -441,7 +441,7 @@ public class ProjectService : IProjectService
             await _context.Quotas.AddAsync(quota);
             await _context.SaveChangesAsync();
 
-            // Add a log for debugging
+            // debug
             Console.WriteLine($"Created quota {quota.QuotaId} for project {projectId} with budget {quota.AllocatedBudget}");
 
             return true;

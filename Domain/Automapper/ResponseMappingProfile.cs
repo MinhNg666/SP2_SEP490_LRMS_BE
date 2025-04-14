@@ -70,5 +70,11 @@ public class ResponseMappingProfile : Profile
                     new List<Document>() : src.ConferenceExpenses.FirstOrDefault().Documents));
 
         CreateMap<ConferenceExpense, ConferenceExpenseResponse>();
+
+        CreateMap<Quota, QuotaResponse>()
+            .ForMember(dest => dest.ProjectName, opt => opt.MapFrom(src => 
+                src.Project != null ? src.Project.ProjectName : null))
+            .ForMember(dest => dest.AllocatorName, opt => opt.MapFrom(src => 
+                src.AllocatedByNavigation != null ? src.AllocatedByNavigation.FullName : null));
     } 
 }
