@@ -428,6 +428,21 @@ public class ProjectService : IProjectService
                 await _notificationService.CreateNotification(notificationRequest);
             }
 
+            // Create a new quota with the same budget as the project
+            var quota = new Quota
+            {
+                AllocatedBudget = project.ApprovedBudget,
+                Status = (int)QuotaStatusEnum.Active,
+                CreatedAt = DateTime.Now,
+                ProjectId = projectId,
+                AllocatedBy = secretaryId
+            };
+
+            await _context.Quotas.AddAsync(quota);
+            await _context.SaveChangesAsync();
+
+            // Add a log for debugging
+            Console.WriteLine($"Created quota {quota.QuotaId} for project {projectId} with budget {quota.AllocatedBudget}");
 
             return true;
         }

@@ -1209,9 +1209,7 @@ ADD CONSTRAINT [FK_FundDisbursement_ProjectPhase]
 FOREIGN KEY ([project_phase_id]) 
 REFERENCES [dbo].[ProjectPhase] ([project_phase_id]);
 
--- Create indexes for better query performance
-CREATE INDEX [IX_Fund_Disbursement_quota_id] ON [dbo].[Fund_Disbursement] ([quota_id]);
-CREATE INDEX [IX_Fund_Disbursement_project_phase_id] ON [dbo].[Fund_Disbursement] ([project_phase_id]);
+
 
 
 
