@@ -1191,6 +1191,29 @@ BEGIN
 END
 
 
+-- Thêm quotaId + projectphase vào fund disbursment
+-- First, add new columns to the Fund_Disbursement table
+ALTER TABLE [dbo].[Fund_Disbursement]
+ADD [quota_id] INT NULL,
+    [project_phase_id] INT NULL;
+
+-- Create foreign key for quota_id
+ALTER TABLE [dbo].[Fund_Disbursement]
+ADD CONSTRAINT [FK_FundDisbursement_Quota] 
+FOREIGN KEY ([quota_id]) 
+REFERENCES [dbo].[Quotas] ([quota_id]);
+
+-- Create foreign key for project_phase_id
+ALTER TABLE [dbo].[Fund_Disbursement]
+ADD CONSTRAINT [FK_FundDisbursement_ProjectPhase] 
+FOREIGN KEY ([project_phase_id]) 
+REFERENCES [dbo].[ProjectPhase] ([project_phase_id]);
+
+-- Create indexes for better query performance
+CREATE INDEX [IX_Fund_Disbursement_quota_id] ON [dbo].[Fund_Disbursement] ([quota_id]);
+CREATE INDEX [IX_Fund_Disbursement_project_phase_id] ON [dbo].[Fund_Disbursement] ([project_phase_id]);
+
+
 
  
 

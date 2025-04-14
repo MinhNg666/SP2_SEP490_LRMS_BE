@@ -19,4 +19,6 @@ public partial class ProjectPhase
     public virtual GroupMember? AssignToNavigation { get; set; }
     public virtual ICollection<Document> Documents { get; set; } = new List<Document>();
     public virtual Project? Project { get; set; }
+
+    public virtual ICollection<FundDisbursement> FundDisbursements { get; set; } = new List<FundDisbursement>();
 }

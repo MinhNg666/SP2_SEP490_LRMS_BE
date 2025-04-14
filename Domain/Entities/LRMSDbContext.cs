@@ -234,6 +234,8 @@ public partial class LRMSDbContext : DbContext
             entity.Property(e => e.UpdateAt)
                 .HasColumnType("datetime")
                 .HasColumnName("update_at");
+            entity.Property(e => e.QuotaId).HasColumnName("quota_id");
+            entity.Property(e => e.ProjectPhaseId).HasColumnName("project_phase_id");
 
             entity.HasOne(d => d.AppovedByNavigation).WithMany(p => p.FundDisbursementAppovedByNavigations)
                 .HasForeignKey(d => d.AppovedBy)
@@ -256,6 +258,16 @@ public partial class LRMSDbContext : DbContext
                 .HasForeignKey(d => d.SupervisorRequest)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_FundDisbursement_GroupMember");
+
+            entity.HasOne(d => d.Quota)
+                .WithMany(p => p.FundDisbursements)
+                .HasForeignKey(d => d.QuotaId)
+                .HasConstraintName("FK_FundDisbursement_Quota");
+
+            entity.HasOne(d => d.ProjectPhase)
+                .WithMany(p => p.FundDisbursements)
+                .HasForeignKey(d => d.ProjectPhaseId)
+                .HasConstraintName("FK_FundDisbursement_ProjectPhase");
         });
 
         modelBuilder.Entity<Group>(entity =>
