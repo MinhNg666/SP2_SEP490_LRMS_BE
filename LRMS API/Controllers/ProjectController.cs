@@ -280,4 +280,19 @@ public class ProjectController : ApiBaseController
             return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
         }
     }
+
+    [HttpPost("admin/update-project-phase-statuses")]
+    [Authorize]
+    public async Task<IActionResult> UpdateProjectPhaseStatuses()
+    {
+        try
+        {
+            await _projectService.UpdateProjectPhaseStatusesBasedOnDates();
+            return Ok(new ApiResponse(StatusCodes.Status200OK, "Project phase statuses updated successfully"));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
+        }
+    }
 }

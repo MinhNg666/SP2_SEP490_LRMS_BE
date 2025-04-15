@@ -19,4 +19,5 @@ public interface IProjectService
     Task<IEnumerable<ProjectListResponse>> GetUserPendingProjectsList(int userId);
     Task<IEnumerable<ProjectListResponse>> GetUserApprovedProjectsList(int userId);
     Task<bool> UpdateProjectPhaseStatus(int projectPhaseId, int status, int userId);
+    Task UpdateProjectPhaseStatusesBasedOnDates();
 }

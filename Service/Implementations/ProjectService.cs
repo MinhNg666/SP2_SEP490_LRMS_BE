@@ -845,4 +845,16 @@ public class ProjectService : IProjectService
             throw new ServiceException($"Error updating project phase status: {ex.Message}");
         }
     }
+
+    public async Task UpdateProjectPhaseStatusesBasedOnDates()
+    {
+        try
+        {
+            await _projectPhaseRepository.UpdateProjectPhaseStatusesBasedOnDates();
+        }
+        catch (Exception ex)
+        {
+            throw new ServiceException($"Error updating project phase statuses based on dates: {ex.Message}", ex);
+        }
+    }
 }
