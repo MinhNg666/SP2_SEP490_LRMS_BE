@@ -56,6 +56,7 @@ public static class ServiceExtension
         services.AddScoped<IS3Service, S3Service>();
         services.AddScoped<IJournalRepository, JournalRepository>();
         services.AddScoped<IConferenceRepository, ConferenceRepository>();
+        services.AddScoped<IQuotaService, QuotaService>();
 
         return services;
     }

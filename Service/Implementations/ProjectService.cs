@@ -20,7 +20,7 @@ public class ProjectService : IProjectService
     private readonly INotificationService _notificationService;
     private readonly IMapper _mapper;
     private readonly LRMSDbContext _context;
-    private readonly ITimelineService _timelineService;
+
 
     public ProjectService(IS3Service s3Service, IProjectRepository projectRepository, IGroupRepository groupRepository,
 
@@ -34,7 +34,7 @@ public class ProjectService : IProjectService
         _notificationService = notificationService;
         _mapper = mapper;
         _context = context;
-        _timelineService = timelineService;
+
     }
     public async Task<IEnumerable<ProjectResponse>> GetAllProjects()
     {
@@ -104,14 +104,7 @@ public class ProjectService : IProjectService
     {
         try
         {
-            // Kiểm tra thời gian đăng ký
-            var isValidTime = await _timelineService.IsValidTimeForAction(
-                TimelineTypes.RegisterProject,
-                request.SequenceId
-            );
-
-            if (!isValidTime)
-                throw new ServiceException("Out of time for project registration");
+            
 
             var existingProjects = await _projectRepository.GetAllProjectsWithDetailsAsync();
             if (existingProjects.Any(p => p.ProjectName.Equals(request.ProjectName, StringComparison.OrdinalIgnoreCase)))
@@ -186,7 +179,7 @@ public class ProjectService : IProjectService
                             StartDate = phaseStartDate,
                             EndDate = phaseEndDate,
                             Status = (int)ProjectPhaseStatusEnum.In_progress,
-                            ProjectId = project.ProjectId,
+                    ProjectId = project.ProjectId,
                             AssignBy = createdBy,
                             // These are optional fields based on your schema
                             AssignTo = null
@@ -264,7 +257,7 @@ public class ProjectService : IProjectService
         if (documentFile != null)
             {
                 var documentUrl = await _s3Service.UploadFileAsync(documentFile, $"projects/{project.ProjectId}/documents");
-                
+            
                 // Create ProjectResource for document
                     var projectResource = new ProjectResource
                     {
@@ -306,15 +299,6 @@ public class ProjectService : IProjectService
 
     public async Task<bool> SendProjectForApproval(ProjectApprovalRequest request)
     {
-        // Kiểm tra thời gian gửi phê duyệt
-        var isValidTime = await _timelineService.IsValidTimeForAction(
-            TimelineTypes.ReviewProject,
-            request.SequenceId
-        );
-
-        if (!isValidTime)
-            throw new ServiceException("Out of time for project review submission");
-
         var project = await _projectRepository.GetByIdAsync(request.ProjectId);
         if (project == null)
             throw new ServiceException("Project not found");
@@ -444,8 +428,23 @@ public class ProjectService : IProjectService
                 await _notificationService.CreateNotification(notificationRequest);
             }
 
+            // Create a new quota with the same budget as the project
+            var quota = new Quota
+            {
+                AllocatedBudget = project.ApprovedBudget,
+                Status = (int)QuotaStatusEnum.Active,
+                CreatedAt = DateTime.Now,
+                ProjectId = projectId,
+                AllocatedBy = secretaryId
+            };
 
-        return true;
+            await _context.Quotas.AddAsync(quota);
+            await _context.SaveChangesAsync();
+
+            // debug
+            Console.WriteLine($"Created quota {quota.QuotaId} for project {projectId} with budget {quota.AllocatedBudget}");
+
+            return true;
         }
         catch (Exception ex)
         {
@@ -555,7 +554,7 @@ public class ProjectService : IProjectService
             }
 
 
-        return true;
+            return true;
         }
         catch (Exception ex)
         {

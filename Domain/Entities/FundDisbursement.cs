@@ -27,6 +27,10 @@ public partial class FundDisbursement
 
     public int? ProjectId { get; set; }
 
+    public int? QuotaId { get; set; }
+
+    public int? ProjectPhaseId { get; set; }
+
     public virtual GroupMember? AppovedByNavigation { get; set; }
 
     public virtual Author AuthorRequestNavigation { get; set; } = null!;
@@ -38,4 +42,8 @@ public partial class FundDisbursement
     public virtual Project? Project { get; set; }
 
     public virtual GroupMember SupervisorRequestNavigation { get; set; } = null!;
+
+    public virtual Quota? Quota { get; set; }
+
+    public virtual ProjectPhase? ProjectPhase { get; set; }
 }
