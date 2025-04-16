@@ -721,6 +721,63 @@ public class ProjectService : IProjectService
 
                 await _context.Documents.AddAsync(document);
                 await _context.SaveChangesAsync();
+
+                // Lấy thông tin người upload
+                var uploader = await _userRepository.GetByIdAsync(userId);
+
+                // Gửi thông báo cho các thành viên trong nhóm
+                var groupMembers = project.Group.GroupMembers
+                    .Where(m => m.Status == (int)GroupMemberStatus.Active &&
+                               m.Role != (int)GroupMemberRoleEnum.Stakeholder);
+
+                foreach (var member in groupMembers)
+                {
+                    if (member.UserId.HasValue)
+                    {
+                        string title = member.UserId.Value == userId
+                            ? "Bạn đã tải lên tài liệu mới"
+                            : "Có tài liệu mới trong project";
+
+                        string message = member.UserId.Value == userId
+                            ? $"Bạn đã tải lên tài liệu mới cho project '{project.ProjectName}'"
+                            : $"Thành viên {uploader?.FullName} đã tải lên tài liệu mới cho project '{project.ProjectName}'";
+
+                        var notificationRequest = new CreateNotificationRequest
+                        {
+                            UserId = member.UserId.Value,
+                            Title = title,
+                            Message = $"{message}\n\nTên tài liệu: {documentFile.FileName}\nXem tại: {documentUrl}",
+                            ProjectId = projectId,
+                            Status = 0,
+                            IsRead = false
+                        };
+                        await _notificationService.CreateNotification(notificationRequest);
+                    }
+                }
+
+                // Gửi email cho stakeholder
+                var stakeholders = project.Group.GroupMembers
+                    .Where(m => m.Status == (int)GroupMemberStatus.Active &&
+                               m.Role == (int)GroupMemberRoleEnum.Stakeholder &&
+                               m.User != null);
+
+                var emailSubject = $"Tài liệu mới trong project: {project.ProjectName}";
+                var emailMessage = $"Xin chào,\n\n" +
+                                  $"Một tài liệu mới đã được tải lên trong project '{project.ProjectName}':\n\n" +
+                                  $"- Tên tài liệu: {documentFile.FileName}\n" +
+                                  $"- Người tải lên: {uploader?.FullName}\n" +
+                                  $"- Thời gian: {DateTime.Now:dd/MM/yyyy HH:mm}\n" +
+                                  $"- Xem tại: {documentUrl}\n\n" +
+                                  $"Trân trọng.";
+
+                foreach (var stakeholder in stakeholders)
+                {
+                    await _emailService.SendEmailAsync(
+                        stakeholder.User.Email,
+                        emailSubject,
+                        emailMessage
+                    );
+                }
             }
         }
         catch (Exception ex)

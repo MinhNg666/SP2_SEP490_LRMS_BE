@@ -35,7 +35,7 @@ public class JournalService : IJournalService
         _emailService = emailService;
     }
 
-    public async Task<int> CreateJournalFromResearch(int projectId, int leaderId, CreateJournalFromProjectRequest request, IFormFile documentFile)
+    public async Task<int> CreateJournalFromResearch(int projectId, int userId, CreateJournalFromProjectRequest request)
     {
         try
         {
@@ -55,7 +55,7 @@ public class JournalService : IJournalService
 
             // Kiểm tra người yêu cầu có phải là leader không
             var leaderMember = project.Group.GroupMembers
-                .FirstOrDefault(m => m.UserId == leaderId && m.Status == (int)GroupMemberStatus.Active);
+                .FirstOrDefault(m => m.UserId == userId && m.Status == (int)GroupMemberStatus.Active);
 
             if (leaderMember == null || leaderMember.Role != (int)GroupMemberRoleEnum.Leader)
                 throw new ServiceException("Chỉ leader mới có quyền tạo Journal");
@@ -81,38 +81,6 @@ public class JournalService : IJournalService
             };
 
             await _context.Journals.AddAsync(journal);
-
-            // Upload document nếu có
-            if (documentFile != null)
-            {
-                var documentUrl = await _s3Service.UploadFileAsync(documentFile, $"projects/{journal.JournalId}/documents");
-
-                var projectResource = new ProjectResource
-                {
-                    ResourceName = documentFile.FileName,
-                    ResourceType = 1,
-                    ProjectId = projectId,
-                    Acquired = true,
-                    Quantity = 1
-                };
-
-                await _context.ProjectResources.AddAsync(projectResource);
-                await _context.SaveChangesAsync();
-
-                var document = new Document
-                {
-                    ProjectId = projectId,
-                    DocumentUrl = documentUrl,
-                    FileName = documentFile.FileName,
-                    DocumentType = (int)DocumentTypeEnum.JournalSubmission,
-                    UploadAt = DateTime.Now,
-                    UploadedBy = leaderId,
-                    ProjectResourceId = projectResource.ProjectResourceId
-                };
-
-                await _context.Documents.AddAsync(document);
-            }
-
             await _context.SaveChangesAsync();
 
             // Gửi thông báo cho các thành viên
@@ -369,5 +337,53 @@ public async Task<bool> RejectJournal(int journalId, int secretaryId, IFormFile 
             throw new ServiceException($"Lỗi khi từ chối journal: {ex.Message}");
         }
     }
+    public async Task<bool> AddJournalDocument(int journalId, int userId, IFormFile documentFile)
+    {
+        try
+        {
+            var journal = await _context.Journals
+                .Include(j => j.Project)
+                .FirstOrDefaultAsync(j => j.JournalId == journalId);
 
+            if (journal == null)
+                throw new ServiceException("Không tìm thấy journal");
+
+            if (documentFile == null)
+                throw new ServiceException("Vui lòng cung cấp file tài liệu");
+
+            var documentUrl = await _s3Service.UploadFileAsync(documentFile, $"journals/{journalId}/documents");
+
+            var projectResource = new ProjectResource
+            {
+                ResourceName = documentFile.FileName,
+                ResourceType = 1,
+                ProjectId = journal.ProjectId.Value,
+                Acquired = true,
+                Quantity = 1
+            };
+
+            await _context.ProjectResources.AddAsync(projectResource);
+            await _context.SaveChangesAsync();
+
+            var document = new Document
+            {
+                ProjectId = journal.ProjectId.Value,
+                DocumentUrl = documentUrl,
+                FileName = documentFile.FileName,
+                DocumentType = (int)DocumentTypeEnum.JournalSubmission,
+                UploadAt = DateTime.Now,
+                UploadedBy = userId,
+                ProjectResourceId = projectResource.ProjectResourceId
+            };
+
+            await _context.Documents.AddAsync(document);
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            throw new ServiceException($"Lỗi khi thêm tài liệu cho journal: {ex.Message}");
+        }
+    }
 }

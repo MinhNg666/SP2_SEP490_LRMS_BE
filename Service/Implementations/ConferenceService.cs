@@ -343,4 +343,54 @@ public class ConferenceService : IConferenceService
             throw new ServiceException($"Lỗi khi từ chối conference: {ex.Message}");
         }
     }
+
+    public async Task<bool> AddConferenceDocument(int conferenceId, int userId, IFormFile documentFile)
+{
+    try
+    {
+        var conference = await _context.Conferences
+            .Include(c => c.Project)
+            .FirstOrDefaultAsync(c => c.ConferenceId == conferenceId);
+
+        if (conference == null)
+            throw new ServiceException("Không tìm thấy conference");
+
+        if (documentFile == null)
+            throw new ServiceException("Vui lòng cung cấp file tài liệu");
+
+        var documentUrl = await _s3Service.UploadFileAsync(documentFile, $"conferences/{conferenceId}/documents");
+
+        var projectResource = new ProjectResource
+        {
+            ResourceName = documentFile.FileName,
+            ResourceType = 1,
+            ProjectId = conference.ProjectId.Value,
+            Acquired = true,
+            Quantity = 1
+        };
+
+        await _context.ProjectResources.AddAsync(projectResource);
+        await _context.SaveChangesAsync();
+
+        var document = new Document
+        {
+            ProjectId = conference.ProjectId.Value,
+            DocumentUrl = documentUrl,
+            FileName = documentFile.FileName,
+            DocumentType = (int)DocumentTypeEnum.ConferenceSubmission,
+            UploadAt = DateTime.Now,
+            UploadedBy = userId,
+            ProjectResourceId = projectResource.ProjectResourceId
+        };
+
+        await _context.Documents.AddAsync(document);
+        await _context.SaveChangesAsync();
+
+        return true;
+    }
+    catch (Exception ex)
+    {
+        throw new ServiceException($"Lỗi khi thêm tài liệu cho conference: {ex.Message}");
+    }
+}
 }

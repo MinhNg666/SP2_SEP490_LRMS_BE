@@ -66,5 +66,20 @@ namespace LRMS_API.Controllers
                 return BadRequest(new { success = false, message = ex.Message });
             }
         }
+        [HttpPost("add-document/{conferenceId}")]
+        [Authorize]
+        public async Task<IActionResult> AddConferenceDocument(int conferenceId, IFormFile documentFile)
+        {
+            try
+            {
+                var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+                await _conferenceService.AddConferenceDocument(conferenceId, userId, documentFile);
+                return Ok(new { success = true, message = "Đã thêm tài liệu thành công" });
+            }
+            catch (ServiceException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
     }
 }

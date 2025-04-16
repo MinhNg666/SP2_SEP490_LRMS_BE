@@ -26,10 +26,25 @@ public class JournalController : ApiBaseController
         try
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-            var journalId = await _journalService.CreateJournalFromResearch(projectId, userId, request, documentFile);
+            var journalId = await _journalService.CreateJournalFromResearch(projectId, userId, request);
             return Ok(new { success = true, journalId = journalId, message = "Đã tạo Journal thành công" });
         }
         catch (ServiceException ex)
+        {
+            return BadRequest(new { success = false, message = ex.Message });
+        }
+    }
+    [HttpPost("add-document/{journalId}")]
+    [Authorize]
+    public async Task<IActionResult> AddJournalDocument(int journalId, IFormFile documentFile)
+    {
+        try
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            await _journalService.AddJournalDocument(journalId, userId, documentFile);
+            return Ok(new { success = true, message = "Đã thêm tài liệu thành công" });
+        }
+            catch (ServiceException ex)
         {
             return BadRequest(new { success = false, message = ex.Message });
         }
