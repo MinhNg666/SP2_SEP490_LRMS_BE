@@ -45,6 +45,10 @@ public class ConferenceService : IConferenceService
             if (project == null)
                 throw new ServiceException("Project not found");
 
+            // Kiểm tra department id của project có khớp với department id được gửi lên
+            if (project.DepartmentId != request.DepartmentId)
+                throw new ServiceException("Invalid department id for this project");
+
             // Tạo conference
             var conference = new Conference
             {

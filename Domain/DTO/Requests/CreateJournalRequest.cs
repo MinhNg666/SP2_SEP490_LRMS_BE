@@ -13,4 +13,5 @@ public class CreateJournalRequest
     public DateTime SubmissionDate { get; set; }
     public string ReviewerComments { get; set; }
     public int ProjectId { get; set; }
+    public int DepartmentId { get; set; }
 } 

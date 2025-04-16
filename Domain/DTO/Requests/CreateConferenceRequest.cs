@@ -13,6 +13,7 @@ public class CreateConferenceRequest
     public DateTime AcceptanceDate { get; set; }
     public int PresentationType { get; set; }
     public int ProjectId { get; set; }
+    public int DepartmentId { get; set; }
     
     // Conference Expense Info
     public string Accomodation { get; set; }
