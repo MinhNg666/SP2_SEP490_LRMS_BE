@@ -7,5 +7,6 @@ public enum SystemRoleEnum
     Student = 2,
     Accounting_Department = 3,
     Office = 4,
-    Researcher = 5
+    Researcher = 5,
+    Stakeholder = 6
 }
