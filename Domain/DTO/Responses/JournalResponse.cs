@@ -1,4 +1,7 @@
-﻿namespace Domain.DTO.Responses;
+﻿using System;
+
+namespace Domain.DTO.Responses;
+
 public class JournalResponse
 {
     public int JournalId { get; set; }
@@ -13,4 +16,4 @@ public class JournalResponse
     public int? ProjectId { get; set; }
     public string? ProjectName { get; set; }
     public DocumentResponse? Document { get; set; }
-}
+} 

@@ -1,5 +1,7 @@
-﻿using Domain.Constants;
+﻿using AutoMapper;
+using Domain.Constants;
 using Domain.DTO.Requests;
+using Domain.DTO.Responses;
 using LRMS_API;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -9,31 +11,86 @@ using Service.Interfaces;
 using System.Text;
 
 namespace Service.Implementations;
+
 public class ConferenceService : IConferenceService
 {
+    private readonly IConferenceRepository _conferenceRepository;
     private readonly IProjectRepository _projectRepository;
     private readonly IGroupRepository _groupRepository;
     private readonly INotificationService _notificationService;
     private readonly IEmailService _emailService;
     private readonly IS3Service _s3Service;
+    private readonly ITimelineService _timelineService;
+    private readonly IMapper _mapper;
     private readonly LRMSDbContext _context;
 
     public ConferenceService(
+        IConferenceRepository conferenceRepository,
         IProjectRepository projectRepository,
         IGroupRepository groupRepository,
         INotificationService notificationService,
         IS3Service s3Service,
+        ITimelineService timelineService,
+        IMapper mapper,
         LRMSDbContext context,
         IEmailService emailService)
     {
+        _conferenceRepository = conferenceRepository;
         _projectRepository = projectRepository;
         _groupRepository = groupRepository;
         _notificationService = notificationService;
         _s3Service = s3Service;
+        _timelineService = timelineService;
+        _mapper = mapper;
         _context = context;
         _emailService = emailService;
     }
 
+    public async Task<ConferenceResponse> CreateConference(CreateConferenceRequest request, int createdBy)
+    {
+        try
+        {
+            // Kiểm tra project tồn tại
+            var project = await _projectRepository.GetByIdAsync(request.ProjectId);
+            if (project == null)
+                throw new ServiceException("Project not found");
+
+            // Tạo conference
+            var conference = new Conference
+            {
+                ConferenceName = request.ConferenceName,
+                ConferenceRanking = request.ConferenceRanking,
+                Location = request.Location,
+                ConferenceRanking = request.ConferenceRanking,
+                PresentationDate = request.PresentationDate,
+                AcceptanceDate = request.AcceptanceDate,
+                PresentationType = request.PresentationType,
+                ProjectId = request.ProjectId
+            };
+
+            await _conferenceRepository.AddAsync(conference);
+
+            // Tạo conference expense
+            var expense = new ConferenceExpense
+            {
+                Accomodation = request.Accomodation,
+                AccomodationExpense = request.AccomodationExpense,
+                Travel = request.Travel,
+                TravelExpense = request.TravelExpense,
+                ConferenceId = conference.ConferenceId
+            };
+
+            await _conferenceRepository.AddExpenseAsync(expense);
+
+            // Lấy thông tin conference vừa tạo kèm theo project và expense
+            var createdConference = await _conferenceRepository.GetConferenceWithDetailsAsync(conference.ConferenceId);
+            return _mapper.Map<ConferenceResponse>(createdConference);
+        }
+        catch (Exception ex)
+        {
+            throw new ServiceException($"Error creating conference: {ex.Message}");
+        }
+    }
     public async Task<int> CreateConferenceFromResearch(int projectId, int leaderId, CreateConferenceFromProjectRequest request, IFormFile documentFile)
     {
         try
@@ -118,7 +175,7 @@ public class ConferenceService : IConferenceService
             conferenceInfo.AppendLine($"- Ngày thuyết trình: {conference.PresentationDate:dd/MM/yyyy}");
             conferenceInfo.AppendLine($"- Hình thức: {conference.PresentationType}");
 
-            foreach (var member in groupMembers.Where(m => 
+            foreach (var member in groupMembers.Where(m =>
             m.Status == (int)GroupMemberStatus.Active &&
             m.Role != (int)GroupMemberRoleEnum.Stakeholder))
             {
@@ -136,8 +193,8 @@ public class ConferenceService : IConferenceService
                 }
             }
             // Gửi email cho stakeholder
-            var stakeholders = groupMembers.Where(m => 
-            m.Status == (int)GroupMemberStatus.Active && 
+            var stakeholders = groupMembers.Where(m =>
+            m.Status == (int)GroupMemberStatus.Active &&
             m.Role == (int)GroupMemberRoleEnum.Stakeholder &&
             m.User != null);
 
@@ -210,7 +267,7 @@ public class ConferenceService : IConferenceService
             await _context.SaveChangesAsync();
 
             var groupMembers = await _groupRepository.GetMembersByGroupId(conference.Project.GroupId.Value);
-            foreach (var member in groupMembers.Where(m => 
+            foreach (var member in groupMembers.Where(m =>
             m.Status == (int)GroupMemberStatus.Active &&
             m.Role != (int)GroupMemberRoleEnum.Stakeholder))
             {
@@ -228,8 +285,8 @@ public class ConferenceService : IConferenceService
                 }
             }
             // Gửi email cho stakeholder
-            var stakeholders = groupMembers.Where(m => 
-            m.Status == (int)GroupMemberStatus.Active && 
+            var stakeholders = groupMembers.Where(m =>
+            m.Status == (int)GroupMemberStatus.Active &&
             m.Role == (int)GroupMemberRoleEnum.Stakeholder &&
             m.User != null);
 
@@ -302,7 +359,7 @@ public class ConferenceService : IConferenceService
             await _context.SaveChangesAsync();
 
             var groupMembers = await _groupRepository.GetMembersByGroupId(conference.Project.GroupId.Value);
-            foreach (var member in groupMembers.Where(m => 
+            foreach (var member in groupMembers.Where(m =>
             m.Status == (int)GroupMemberStatus.Active &&
             m.Role != (int)GroupMemberRoleEnum.Stakeholder))
             {
@@ -320,8 +377,8 @@ public class ConferenceService : IConferenceService
                 }
             }
             // Gửi email cho stakeholder
-            var stakeholders = groupMembers.Where(m => 
-            m.Status == (int)GroupMemberStatus.Active && 
+            var stakeholders = groupMembers.Where(m =>
+            m.Status == (int)GroupMemberStatus.Active &&
             m.Role == (int)GroupMemberRoleEnum.Stakeholder &&
             m.User != null);
 
@@ -345,52 +402,95 @@ public class ConferenceService : IConferenceService
     }
 
     public async Task<bool> AddConferenceDocument(int conferenceId, int userId, IFormFile documentFile)
-{
-    try
     {
-        var conference = await _context.Conferences
-            .Include(c => c.Project)
-            .FirstOrDefaultAsync(c => c.ConferenceId == conferenceId);
-
-        if (conference == null)
-            throw new ServiceException("Không tìm thấy conference");
-
-        if (documentFile == null)
-            throw new ServiceException("Vui lòng cung cấp file tài liệu");
-
-        var documentUrl = await _s3Service.UploadFileAsync(documentFile, $"conferences/{conferenceId}/documents");
-
-        var projectResource = new ProjectResource
+        try
         {
-            ResourceName = documentFile.FileName,
-            ResourceType = 1,
-            ProjectId = conference.ProjectId.Value,
-            Acquired = true,
-            Quantity = 1
-        };
+            var conference = await _context.Conferences
+                .Include(c => c.Project)
+                .FirstOrDefaultAsync(c => c.ConferenceId == conferenceId);
 
-        await _context.ProjectResources.AddAsync(projectResource);
-        await _context.SaveChangesAsync();
+            if (conference == null)
+                throw new ServiceException("Không tìm thấy conference");
 
-        var document = new Document
+            if (documentFile == null)
+                throw new ServiceException("Vui lòng cung cấp file tài liệu");
+
+            var documentUrl = await _s3Service.UploadFileAsync(documentFile, $"conferences/{conferenceId}/documents");
+
+            var projectResource = new ProjectResource
+            {
+                ResourceName = documentFile.FileName,
+                ResourceType = 1,
+                ProjectId = conference.ProjectId.Value,
+                Acquired = true,
+                Quantity = 1
+            };
+
+            await _context.ProjectResources.AddAsync(projectResource);
+            await _context.SaveChangesAsync();
+
+            var document = new Document
+            {
+                ProjectId = conference.ProjectId.Value,
+                DocumentUrl = documentUrl,
+                FileName = documentFile.FileName,
+                DocumentType = (int)DocumentTypeEnum.ConferenceSubmission,
+                UploadAt = DateTime.Now,
+                UploadedBy = userId,
+                ProjectResourceId = projectResource.ProjectResourceId
+            };
+
+            await _context.Documents.AddAsync(document);
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+        catch (Exception ex)
         {
-            ProjectId = conference.ProjectId.Value,
-            DocumentUrl = documentUrl,
-            FileName = documentFile.FileName,
-            DocumentType = (int)DocumentTypeEnum.ConferenceSubmission,
-            UploadAt = DateTime.Now,
-            UploadedBy = userId,
-            ProjectResourceId = projectResource.ProjectResourceId
-        };
-
-        await _context.Documents.AddAsync(document);
-        await _context.SaveChangesAsync();
-
-        return true;
+            throw new ServiceException($"Lỗi khi thêm tài liệu cho conference: {ex.Message}");
+        }
     }
-    catch (Exception ex)
+
+    public async Task<IEnumerable<ConferenceResponse>> GetAllConferences()
     {
-        throw new ServiceException($"Lỗi khi thêm tài liệu cho conference: {ex.Message}");
+        try
+        {
+            var conferences = await _conferenceRepository.GetAllConferencesWithDetailsAsync();
+            return _mapper.Map<IEnumerable<ConferenceResponse>>(conferences);
+        }
+        catch (Exception ex)
+        {
+            throw new ServiceException($"Error getting all conferences: {ex.Message}");
+        }
     }
-}
-}
+
+    public async Task<ConferenceResponse> GetConferenceById(int conferenceId)
+    {
+        try
+        {
+            var conference = await _conferenceRepository.GetConferenceWithDetailsAsync(conferenceId);
+            if (conference == null)
+                throw new ServiceException("Conference not found");
+
+            return _mapper.Map<ConferenceResponse>(conference);
+        }
+        catch (Exception ex)
+        {
+            throw new ServiceException($"Error getting conference by id: {ex.Message}");
+        }
+    }
+
+    public async Task<IEnumerable<ConferenceResponse>> GetConferencesByProjectId(int projectId)
+    {
+        try
+        {
+            var conferences = await _conferenceRepository.GetAllConferencesWithDetailsAsync();
+            var projectConferences = conferences.Where(c => c.ProjectId == projectId);
+            return _mapper.Map<IEnumerable<ConferenceResponse>>(projectConferences);
+        }
+        catch (Exception ex)
+        {
+            throw new ServiceException($"Error getting conferences by project id: {ex.Message}");
+        }
+    }
+} 

@@ -7,7 +7,8 @@ namespace Service.Interfaces;
 
 public interface ITimelineSequenceService
 {
-    Task<TimelineSequenceResponse> CreateTimelineSequence(TimelineSequenceRequest request);
+    Task<TimelineSequenceResponse> CreateTimelineSequence(TimelineSequenceRequest request, int createdBy);
     Task<IEnumerable<TimelineSequenceResponse>> GetAllTimelineSequences();
     Task<TimelineSequenceResponse> GetTimelineSequenceById(int id);
+    Task<TimelineSequenceResponse> UpdateTimelineSequence(int id, TimelineSequenceRequest request, int updatedBy);
 } 

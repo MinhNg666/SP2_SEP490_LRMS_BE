@@ -65,11 +65,11 @@ public partial class Project
 
     public virtual ICollection<Journal> Journals { get; set; } = new List<Journal>();
 
-    public virtual ICollection<Milestone> Milestones { get; set; } = new List<Milestone>();
-
     public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
 
     public virtual ICollection<ProjectResource> ProjectResources { get; set; } = new List<ProjectResource>();
 
     public virtual ICollection<Quota> Quota { get; set; } = new List<Quota>();
+
+    public virtual ICollection<ProjectPhase> ProjectPhases { get; set; } = new List<ProjectPhase>();
 }

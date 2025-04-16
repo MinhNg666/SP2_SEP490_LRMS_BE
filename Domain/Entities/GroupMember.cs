@@ -23,9 +23,9 @@ public partial class GroupMember
 
     public virtual Group? Group { get; set; }
 
-    public virtual ICollection<Milestone> MilestoneAssignByNavigations { get; set; } = new List<Milestone>();
+    public virtual ICollection<ProjectPhase> ProjectPhaseAssignByNavigations { get; set; } = new List<ProjectPhase>();
 
-    public virtual ICollection<Milestone> MilestoneAssignToNavigations { get; set; } = new List<Milestone>();
+    public virtual ICollection<ProjectPhase> ProjectPhaseAssignToNavigations { get; set; } = new List<ProjectPhase>();
 
     public virtual ICollection<Project> Projects { get; set; } = new List<Project>();
 

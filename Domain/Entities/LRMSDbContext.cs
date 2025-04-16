@@ -36,7 +36,7 @@ public partial class LRMSDbContext : DbContext
 
     public virtual DbSet<Journal> Journals { get; set; }
 
-    public virtual DbSet<Milestone> Milestones { get; set; }
+    public virtual DbSet<ProjectPhase> ProjectPhases { get; set; }
 
     public virtual DbSet<Notification> Notifications { get; set; }
 
@@ -176,7 +176,7 @@ public partial class LRMSDbContext : DbContext
                 .HasMaxLength(255)
                 .HasColumnName("file_name");
             entity.Property(e => e.FundDisbursementId).HasColumnName("fund_disbursement_id");
-            entity.Property(e => e.MilestoneId).HasColumnName("milestone_id");
+            entity.Property(e => e.ProjectPhaseId).HasColumnName("project_phase_id");
             entity.Property(e => e.ProjectId).HasColumnName("project_id");
             entity.Property(e => e.ProjectResourceId).HasColumnName("project_resource_id");
             entity.Property(e => e.UploadAt)
@@ -193,9 +193,9 @@ public partial class LRMSDbContext : DbContext
                 .HasForeignKey(d => d.FundDisbursementId)
                 .HasConstraintName("FK_Documents_FundDisbursement");
 
-            entity.HasOne(d => d.Milestone).WithMany(p => p.Documents)
-                .HasForeignKey(d => d.MilestoneId)
-                .HasConstraintName("FK_Documents_Milestone");
+            entity.HasOne(d => d.ProjectPhase).WithMany(p => p.Documents)
+                .HasForeignKey(d => d.ProjectPhaseId)
+                .HasConstraintName("FK_Documents_ProjectPhase");
 
             entity.HasOne(d => d.Project).WithMany(p => p.Documents)
                 .HasForeignKey(d => d.ProjectId)
@@ -234,6 +234,8 @@ public partial class LRMSDbContext : DbContext
             entity.Property(e => e.UpdateAt)
                 .HasColumnType("datetime")
                 .HasColumnName("update_at");
+            entity.Property(e => e.QuotaId).HasColumnName("quota_id");
+            entity.Property(e => e.ProjectPhaseId).HasColumnName("project_phase_id");
 
             entity.HasOne(d => d.AppovedByNavigation).WithMany(p => p.FundDisbursementAppovedByNavigations)
                 .HasForeignKey(d => d.AppovedBy)
@@ -256,6 +258,16 @@ public partial class LRMSDbContext : DbContext
                 .HasForeignKey(d => d.SupervisorRequest)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_FundDisbursement_GroupMember");
+
+            entity.HasOne(d => d.Quota)
+                .WithMany(p => p.FundDisbursements)
+                .HasForeignKey(d => d.QuotaId)
+                .HasConstraintName("FK_FundDisbursement_Quota");
+
+            entity.HasOne(d => d.ProjectPhase)
+                .WithMany(p => p.FundDisbursements)
+                .HasForeignKey(d => d.ProjectPhaseId)
+                .HasConstraintName("FK_FundDisbursement_ProjectPhase");
         });
 
         modelBuilder.Entity<Group>(entity =>
@@ -380,13 +392,13 @@ public partial class LRMSDbContext : DbContext
                 .HasConstraintName("FK_Journal_Projects");
         });
 
-        modelBuilder.Entity<Milestone>(entity =>
+        modelBuilder.Entity<ProjectPhase>(entity =>
         {
-            entity.HasKey(e => e.MilestoneId).HasName("PK__Mileston__67592EB79C6F9174");
+            entity.HasKey(e => e.ProjectPhaseId).HasName("PK__ProjectP__67592EB79C6F9174");
 
-            entity.ToTable("Milestone");
+            entity.ToTable("ProjectPhase");
 
-            entity.Property(e => e.MilestoneId).HasColumnName("milestone_id");
+            entity.Property(e => e.ProjectPhaseId).HasColumnName("project_phase_id");
             entity.Property(e => e.AssignBy).HasColumnName("assign_by");
             entity.Property(e => e.AssignTo).HasColumnName("assign_to");
             entity.Property(e => e.Description).HasColumnName("description");
@@ -402,17 +414,17 @@ public partial class LRMSDbContext : DbContext
                 .HasMaxLength(255)
                 .HasColumnName("title");
 
-            entity.HasOne(d => d.AssignByNavigation).WithMany(p => p.MilestoneAssignByNavigations)
+            entity.HasOne(d => d.AssignByNavigation).WithMany(p => p.ProjectPhaseAssignByNavigations)
                 .HasForeignKey(d => d.AssignBy)
-                .HasConstraintName("FK_Milestone_GroupMember_AssignBy");
+                .HasConstraintName("FK_ProjectPhase_GroupMember_AssignBy");
 
-            entity.HasOne(d => d.AssignToNavigation).WithMany(p => p.MilestoneAssignToNavigations)
+            entity.HasOne(d => d.AssignToNavigation).WithMany(p => p.ProjectPhaseAssignToNavigations)
                 .HasForeignKey(d => d.AssignTo)
-                .HasConstraintName("FK_Milestone_GroupMember_AssignTo");
+                .HasConstraintName("FK_ProjectPhase_GroupMember_AssignTo");
 
-            entity.HasOne(d => d.Project).WithMany(p => p.Milestones)
+            entity.HasOne(d => d.Project).WithMany(p => p.ProjectPhases)
                 .HasForeignKey(d => d.ProjectId)
-                .HasConstraintName("FK_Milestone_Projects");
+                .HasConstraintName("FK_ProjectPhase_Projects");
         });
 
         modelBuilder.Entity<Notification>(entity =>

@@ -9,6 +9,7 @@ using LRMS_API;
 using Microsoft.EntityFrameworkCore;
 using Service.Exceptions;
 using Service.Interfaces;
+using Domain.Constants;
 
 namespace Service.Implementations;
 
@@ -23,13 +24,19 @@ public class TimelineSequenceService : ITimelineSequenceService
         _context = context;
     }
 
-    public async Task<TimelineSequenceResponse> CreateTimelineSequence(TimelineSequenceRequest request)
+    public async Task<TimelineSequenceResponse> CreateTimelineSequence(TimelineSequenceRequest request, int createdBy)
     {
         try
         {
-            if (string.IsNullOrEmpty(request.SequenceName) || request.CreatedBy == null)
+            if (string.IsNullOrEmpty(request.SequenceName))
             {
-                throw new ServiceException("Sequence Name and CreatedBy are required");
+                throw new ServiceException("Sequence Name is required");
+            }
+
+            // Set default status to Active if not provided
+            if (request.Status == null)
+            {
+                request.Status = (int)TimelineSequenceStatusEnum.Active;
             }
 
             var sequence = new TimelineSequence
@@ -37,7 +44,8 @@ public class TimelineSequenceService : ITimelineSequenceService
                 SequenceName = request.SequenceName,
                 SequenceDescription = request.SequenceDescription,
                 SequenceColor = request.SequenceColor,
-                CreatedBy = request.CreatedBy.Value,
+                Status = request.Status,
+                CreatedBy = createdBy,
                 CreatedAt = DateTime.Now,
                 UpdatedAt = DateTime.Now
             };
@@ -45,7 +53,11 @@ public class TimelineSequenceService : ITimelineSequenceService
             await _context.TimelineSequence.AddAsync(sequence);
             await _context.SaveChangesAsync();
 
-            var createdUser = request.CreatedBy != null ? await _context.Users.FindAsync(request.CreatedBy) : null;
+            var createdUser = await _context.Users.FindAsync(createdBy);
+            
+            string statusName = sequence.Status.HasValue 
+                ? Enum.GetName(typeof(TimelineSequenceStatusEnum), sequence.Status) 
+                : "Unknown";
             
             return new TimelineSequenceResponse
             {
@@ -53,6 +65,8 @@ public class TimelineSequenceService : ITimelineSequenceService
                 SequenceName = sequence.SequenceName,
                 SequenceDescription = sequence.SequenceDescription,
                 SequenceColor = sequence.SequenceColor,
+                Status = sequence.Status,
+                StatusName = statusName,
                 CreatedAt = sequence.CreatedAt,
                 UpdatedAt = sequence.UpdatedAt,
                 CreatedBy = sequence.CreatedBy,
@@ -114,6 +128,51 @@ public class TimelineSequenceService : ITimelineSequenceService
                 UpdatedAt = sequence.UpdatedAt,
                 CreatedBy = sequence.CreatedBy,
                 CreatedByName = sequence.CreatedByNavigation?.FullName ?? "Unknown"
+            };
+        }
+        catch (Exception e)
+        {
+            throw new ServiceException(e.Message);
+        }
+    }
+
+    public async Task<TimelineSequenceResponse> UpdateTimelineSequence(int id, TimelineSequenceRequest request, int updatedBy)
+    {
+        try
+        {
+            var sequence = await _context.TimelineSequence.FindAsync(id);
+            if (sequence == null)
+            {
+                throw new ServiceException("Timeline Sequence not found");
+            }
+
+            // Update the sequence properties
+            sequence.SequenceName = request.SequenceName ?? sequence.SequenceName;
+            sequence.SequenceDescription = request.SequenceDescription ?? sequence.SequenceDescription;
+            sequence.SequenceColor = request.SequenceColor ?? sequence.SequenceColor;
+            sequence.Status = request.Status ?? sequence.Status;
+            sequence.UpdatedAt = DateTime.Now;
+
+            await _context.SaveChangesAsync();
+
+            var updatedUser = await _context.Users.FindAsync(updatedBy);
+            
+            string statusName = sequence.Status.HasValue 
+                ? Enum.GetName(typeof(TimelineSequenceStatusEnum), sequence.Status) 
+                : "Unknown";
+
+            return new TimelineSequenceResponse
+            {
+                Id = sequence.SequenceId,
+                SequenceName = sequence.SequenceName,
+                SequenceDescription = sequence.SequenceDescription,
+                SequenceColor = sequence.SequenceColor,
+                Status = sequence.Status,
+                StatusName = statusName,
+                CreatedAt = sequence.CreatedAt,
+                UpdatedAt = sequence.UpdatedAt,
+                CreatedBy = sequence.CreatedBy,
+                CreatedByName = updatedUser?.FullName ?? "Unknown"
             };
         }
         catch (Exception e)

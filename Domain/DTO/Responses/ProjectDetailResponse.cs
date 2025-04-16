@@ -8,6 +8,7 @@ namespace Domain.DTO.Responses
         public UserShortInfo ApprovedByUser { get; set; }
         public GroupDetailInfo Group { get; set; }
         public DepartmentResponse Department { get; set; }
+        public new ICollection<ProjectPhaseResponse> ProjectPhases { get; set; }
     }
 
     public class UserShortInfo

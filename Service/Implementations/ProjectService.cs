@@ -17,7 +17,7 @@ public class ProjectService : IProjectService
     private readonly IS3Service _s3Service;
     private readonly IProjectRepository _projectRepository;
     private readonly IGroupRepository _groupRepository;
-    private readonly IMilestoneRepository _milestoneRepository;
+    private readonly IProjectPhaseRepository _projectPhaseRepository;
     private readonly IDepartmentRepository _departmentRepository;
     private readonly IUserRepository _userRepository;
     private readonly INotificationService _notificationService;
@@ -26,13 +26,16 @@ public class ProjectService : IProjectService
     private readonly IMapper _mapper;
     private readonly LRMSDbContext _context;
 
+
     public ProjectService(IS3Service s3Service, IProjectRepository projectRepository, IGroupRepository groupRepository,
-        IMilestoneRepository milestoneRepository, IDepartmentRepository departmentRepository, IUserRepository userRepository, INotificationService notificationService, IMapper mapper, LRMSDbContext context, IGroupService groupService, IEmailService emailService)
+        IDepartmentRepository departmentRepository, IUserRepository userRepository, IGroupService groupService, IEmailService emailService,
+        IProjectPhaseRepository projectPhaseRepository, INotificationService notificationService, IMapper mapper, LRMSDbContext context)
+
     {
         _s3Service = s3Service;
         _projectRepository = projectRepository;
         _groupRepository = groupRepository;
-        _milestoneRepository = milestoneRepository;
+        _projectPhaseRepository = projectPhaseRepository;
         _departmentRepository = departmentRepository;
         _userRepository = userRepository;
         _notificationService = notificationService;
@@ -40,6 +43,7 @@ public class ProjectService : IProjectService
         _emailService = emailService;
         _mapper = mapper;
         _context = context;
+
     }
 
     private string GetProjectTypeName(int? projectType)
@@ -160,7 +164,7 @@ public class ProjectService : IProjectService
             var currentDate = DateTime.Now;
             var activeRegistrationTimeline = await _context.Timelines
                 .Include(t => t.Sequence)
-                .Where(t => t.TimelineType == 1 && // Assuming 1 is registration type
+                .Where(t => t.TimelineType == (int)TimelineTypeEnum.ProjectRegistration &&
                        t.StartDate <= currentDate &&
                        t.EndDate >= currentDate)
                 .FirstOrDefaultAsync();
@@ -179,8 +183,8 @@ public class ProjectService : IProjectService
             ProjectName = request.ProjectName,
             Description = request.Description,
             Methodlogy = request.Methodology,
-            StartDate = request.StartDate?.Date,
-            EndDate = request.EndDate?.Date,
+                StartDate = request.StartDate?.Date,
+                EndDate = request.EndDate?.Date,
             ApprovedBudget = request.ApprovedBudget,
                 SpentBudget = 0, // Initialize with 0
             Status = (int)ProjectStatusEnum.Pending,
@@ -188,74 +192,74 @@ public class ProjectService : IProjectService
             CreatedBy = createdBy,
             GroupId = request.GroupId,
             DepartmentId = request.DepartmentId,
-            ProjectType = (int)ProjectTypeEnum.Research,
-            SequenceId = sequenceId // Set the automatically determined sequence ID
+                ProjectType = (int)ProjectTypeEnum.Research,
+                SequenceId = sequenceId // Set the automatically determined sequence ID
         };
 
         await _projectRepository.AddAsync(project);
             
-            // Modified milestone creation code with detailed error handling
-            if (request.Milestones != null && request.Milestones.Any())
+            // Modified project phase creation code with detailed error handling
+            if (request.ProjectPhases != null && request.ProjectPhases.Any())
             {
-                Console.WriteLine($"Processing {request.Milestones.Count} milestones for project {project.ProjectId}");
+                Console.WriteLine($"Processing {request.ProjectPhases.Count} project phases for project {project.ProjectId}");
                 
-                foreach (var milestoneRequest in request.Milestones)
+                foreach (var phaseRequest in request.ProjectPhases)
                 {
                     try
                     {
-                        var milestoneStartDate = milestoneRequest.StartDate.Date;
-                        var milestoneEndDate = milestoneRequest.EndDate.Date;
+                        var phaseStartDate = phaseRequest.StartDate.Date;
+                        var phaseEndDate = phaseRequest.EndDate.Date;
                         
-                        Console.WriteLine($"Creating milestone: {milestoneRequest.Title} ({milestoneStartDate:yyyy-MM-dd} to {milestoneEndDate:yyyy-MM-dd})");
+                        Console.WriteLine($"Creating project phase: {phaseRequest.Title} ({phaseStartDate:yyyy-MM-dd} to {phaseEndDate:yyyy-MM-dd})");
                         
-                        // Validate milestone dates against project dates
+                        // Validate phase dates against project dates
                         if (project.StartDate.HasValue && project.EndDate.HasValue && 
-                            (milestoneStartDate < project.StartDate || milestoneEndDate > project.EndDate))
+                            (phaseStartDate < project.StartDate || phaseEndDate > project.EndDate))
                         {
-                            throw new ServiceException($"Milestone dates ({milestoneStartDate:yyyy-MM-dd} to {milestoneEndDate:yyyy-MM-dd}) must be within project start and end dates ({project.StartDate?.Date:yyyy-MM-dd} to {project.EndDate?.Date:yyyy-MM-dd}).");
+                            throw new ServiceException($"Project phase dates ({phaseStartDate:yyyy-MM-dd} to {phaseEndDate:yyyy-MM-dd}) must be within project start and end dates ({project.StartDate?.Date:yyyy-MM-dd} to {project.EndDate?.Date:yyyy-MM-dd}).");
                         }
                         
-                        // Create a new milestone
-                        var milestone = new Milestone
+                        // Create a new project phase
+                        var projectPhase = new ProjectPhase
                         {
-                            Title = milestoneRequest.Title,
-                            Description = milestoneRequest.Title, // Using title as description
-                            StartDate = milestoneStartDate,
-                            EndDate = milestoneEndDate,
-                            Status = (int)MilestoneStatusEnum.In_progress,
-                            ProjectId = project.ProjectId,
+                            Title = phaseRequest.Title,
+                            Description = phaseRequest.Title, // Using title as description
+                            StartDate = phaseStartDate,
+                            EndDate = phaseEndDate,
+                            Status = (int)ProjectPhaseStatusEnum.In_progress,
+                    ProjectId = project.ProjectId,
                             AssignBy = createdBy,
                             // These are optional fields based on your schema
                             AssignTo = null
                         };
                         
-                        // Try two different approaches to insert the milestone
+                        // Try two different approaches to insert the project phase
                         try
                         {
-                            // Method 1: Use the MilestoneRepository
-                            await _milestoneRepository.AddMilestoneAsync(milestone);
-                            Console.WriteLine("Successfully added milestone using repository");
+                            // Method 1: Use the ProjectPhaseRepository
+                            await _projectPhaseRepository.AddProjectPhaseAsync(projectPhase);
+                            Console.WriteLine("Successfully added project phase using repository");
                         }
                         catch (Exception repoEx)
                         {
-                            Console.WriteLine($"Error using repository to add milestone: {repoEx.Message}");
+                            Console.WriteLine($"Error using repository to add project phase: {repoEx.Message}");
                             
                             // Method 2: Try using DbContext directly
                             try
                             {
-                                _context.Milestones.Add(milestone);
+                                _context.ProjectPhases.Add(projectPhase);
                                 await _context.SaveChangesAsync();
-                                Console.WriteLine("Successfully added milestone using direct DbContext");
+                                Console.WriteLine("Successfully added project phase using direct DbContext");
                             }
                             catch (Exception dbEx)
                             {
-                                Console.WriteLine($"Error using direct DbContext to add milestone: {dbEx.Message}");
+                                Console.WriteLine($"Error using direct DbContext to add project phase: {dbEx.Message}");
                                 
                                 // Method 3: Try inserting using raw SQL
                                 try
                                 {
                                     var sql = @"
-                                        INSERT INTO [dbo].[Milestone] (
+                                        INSERT INTO [dbo].[ProjectPhase] (
                                             [title], [description], [start_date], [end_date], 
                                             [status], [assign_by], [project_id]
                                         ) VALUES (
@@ -265,43 +269,43 @@ public class ProjectService : IProjectService
                                     
                                     var parameters = new[]
                                     {
-                                        new SqlParameter("@title", milestone.Title ?? (object)DBNull.Value),
-                                        new SqlParameter("@description", milestone.Description ?? (object)DBNull.Value),
-                                        new SqlParameter("@startDate", milestone.StartDate ?? (object)DBNull.Value),
-                                        new SqlParameter("@endDate", milestone.EndDate ?? (object)DBNull.Value),
-                                        new SqlParameter("@status", milestone.Status ?? (object)DBNull.Value),
-                                        new SqlParameter("@assignBy", milestone.AssignBy ?? (object)DBNull.Value),
-                                        new SqlParameter("@projectId", milestone.ProjectId ?? (object)DBNull.Value)
+                                        new SqlParameter("@title", projectPhase.Title ?? (object)DBNull.Value),
+                                        new SqlParameter("@description", projectPhase.Description ?? (object)DBNull.Value),
+                                        new SqlParameter("@startDate", projectPhase.StartDate ?? (object)DBNull.Value),
+                                        new SqlParameter("@endDate", projectPhase.EndDate ?? (object)DBNull.Value),
+                                        new SqlParameter("@status", projectPhase.Status ?? (object)DBNull.Value),
+                                        new SqlParameter("@assignBy", projectPhase.AssignBy ?? (object)DBNull.Value),
+                                        new SqlParameter("@projectId", projectPhase.ProjectId ?? (object)DBNull.Value)
                                     };
                                     
                                     await _context.Database.ExecuteSqlRawAsync(sql, parameters);
-                                    Console.WriteLine("Successfully added milestone using raw SQL");
+                                    Console.WriteLine("Successfully added project phase using raw SQL");
                                 }
                                 catch (Exception sqlEx)
                                 {
-                                    Console.WriteLine($"Error using raw SQL to add milestone: {sqlEx.Message}");
+                                    Console.WriteLine($"Error using raw SQL to add project phase: {sqlEx.Message}");
                                     // At this point, all three methods have failed
-                                    throw new ServiceException($"Failed to add milestone after trying multiple methods: {sqlEx.Message}");
+                                    throw new ServiceException($"Failed to add project phase after trying multiple methods: {sqlEx.Message}");
                                 }
                             }
                         }
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"Error processing milestone {milestoneRequest.Title}: {ex.Message}");
-                        // Continue with other milestones even if this one fails
+                        Console.WriteLine($"Error processing project phase {phaseRequest.Title}: {ex.Message}");
+                        // Continue with other phases even if this one fails
                     }
                 }
             }
             else
             {
-                Console.WriteLine("No milestones to create - request.Milestones is null or empty");
+                Console.WriteLine("No project phases to create - request.ProjectPhases is null or empty");
             }
             
         if (documentFile != null)
             {
                 var documentUrl = await _s3Service.UploadFileAsync(documentFile, $"projects/{project.ProjectId}/documents");
-                
+            
                 // Create ProjectResource for document
                     var projectResource = new ProjectResource
                     {
@@ -331,6 +335,8 @@ public class ProjectService : IProjectService
                 await _context.Documents.AddAsync(document);
                 await _context.SaveChangesAsync();
             }
+            
+        return project.ProjectId;
             // Lấy thông tin chi tiết để gửi thông báo
             var department = await _departmentRepository.GetByIdAsync(request.DepartmentId);
             var group = await _groupRepository.GetByIdAsync(request.GroupId);
@@ -447,34 +453,57 @@ public class ProjectService : IProjectService
         try
         {
             if (documentFile == null)
-                throw new ServiceException("Vui lòng tải lên biên bản họp hội đồng");
-            // Lấy thông tin project
-        var project = await _projectRepository.GetByIdAsync(projectId);
-        if (project == null)
-                throw new ServiceException("Không tìm thấy project");
 
-            // Kiểm tra project có đang ở trạng thái chờ phê duyệt không
+                throw new ServiceException("Please upload the council meeting minutes document");
+
+            // Timeline validation code remains the same
+            var currentDate = DateTime.Now.Date;
+            var allReviewTimelines = await _context.Timelines
+                .Where(t => t.TimelineType == (int)TimelineTypeEnum.ReviewPeriod)
+                .ToListAsync();
+
+            // Console logging code remains the same
+            
+            var activeReviewTimeline = await _context.Timelines
+                .Include(t => t.Sequence)
+                .Where(t => t.TimelineType == (int)TimelineTypeEnum.ReviewPeriod && 
+                       t.StartDate <= currentDate &&
+                       t.EndDate >= currentDate)
+                .FirstOrDefaultAsync();
+            
+            if (activeReviewTimeline == null)
+            {
+                throw new ServiceException("Project review is not currently open. Please check the review schedule.");
+            }
+
+            // Get project information
+            var project = await _projectRepository.GetByIdAsync(projectId);
+            if (project == null)
+                throw new ServiceException("Project not found");
+
+
+            // Check if project is in pending status
             if (project.Status != (int)ProjectStatusEnum.Pending)
-                throw new ServiceException("Project không ở trạng thái chờ phê duyệt");
+                throw new ServiceException("Project is not in pending status");
 
-            // Lấy thông tin người phê duyệt
-            var secretary = await _groupRepository.GetMemberByUserId(secretaryId);
-            if (secretary == null)
-                throw new ServiceException("Không tìm thấy thông tin người phê duyệt");
+            // Get approver information
+            var approver = await _groupRepository.GetMemberByUserId(secretaryId);
+            if (approver == null)
+                throw new ServiceException("Approver information not found");
 
-            // Kiểm tra người phê duyệt có phải là thư ký hội đồng không
-            if (secretary.Role != (int)GroupMemberRoleEnum.Secretary)
-                throw new ServiceException("Bạn không có quyền phê duyệt project");
+            // Check if approver is either a Secretary or Council Chairman
+            if (approver.Role != (int)GroupMemberRoleEnum.Secretary && 
+                approver.Role != (int)GroupMemberRoleEnum.Council_Chairman)
+                throw new ServiceException("You don't have permission to approve this project. Only the council secretary or chairman can approve projects.");
 
-            // Kiểm tra thư ký có cùng department với project không
-            var secretaryGroup = await _groupRepository.GetByIdAsync(secretary.GroupId.Value);
-            if (secretaryGroup.GroupDepartment != project.DepartmentId)
-                throw new ServiceException("Bạn không thuộc cùng phòng ban với project này");
+            // Check if approver belongs to the same department as the project
+            var approverGroup = await _groupRepository.GetByIdAsync(approver.GroupId.Value);
+            if (approverGroup.GroupDepartment != project.DepartmentId)
+                throw new ServiceException("You don't belong to the same department as this project");
 
-            // Upload document
+            // Upload document and create records - remains the same
             var documentUrl = await _s3Service.UploadFileAsync(documentFile, $"projects/{projectId}/council-documents");
             
-            // Tạo ProjectResource cho document
             var projectResource = new ProjectResource
             {
                 ResourceName = documentFile.FileName,
@@ -485,7 +514,6 @@ public class ProjectService : IProjectService
             };
             var resourceId = await _projectRepository.AddResourceAsync(projectResource);
 
-            // Tạo Document record
             var document = new Document
             {
                 ProjectId = projectId,
@@ -498,10 +526,26 @@ public class ProjectService : IProjectService
             };
             await _projectRepository.AddDocumentAsync(document);
 
-            // Cập nhật trạng thái project
-        project.Status = (int)ProjectStatusEnum.Approved;
-        await _projectRepository.UpdateAsync(project);
 
+            // Update project status
+            project.Status = (int)ProjectStatusEnum.Approved;
+            project.ApprovedBy = approver.GroupMemberId; // Store the approver
+            await _projectRepository.UpdateAsync(project);
+
+            // Get approver role name for notification
+            string approverRoleName = approver.Role == (int)GroupMemberRoleEnum.Secretary ? 
+                "council secretary" : "council chairman";
+
+            // Send notifications to research group members
+            var groupMembers = await _groupRepository.GetMembersByGroupId(project.GroupId.Value);
+            foreach (var member in groupMembers)
+            {
+                var notificationRequest = new CreateNotificationRequest
+                {
+                    UserId = member.UserId.Value,
+                    Title = "Project Approved",
+                    Message = $"Project '{project.ProjectName}' has been approved by the {approverRoleName}",
+                    ProjectId = project.ProjectId
             var department = await _departmentRepository.GetByIdAsync(project.DepartmentId.Value);
             var group = await _groupRepository.GetByIdAsync(project.GroupId.Value);
             var creator = await _userRepository.GetByIdAsync(project.CreatedBy.Value);
@@ -553,11 +597,27 @@ public class ProjectService : IProjectService
             await _emailService.SendEmailAsync(stakeholder.User.Email, emailSubject, emailMessage);
         }
 
-        return true;
+            // Create a new quota with the same budget as the project
+            var quota = new Quota
+            {
+                AllocatedBudget = project.ApprovedBudget,
+                Status = (int)QuotaStatusEnum.Active,
+                CreatedAt = DateTime.Now,
+                ProjectId = projectId,
+                AllocatedBy = secretaryId
+            };
+
+            await _context.Quotas.AddAsync(quota);
+            await _context.SaveChangesAsync();
+
+            // debug
+            Console.WriteLine($"Created quota {quota.QuotaId} for project {projectId} with budget {quota.AllocatedBudget}");
+
+            return true;
         }
         catch (Exception ex)
         {
-            throw new ServiceException($"Lỗi khi phê duyệt project: {ex.Message}");
+            throw new ServiceException($"Error while approving project: {ex.Message}");
         }
     }
 
@@ -566,35 +626,57 @@ public class ProjectService : IProjectService
         try
         {
             if (documentFile == null)
-                throw new ServiceException("Vui lòng tải lên biên bản họp hội đồng");
+                throw new ServiceException("Please upload the council meeting minutes document");
 
-            // Lấy thông tin project
-        var project = await _projectRepository.GetByIdAsync(projectId);
-        if (project == null)
-                throw new ServiceException("Không tìm thấy project");
 
-            // Kiểm tra project có đang ở trạng thái chờ phê duyệt không
+            // Timeline validation code remains the same
+            var currentDate = DateTime.Now.Date;
+            var allReviewTimelines = await _context.Timelines
+                .Where(t => t.TimelineType == (int)TimelineTypeEnum.ReviewPeriod)
+                .ToListAsync();
+
+            // Console logging code remains the same
+            
+            var activeReviewTimeline = await _context.Timelines
+                .Include(t => t.Sequence)
+                .Where(t => t.TimelineType == (int)TimelineTypeEnum.ReviewPeriod && 
+                       t.StartDate <= currentDate &&
+                       t.EndDate >= currentDate)
+                .FirstOrDefaultAsync();
+            
+            if (activeReviewTimeline == null)
+            {
+                throw new ServiceException("Project review is not currently open. Please check the review schedule.");
+            }
+
+            // Get project information
+            var project = await _projectRepository.GetByIdAsync(projectId);
+            if (project == null)
+                throw new ServiceException("Project not found");
+
+
+            // Check if project is in pending status
             if (project.Status != (int)ProjectStatusEnum.Pending)
-                throw new ServiceException("Project không ở trạng thái chờ phê duyệt");
+                throw new ServiceException("Project is not in pending status");
 
-            // Lấy thông tin người phê duyệt
-            var secretary = await _groupRepository.GetMemberByUserId(secretaryId);
-            if (secretary == null)
-                throw new ServiceException("Không tìm thấy thông tin người phê duyệt");
+            // Get approver information
+            var approver = await _groupRepository.GetMemberByUserId(secretaryId);
+            if (approver == null)
+                throw new ServiceException("Approver information not found");
 
-            // Kiểm tra người phê duyệt có phải là thư ký hội đồng không
-            if (secretary.Role != (int)GroupMemberRoleEnum.Secretary)
-                throw new ServiceException("Bạn không có quyền từ chối project");
+            // Check if approver is either a Secretary or Council Chairman
+            if (approver.Role != (int)GroupMemberRoleEnum.Secretary && 
+                approver.Role != (int)GroupMemberRoleEnum.Council_Chairman)
+                throw new ServiceException("You don't have permission to reject this project. Only the council secretary or chairman can reject projects.");
 
-            // Kiểm tra thư ký có cùng department với project không
-            var secretaryGroup = await _groupRepository.GetByIdAsync(secretary.GroupId.Value);
-            if (secretaryGroup.GroupDepartment != project.DepartmentId)
-                throw new ServiceException("Bạn không thuộc cùng phòng ban với project này");
+            // Check if approver belongs to the same department as the project
+            var approverGroup = await _groupRepository.GetByIdAsync(approver.GroupId.Value);
+            if (approverGroup.GroupDepartment != project.DepartmentId)
+                throw new ServiceException("You don't belong to the same department as this project");
 
-            // Upload document
+            // Upload document and create records - remains the same
             var documentUrl = await _s3Service.UploadFileAsync(documentFile, $"projects/{projectId}/council-documents");
             
-            // Tạo ProjectResource cho document
             var projectResource = new ProjectResource
             {
                 ResourceName = documentFile.FileName,
@@ -605,7 +687,6 @@ public class ProjectService : IProjectService
             };
             var resourceId = await _projectRepository.AddResourceAsync(projectResource);
 
-            // Tạo Document record
             var document = new Document
             {
                 ProjectId = projectId,
@@ -618,10 +699,25 @@ public class ProjectService : IProjectService
             };
             await _projectRepository.AddDocumentAsync(document);
 
-            // Cập nhật trạng thái project
-        project.Status = (int)ProjectStatusEnum.Rejected;
-        await _projectRepository.UpdateAsync(project);
+            // Update project status
+            project.Status = (int)ProjectStatusEnum.Rejected;
+            project.ApprovedBy = approver.GroupMemberId; // Store the approver
+            await _projectRepository.UpdateAsync(project);
 
+            // Get approver role name for notification
+            string approverRoleName = approver.Role == (int)GroupMemberRoleEnum.Secretary ? 
+                "council secretary" : "council chairman";
+
+            // Send notifications to research group members
+            var groupMembers = await _groupRepository.GetMembersByGroupId(project.GroupId.Value);
+            foreach (var member in groupMembers)
+            {
+                var notificationRequest = new CreateNotificationRequest
+                {
+                    UserId = member.UserId.Value,
+                    Title = "Project Rejected",
+                    Message = $"Project '{project.ProjectName}' has been rejected by the {approverRoleName}",
+                    ProjectId = project.ProjectId
              // Lấy thêm thông tin chi tiết
             var department = await _departmentRepository.GetByIdAsync(project.DepartmentId.Value);
             var group = await _groupRepository.GetByIdAsync(project.GroupId.Value);
@@ -678,7 +774,7 @@ public class ProjectService : IProjectService
         }
         catch (Exception ex)
         {
-            throw new ServiceException($"Lỗi khi từ chối project: {ex.Message}");
+            throw new ServiceException($"Error while rejecting project: {ex.Message}");
         }
     }
 
@@ -799,7 +895,7 @@ public class ProjectService : IProjectService
                     .ThenInclude(g => g.GroupMembers)
                         .ThenInclude(gm => gm.User)
                 .Include(p => p.Department)
-                .Include(p => p.Milestones)
+                .Include(p => p.ProjectPhases)
                 .Include(p => p.CreatedByNavigation)
                 .Include(p => p.ApprovedByNavigation)
                     .ThenInclude(gm => gm.User)
@@ -832,7 +928,7 @@ public class ProjectService : IProjectService
                 GroupName = projectResponse.GroupName,
                 DepartmentId = projectResponse.DepartmentId,
                 Documents = projectResponse.Documents,
-                Milestones = projectResponse.Milestones,
+                ProjectPhases = projectResponse.ProjectPhases,
                 
                 // Add enhanced creator info
                 CreatedByUser = project.CreatedByNavigation != null ? new UserShortInfo

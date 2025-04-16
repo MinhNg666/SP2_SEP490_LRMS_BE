@@ -1,10 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
-using Microsoft.AspNetCore.Http;
+using Domain.DTO.Requests;
 using Microsoft.AspNetCore.Mvc;
 using Service.Exceptions;
 using Service.Interfaces;
-using Domain.DTO.Requests;
+using Domain.DTO.Common;
+using Microsoft.AspNetCore.Authorization;
 
 namespace LRMS_API.Controllers;
 
@@ -19,6 +20,22 @@ public class JournalController : ApiBaseController
         _journalService = journalService;
     }
 
+    [HttpPost("journal/register")]
+    [Authorize]
+    public async Task<IActionResult> CreateJournal([FromBody] CreateJournalRequest request)
+    {
+        try
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            var journal = await _journalService.CreateJournal(request, userId);
+            var response = new ApiResponse(StatusCodes.Status200OK, $"Journal has been registered. Journal ID: {journal.JournalId}", journal);
+            return Ok(response);
+        }
+        catch (ServiceException ex)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
+        }
+    }
     [HttpPost("create-journal-from-research/{projectId}")]
     [Authorize]
     public async Task<IActionResult> CreateFromResearch(int projectId, [FromForm] CreateJournalFromProjectRequest request, IFormFile documentFile)
@@ -34,6 +51,7 @@ public class JournalController : ApiBaseController
             return BadRequest(new { success = false, message = ex.Message });
         }
     }
+
     [HttpPost("add-document/{journalId}")]
     [Authorize]
     public async Task<IActionResult> AddJournalDocument(int journalId, IFormFile documentFile)
@@ -44,7 +62,7 @@ public class JournalController : ApiBaseController
             await _journalService.AddJournalDocument(journalId, userId, documentFile);
             return Ok(new { success = true, message = "Đã thêm tài liệu thành công" });
         }
-            catch (ServiceException ex)
+        catch (ServiceException ex)
         {
             return BadRequest(new { success = false, message = ex.Message });
         }
@@ -81,4 +99,51 @@ public class JournalController : ApiBaseController
             return BadRequest(new { success = false, message = ex.Message });
         }
     }
-}
+
+
+
+    [HttpGet("journal/list-all")]
+    [Authorize]
+    public async Task<IActionResult> GetAllJournals()
+    {
+        try
+        {
+            var journals = await _journalService.GetAllJournals();
+            return Ok(new ApiResponse(StatusCodes.Status200OK, "Journals retrieved successfully", journals));
+        }
+        catch (ServiceException ex)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
+        }
+    }
+
+    [HttpGet("journal/{journalId}")]
+    [Authorize]
+    public async Task<IActionResult> GetJournalById(int journalId)
+    {
+        try
+        {
+            var journal = await _journalService.GetJournalById(journalId);
+            return Ok(new ApiResponse(StatusCodes.Status200OK, "Journal retrieved successfully", journal));
+        }
+        catch (ServiceException ex)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
+        }
+    }
+
+    [HttpGet("journal/project/{projectId}")]
+    [Authorize]
+    public async Task<IActionResult> GetJournalsByProjectId(int projectId)
+    {
+        try
+        {
+            var journals = await _journalService.GetJournalsByProjectId(projectId);
+            return Ok(new ApiResponse(StatusCodes.Status200OK, "Journals retrieved successfully", journals));
+        }
+        catch (ServiceException ex)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
+        }
+    }
+} 

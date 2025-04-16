@@ -22,4 +22,6 @@ public partial class Quota
     public virtual User? AllocatedByNavigation { get; set; }
 
     public virtual Project? Project { get; set; }
+
+     public virtual ICollection<FundDisbursement> FundDisbursements { get; set; } = new List<FundDisbursement>();
 }

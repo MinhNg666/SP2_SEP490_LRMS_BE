@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+using Microsoft.AspNetCore.Http;
+using System;
 
-namespace Domain.DTO.Responses;
+namespace Domain.DTO.Requests;
 
-public class ConferenceResponse
+public class CreateConferenceRequest
 {
-    public int ConferenceId { get; set; }
+    // Conference Info
     public string ConferenceName { get; set; }
     public int ConferenceRanking { get; set; }
     public string Location { get; set; }
@@ -13,14 +13,8 @@ public class ConferenceResponse
     public DateTime AcceptanceDate { get; set; }
     public int PresentationType { get; set; }
     public int ProjectId { get; set; }
-    public string ProjectName { get; set; }
-    public ConferenceExpenseResponse Expense { get; set; }
-    public List<DocumentResponse> Documents { get; set; }
-}
-
-public class ConferenceExpenseResponse
-{
-    public int ExpenseId { get; set; }
+    
+    // Conference Expense Info
     public string Accomodation { get; set; }
     public decimal AccomodationExpense { get; set; }
     public string Travel { get; set; }

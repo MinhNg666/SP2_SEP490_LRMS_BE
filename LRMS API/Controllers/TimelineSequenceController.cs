@@ -5,6 +5,7 @@ using Domain.DTO.Responses;
 using Microsoft.AspNetCore.Mvc;
 using Service.Exceptions;
 using Service.Interfaces;
+using System.Security.Claims;
 
 namespace LRMS_API.Controllers;
 
@@ -23,7 +24,17 @@ public class TimelineSequenceController : ApiBaseController
     {
         try
         {
-            var result = await _timelineSequenceService.CreateTimelineSequence(request);
+            // Get current user ID from claims
+            int userId = User.Identity.IsAuthenticated 
+                ? int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0") 
+                : 0;
+            
+            if (userId == 0)
+            {
+                return Unauthorized(new ApiResponse(StatusCodes.Status401Unauthorized, "User not authenticated"));
+            }
+            
+            var result = await _timelineSequenceService.CreateTimelineSequence(request, userId);
             return Ok(new ApiResponse(StatusCodes.Status200OK, MessageConstants.SUCCESSFUL, result));
         }
         catch (ServiceException e)

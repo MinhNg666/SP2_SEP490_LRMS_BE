@@ -15,5 +15,5 @@ public class TimelineRequest
     
     public string? Event { get; set; }
     public int? TimelineType { get; set; }
-    public int? CreatedBy { get; set; }
+    public int? Status { get; set; }
 } 

@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Domain.DTO.Common;
 using Domain.DTO.Responses;
+using Domain.Constants;
 using LRMS_API;
 
 namespace Domain.Automapper;
@@ -42,12 +43,38 @@ public class ResponseMappingProfile : Profile
             .ForMember(dest => dest.GroupName, opt => opt.MapFrom(src => src.Group.GroupName))
             .ForMember(dest => dest.DepartmentId, opt => opt.MapFrom(src => src.Department.DepartmentId))
             .ForMember(dest => dest.Documents, opt => opt.MapFrom(src => src.Documents))
-            .ForMember(dest => dest.Milestones, opt => opt.MapFrom(src => src.Milestones))
+            .ForMember(dest => dest.ProjectPhases, opt => opt.MapFrom(src => src.ProjectPhases))
             .ForMember(dest => dest.Methodology, opt => opt.MapFrom(src => src.Methodlogy));
             
         CreateMap<Document, DocumentResponse>();
-        CreateMap<Milestone, MilestoneResponse>();
-        CreateMap<Conference, ConferenceResponse>();
-        CreateMap<Journal, JournalResponse>();
+
+        CreateMap<ProjectPhase, ProjectPhaseResponse>();
+
+
+        CreateMap<Journal, JournalResponse>()
+            .ForMember(dest => dest.ProjectName, opt => 
+                opt.MapFrom(src => src.Project == null ? string.Empty : src.Project.ProjectName))
+            .ForMember(dest => dest.Document, opt => 
+                opt.MapFrom(src => (src.Project == null || src.Project.Documents == null) ? null : 
+                    src.Project.Documents.FirstOrDefault(d => d.DocumentType == (int)DocumentTypeEnum.JournalPaper)));
+
+        CreateMap<Conference, ConferenceResponse>()
+            .ForMember(dest => dest.ProjectName, opt => 
+                opt.MapFrom(src => src.Project == null ? string.Empty : src.Project.ProjectName))
+            .ForMember(dest => dest.Expense, opt => 
+                opt.MapFrom(src => src.ConferenceExpenses == null ? null : src.ConferenceExpenses.FirstOrDefault()))
+            .ForMember(dest => dest.Documents, opt => 
+                opt.MapFrom(src => (src.ConferenceExpenses == null || !src.ConferenceExpenses.Any() || 
+                    src.ConferenceExpenses.FirstOrDefault() == null || 
+                    src.ConferenceExpenses.FirstOrDefault().Documents == null) ? 
+                    new List<Document>() : src.ConferenceExpenses.FirstOrDefault().Documents));
+
+        CreateMap<ConferenceExpense, ConferenceExpenseResponse>();
+
+        CreateMap<Quota, QuotaResponse>()
+            .ForMember(dest => dest.ProjectName, opt => opt.MapFrom(src => 
+                src.Project != null ? src.Project.ProjectName : null))
+            .ForMember(dest => dest.AllocatorName, opt => opt.MapFrom(src => 
+                src.AllocatedByNavigation != null ? src.AllocatedByNavigation.FullName : null));
     } 
 }
