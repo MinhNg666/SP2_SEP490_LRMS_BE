@@ -87,7 +87,7 @@ public async Task<int> CreateJournalFromResearch(int projectId, int userId, Crea
     {
         // Kiểm tra project có tồn tại không
         var project = await _context.Projects
-            .Include(p => p.Milestones)
+            .Include(p => p.ProjectPhases)
             .Include(p => p.Group)
                 .ThenInclude(g => g.GroupMembers)
             .FirstOrDefaultAsync(p => p.ProjectId == projectId);
@@ -107,7 +107,7 @@ public async Task<int> CreateJournalFromResearch(int projectId, int userId, Crea
             throw new ServiceException("Chỉ leader mới có quyền tạo Journal");
 
         // Kiểm tra tất cả milestone đã hoàn thành chưa
-        if (project.Milestones.Any(m => m.Status != (int)MilestoneStatusEnum.Completed))
+        if (project.ProjectPhases.Any(m => m.Status != (int)ProjectPhaseStatusEnum.Completed))
             throw new ServiceException("Tất cả milestone phải hoàn thành trước khi tạo Journal");
 
         // Cập nhật project hiện có
@@ -383,43 +383,37 @@ public async Task<int> CreateJournalFromResearch(int projectId, int userId, Crea
         }
     }
 
-    public async Task AddJournalDocument(int journalId, IFormFile documentFile, int userId)
+    public async Task<bool> AddJournalDocument(int journalId, int userId, IFormFile documentFile)
     {
         try
         {
-            // Kiểm tra journal tồn tại
-            var journal = await _journalRepository.GetByIdAsync(journalId);
-            if (journal == null)
-                throw new ServiceException("Journal not found");
+            var journal = await _context.Journals
+                .Include(j => j.Project)
+                .FirstOrDefaultAsync(j => j.JournalId == journalId);
 
-            // Upload file
+            if (journal == null)
+                throw new ServiceException("Không tìm thấy journal");
+
+            if (documentFile == null)
+                throw new ServiceException("Vui lòng cung cấp file tài liệu");
+
             var documentUrl = await _s3Service.UploadFileAsync(documentFile, $"journals/{journalId}/documents");
 
-        // Kiểm tra thư ký có cùng department với project không
-        var secretaryGroup = await _groupRepository.GetByIdAsync(secretary.GroupId.Value);
-        if (secretaryGroup.GroupDepartment != journal.Project.DepartmentId)
-            throw new ServiceException("Bạn không thuộc cùng phòng ban với journal này");
-
-        // Upload document
-        var documentUrl = await _s3Service.UploadFileAsync(documentFile, $"journals/{journalId}/council-documents");
-        
-            // Tạo ProjectResource cho document
             var projectResource = new ProjectResource
             {
                 ResourceName = documentFile.FileName,
-                ResourceType = 1, // Document type
-                ProjectId = journal.ProjectId,
+                ResourceType = 1,
+                ProjectId = journal.ProjectId.Value,
                 Acquired = true,
                 Quantity = 1
             };
-            
+
             await _context.ProjectResources.AddAsync(projectResource);
             await _context.SaveChangesAsync();
 
-            // Tạo document
             var document = new Document
             {
-                ProjectId = journal.ProjectId,
+                ProjectId = journal.ProjectId.Value,
                 DocumentUrl = documentUrl,
                 FileName = documentFile.FileName,
                 DocumentType = (int)DocumentTypeEnum.JournalPaper,
@@ -429,53 +423,13 @@ public async Task<int> CreateJournalFromResearch(int projectId, int userId, Crea
             };
 
             await _context.Documents.AddAsync(document);
-
-        // Cập nhật trạng thái project và journal
-        journal.Project.Status = (int)ProjectStatusEnum.Approved;
-        journal.PublisherStatus = (int)PublisherStatusEnum.Approved;
             await _context.SaveChangesAsync();
 
-        // Gửi thông báo cho các thành viên
-        var groupMembers = await _groupRepository.GetMembersByGroupId(journal.Project.GroupId.Value);
-        foreach (var member in groupMembers.Where(m => 
-            m.Status == (int)GroupMemberStatus.Active &&
-            m.Role != (int)GroupMemberRoleEnum.Stakeholder))
-        {
-            if (member.UserId.HasValue)
-            {
-                await _notificationService.CreateNotification(new CreateNotificationRequest
-                {
-                    UserId = member.UserId.Value,
-                    Title = "Journal đã được phê duyệt",
-                    Message = $"Journal '{journal.JournalName}' đã được hội đồng phê duyệt",
-                    ProjectId = journal.ProjectId.Value,
-                    Status = 0,
-                    IsRead = false
-                });
-            }
-        }
-        // Gửi email cho stakeholder
-        var stakeholders = groupMembers.Where(m => 
-            m.Status == (int)GroupMemberStatus.Active && 
-            m.Role == (int)GroupMemberRoleEnum.Stakeholder &&
-            m.User != null);
-
-        foreach (var stakeholder in stakeholders)
-        {
-            await _emailService.SendEmailAsync(
-                stakeholder.User.Email,
-                $"Journal đã được phê duyệt",
-                $"Xin chào {stakeholder.User.FullName},\n\n" +
-                $"Journal '{journal.JournalName}' đã được hội đồng phê duyệt.\n\n" +
-                $"Trân trọng."
-            );
-        }
-
-        return true;
+            return true;
         }
         catch (Exception ex)
         {
-            throw new ServiceException($"Error uploading journal document: {ex.Message}");
+            throw new ServiceException($"Lỗi khi thêm tài liệu cho journal: {ex.Message}");
         }
     }
 
@@ -485,21 +439,16 @@ public async Task<int> CreateJournalFromResearch(int projectId, int userId, Crea
         {
             var journals = await _journalRepository.GetAllJournalsWithDetailsAsync();
             Console.WriteLine($"Found {journals?.Count() ?? 0} journals");
-            
+
             if (journals == null || !journals.Any())
             {
                 Console.WriteLine("No journals found");
                 return new List<JournalResponse>();
             }
-            // Gửi email cho stakeholder
-            var stakeholders = groupMembers.Where(m => 
-            m.Status == (int)GroupMemberStatus.Active && 
-            m.Role == (int)GroupMemberRoleEnum.Stakeholder &&
-            m.User != null);
 
             var responses = _mapper.Map<IEnumerable<JournalResponse>>(journals);
             Console.WriteLine($"Mapped {responses?.Count() ?? 0} journal responses");
-            
+
             return responses ?? new List<JournalResponse>();
         }
         catch (Exception ex)

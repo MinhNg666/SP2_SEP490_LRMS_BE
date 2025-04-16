@@ -61,7 +61,6 @@ public class ConferenceService : IConferenceService
                 ConferenceName = request.ConferenceName,
                 ConferenceRanking = request.ConferenceRanking,
                 Location = request.Location,
-                ConferenceRanking = request.ConferenceRanking,
                 PresentationDate = request.PresentationDate,
                 AcceptanceDate = request.AcceptanceDate,
                 PresentationType = request.PresentationType,
@@ -96,7 +95,7 @@ public class ConferenceService : IConferenceService
         try
         {
             var project = await _context.Projects
-                .Include(p => p.Milestones)
+                .Include(p => p.ProjectPhases)
                 .Include(p => p.Group)
                     .ThenInclude(g => g.GroupMembers)
                 .FirstOrDefaultAsync(p => p.ProjectId == projectId);
@@ -113,7 +112,7 @@ public class ConferenceService : IConferenceService
             if (leaderMember == null || leaderMember.Role != (int)GroupMemberRoleEnum.Leader)
                 throw new ServiceException("Chỉ leader mới có quyền tạo Conference");
 
-            if (project.Milestones.Any(m => m.Status != (int)MilestoneStatusEnum.Completed))
+            if (project.ProjectPhases.Any(m => m.Status != (int)ProjectPhaseStatusEnum.Completed))
                 throw new ServiceException("Tất cả milestone phải hoàn thành trước khi tạo Conference");
 
             // Cập nhật project hiện có
@@ -154,7 +153,7 @@ public class ConferenceService : IConferenceService
                     ProjectId = projectId,
                     DocumentUrl = documentUrl,
                     FileName = documentFile.FileName,
-                    DocumentType = (int)DocumentTypeEnum.ConferenceSubmission,
+                    DocumentType = (int)DocumentTypeEnum.ConferenceProposal,
                     UploadAt = DateTime.Now,
                     UploadedBy = leaderId,
                     ProjectResourceId = projectResource.ProjectResourceId
@@ -434,7 +433,7 @@ public class ConferenceService : IConferenceService
                 ProjectId = conference.ProjectId.Value,
                 DocumentUrl = documentUrl,
                 FileName = documentFile.FileName,
-                DocumentType = (int)DocumentTypeEnum.ConferenceSubmission,
+                DocumentType = (int)DocumentTypeEnum.ConferenceProposal,
                 UploadAt = DateTime.Now,
                 UploadedBy = userId,
                 ProjectResourceId = projectResource.ProjectResourceId

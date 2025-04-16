@@ -4,6 +4,7 @@ using Service.Settings;
 using Service.Interfaces;
 using Service.Implementations;
 using Microsoft.EntityFrameworkCore;
+using System.Runtime.Serialization;
 
 namespace LRMS_API.Extensions;
 public static class ServiceExtension
@@ -39,9 +40,9 @@ public static class ServiceExtension
         services.AddScoped<ITimelineSequenceService, TimelineSequenceService>();
         services.AddScoped<IDocumentService, DocumentService>();
         services.AddScoped<IConferenceService, ConferenceService>();
-        services.AddScoped<IConferenceRepository, ConferenceRepository>();
+        services.AddScoped<IQuotaService, QuotaService>();
         services.AddScoped<IJournalService, JournalService>();
-        services.AddScoped<IJournalRepository, JournalRepository>();
+        services.AddScoped<IEmailService, EmailService>();
         //services.AddScoped<IPublicationService, PublicationService>();
 
         //Repository
@@ -53,10 +54,10 @@ public static class ServiceExtension
         services.AddScoped<IDepartmentRepository, DepartmentRepository>();
         services.AddScoped<IProjectPhaseRepository, ProjectPhaseRepository>();
         services.AddScoped<ITimelineSequenceRepository, TimelineSequenceRepository>();
-        services.AddScoped<IS3Service, S3Service>();
         services.AddScoped<IJournalRepository, JournalRepository>();
         services.AddScoped<IConferenceRepository, ConferenceRepository>();
-        services.AddScoped<IQuotaService, QuotaService>();
+        services.AddScoped<IJournalRepository, JournalRepository>();
+        services.AddScoped<IConferenceRepository, ConferenceRepository>();
 
         return services;
     }
