@@ -11,4 +11,5 @@ public interface IJournalService
     Task<IEnumerable<JournalResponse>> GetAllJournals();
     Task<JournalResponse> GetJournalById(int journalId);
     Task<IEnumerable<JournalResponse>> GetJournalsByProjectId(int projectId);
+    Task AddJournalDocuments(int journalId, IEnumerable<IFormFile> documentFiles, int userId);
 } 

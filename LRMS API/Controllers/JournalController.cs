@@ -37,21 +37,24 @@ public class JournalController : ApiBaseController
 
     [HttpPost("journal/{journalId}/upload-document")]
     [Authorize]
-    public async Task<IActionResult> UploadJournalDocument(int journalId, IFormFile documentFile)
+    public async Task<IActionResult> UploadJournalDocuments(int journalId, List<IFormFile> documentFiles)
     {
         try
         {
-            if (documentFile == null)
-                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "No file uploaded"));
+            if (documentFiles == null || !documentFiles.Any())
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "No files uploaded"));
             
             var allowedExtensions = new[] { ".pdf", ".doc", ".docx" };
-            var fileExtension = Path.GetExtension(documentFile.FileName).ToLowerInvariant();
-            if (!allowedExtensions.Contains(fileExtension))
-                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Only PDF, DOC, and DOCX files are allowed"));
-
+            foreach (var file in documentFiles)
+            {
+                var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+                if (!allowedExtensions.Contains(fileExtension))
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, $"Only PDF, DOC, and DOCX files are allowed. Invalid file: {file.FileName}"));
+            }
+            
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-            await _journalService.AddJournalDocument(journalId, documentFile, userId);
-            return Ok(new ApiResponse(StatusCodes.Status200OK, "Document uploaded successfully"));
+            await _journalService.AddJournalDocuments(journalId, documentFiles, userId);
+            return Ok(new ApiResponse(StatusCodes.Status200OK, "Documents uploaded successfully"));
         }
         catch (ServiceException ex)
         {

@@ -97,22 +97,24 @@ public class FundDisbursementController : ApiBaseController
     
     [HttpPost("fund-disbursements/{disbursementId}/upload-document")]
     [Authorize]
-    public async Task<IActionResult> UploadDisbursementDocument(int disbursementId, IFormFile documentFile)
+    public async Task<IActionResult> UploadDisbursementDocuments(int disbursementId, List<IFormFile> documentFiles)
     {
         try
         {
-            if (documentFile == null)
-                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "No file uploaded"));
-                
-            var allowedExtensions = new[] { ".pdf", ".doc", ".docx" };
-            var fileExtension = Path.GetExtension(documentFile.FileName).ToLowerInvariant();
-            if (!allowedExtensions.Contains(fileExtension))
-                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Only PDF, DOC, and DOCX files are allowed"));
-                
-            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-            var result = await _fundDisbursementService.UploadDisbursementDocument(disbursementId, documentFile, userId);
+            if (documentFiles == null || !documentFiles.Any())
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "No files uploaded"));
             
-            return Ok(new ApiResponse(StatusCodes.Status200OK, "Document uploaded successfully"));
+            var allowedExtensions = new[] { ".pdf", ".doc", ".docx" };
+            foreach (var file in documentFiles)
+            {
+                var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+                if (!allowedExtensions.Contains(fileExtension))
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, $"Only PDF, DOC, and DOCX files are allowed. Invalid file: {file.FileName}"));
+            }
+            
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            await _fundDisbursementService.UploadDisbursementDocuments(disbursementId, documentFiles, userId);
+            return Ok(new ApiResponse(StatusCodes.Status200OK, "Documents uploaded successfully"));
         }
         catch (ServiceException ex)
         {

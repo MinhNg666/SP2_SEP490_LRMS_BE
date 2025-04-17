@@ -287,7 +287,7 @@ public class FundDisbursementService : IFundDisbursementService
         }
     }
     
-    public async Task<bool> UploadDisbursementDocument(int fundDisbursementId, IFormFile documentFile, int userId)
+    public async Task<bool> UploadDisbursementDocuments(int fundDisbursementId, IEnumerable<IFormFile> documentFiles, int userId)
     {
         try
         {
@@ -302,43 +302,49 @@ public class FundDisbursementService : IFundDisbursementService
             if (author?.UserId != userId && supervisor?.UserId != userId)
                 throw new ServiceException("You are not authorized to upload documents for this disbursement");
                 
-            // Upload document to S3
-            var documentUrl = await _s3Service.UploadFileAsync(documentFile, $"projects/{disbursement.ProjectId}/disbursements/{fundDisbursementId}");
+            // Upload documents to S3
+            var urls = await _s3Service.UploadFilesAsync(documentFiles, $"projects/{disbursement.ProjectId}/disbursements/{fundDisbursementId}");
+            int index = 0;
             
-            // Create resource
-            var projectResource = new ProjectResource
+            foreach (var file in documentFiles)
             {
-                ResourceName = documentFile.FileName,
-                ResourceType = 1, // Document
-                ProjectId = disbursement.ProjectId,
-                Acquired = true,
-                Quantity = 1
-            };
+                // Create resource
+                var projectResource = new ProjectResource
+                {
+                    ResourceName = file.FileName,
+                    ResourceType = 1, // Document
+                    ProjectId = disbursement.ProjectId,
+                    Acquired = true,
+                    Quantity = 1
+                };
+                
+                await _context.ProjectResources.AddAsync(projectResource);
+                await _context.SaveChangesAsync();
+                
+                // Create document
+                var document = new Document
+                {
+                    FundDisbursementId = fundDisbursementId,
+                    DocumentUrl = urls[index],
+                    FileName = file.FileName,
+                    DocumentType = (int)DocumentTypeEnum.Disbursement,
+                    UploadAt = DateTime.Now,
+                    UploadedBy = userId,
+                    ProjectResourceId = projectResource.ProjectResourceId,
+                    ProjectId = disbursement.ProjectId
+                };
+                
+                await _context.Documents.AddAsync(document);
+                index++;
+            }
             
-            await _context.ProjectResources.AddAsync(projectResource);
-            await _context.SaveChangesAsync();
-            
-            // Create document
-            var document = new Document
-            {
-                FundDisbursementId = fundDisbursementId,
-                DocumentUrl = documentUrl,
-                FileName = documentFile.FileName,
-                DocumentType = (int)DocumentTypeEnum.Disbursement,
-                UploadAt = DateTime.Now,
-                UploadedBy = userId,
-                ProjectResourceId = projectResource.ProjectResourceId,
-                ProjectId = disbursement.ProjectId
-            };
-            
-            await _context.Documents.AddAsync(document);
             await _context.SaveChangesAsync();
             
             return true;
         }
         catch (Exception ex)
         {
-            throw new ServiceException($"Error uploading disbursement document: {ex.Message}");
+            throw new ServiceException($"Error uploading disbursement documents: {ex.Message}");
         }
     }
     
@@ -562,6 +568,61 @@ public class FundDisbursementService : IFundDisbursementService
         catch (Exception ex)
         {
             throw new ServiceException($"Error rejecting fund disbursement: {ex.Message}");
+        }
+    }
+    
+    public async Task<bool> UploadDisbursementDocument(int fundDisbursementId, IFormFile documentFile, int userId)
+    {
+        try
+        {
+            var disbursement = await _fundDisbursementRepository.GetByIdWithDetailsAsync(fundDisbursementId);
+            if (disbursement == null)
+                throw new ServiceException("Fund disbursement not found");
+                
+            // Check if user is authorized (author or supervisor)
+            var author = disbursement.AuthorRequestNavigation;
+            var supervisor = disbursement.SupervisorRequestNavigation;
+            
+            if (author?.UserId != userId && supervisor?.UserId != userId)
+                throw new ServiceException("You are not authorized to upload documents for this disbursement");
+                
+            // Upload document to S3
+            var documentUrl = await _s3Service.UploadFileAsync(documentFile, $"projects/{disbursement.ProjectId}/disbursements/{fundDisbursementId}");
+            
+            // Create resource
+            var projectResource = new ProjectResource
+            {
+                ResourceName = documentFile.FileName,
+                ResourceType = 1, // Document
+                ProjectId = disbursement.ProjectId,
+                Acquired = true,
+                Quantity = 1
+            };
+            
+            await _context.ProjectResources.AddAsync(projectResource);
+            await _context.SaveChangesAsync();
+            
+            // Create document
+            var document = new Document
+            {
+                FundDisbursementId = fundDisbursementId,
+                DocumentUrl = documentUrl,
+                FileName = documentFile.FileName,
+                DocumentType = (int)DocumentTypeEnum.Disbursement,
+                UploadAt = DateTime.Now,
+                UploadedBy = userId,
+                ProjectResourceId = projectResource.ProjectResourceId,
+                ProjectId = disbursement.ProjectId
+            };
+            
+            await _context.Documents.AddAsync(document);
+            await _context.SaveChangesAsync();
+            
+            return true;
+        }
+        catch (Exception ex)
+        {
+            throw new ServiceException($"Error uploading disbursement document: {ex.Message}");
         }
     }
     

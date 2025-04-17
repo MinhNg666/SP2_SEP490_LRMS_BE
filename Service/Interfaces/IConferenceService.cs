@@ -11,4 +11,5 @@ public interface IConferenceService
     Task<IEnumerable<ConferenceResponse>> GetAllConferences();
     Task<ConferenceResponse> GetConferenceById(int conferenceId);
     Task<IEnumerable<ConferenceResponse>> GetConferencesByProjectId(int projectId);
+    Task AddConferenceDocuments(int conferenceId, IEnumerable<IFormFile> documentFiles, int userId);
 } 

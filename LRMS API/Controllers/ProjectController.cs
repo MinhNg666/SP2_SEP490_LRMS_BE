@@ -123,20 +123,20 @@ public class ProjectController : ApiBaseController
         }
     }
 
-    [HttpPost("project/{projectId}/upload-documents")]
-    public async Task<IActionResult> UploadProjectDocuments(int projectId, List<IFormFile> documentFiles)
+    [HttpPost("project/{projectId}/upload-document")]
+    public async Task<IActionResult> UploadProjectDocument(int projectId, List<IFormFile> documentFiles)
     {
         try
         {
-            if (documentFiles == null || documentFiles.Count == 0)
-                return BadRequest("No files uploaded");
+            if (documentFiles == null || !documentFiles.Any())
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "No files uploaded"));
             
             var allowedExtensions = new[] { ".pdf", ".doc", ".docx" };
             foreach (var file in documentFiles)
             {
                 var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
                 if (!allowedExtensions.Contains(fileExtension))
-                    return BadRequest($"Only PDF, DOC, and DOCX files are allowed. File: {file.FileName}");
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, $"Only PDF, DOC, and DOCX files are allowed. Invalid file: {file.FileName}"));
             }
             
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
@@ -145,7 +145,7 @@ public class ProjectController : ApiBaseController
         }
         catch (ServiceException ex)
         {
-            return BadRequest(new { message = ex.Message });
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
         }
     }
 
@@ -164,13 +164,13 @@ public class ProjectController : ApiBaseController
     //}
     [HttpPost("project/{projectId}/council-approve")]
     [Authorize]
-    public async Task<IActionResult> ApproveProjectBySecretary(int projectId, IFormFile documentFile)
+    public async Task<IActionResult> ApproveProjectBySecretary(int projectId, List<IFormFile> documentFiles)
     {
         try
         {
             var secretaryId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-            var result = await _projectService.ApproveProjectBySecretary(projectId, secretaryId, documentFile);
-            return Ok(new ApiResponse(StatusCodes.Status200OK, "Phê duyệt project thành công"));
+            var result = await _projectService.ApproveProjectBySecretary(projectId, secretaryId, documentFiles);
+            return Ok(new ApiResponse(StatusCodes.Status200OK, "Project approved successfully"));
         }
         catch (ServiceException ex)
         {
@@ -180,13 +180,13 @@ public class ProjectController : ApiBaseController
 
     [HttpPost("project/{projectId}/council-reject")]
     [Authorize]
-    public async Task<IActionResult> RejectProjectBySecretary(int projectId, IFormFile documentFile)
+    public async Task<IActionResult> RejectProjectBySecretary(int projectId, List<IFormFile> documentFiles)
     {
         try
         {
             var secretaryId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-            var result = await _projectService.RejectProjectBySecretary(projectId, secretaryId, documentFile);
-            return Ok(new ApiResponse(StatusCodes.Status200OK, "Từ chối project thành công"));
+            var result = await _projectService.RejectProjectBySecretary(projectId, secretaryId, documentFiles);
+            return Ok(new ApiResponse(StatusCodes.Status200OK, "Project rejected successfully"));
         }
         catch (ServiceException ex)
         {

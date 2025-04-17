@@ -37,21 +37,24 @@ public class ConferenceController : ApiBaseController
 
     [HttpPost("conference/{conferenceId}/upload-document")]
     [Authorize]
-    public async Task<IActionResult> UploadConferenceDocument(int conferenceId, IFormFile documentFile)
+    public async Task<IActionResult> UploadConferenceDocuments(int conferenceId, List<IFormFile> documentFiles)
     {
         try
         {
-            if (documentFile == null)
-                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "No file uploaded"));
+            if (documentFiles == null || !documentFiles.Any())
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "No files uploaded"));
             
             var allowedExtensions = new[] { ".pdf", ".doc", ".docx" };
-            var fileExtension = Path.GetExtension(documentFile.FileName).ToLowerInvariant();
-            if (!allowedExtensions.Contains(fileExtension))
-                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Only PDF, DOC, and DOCX files are allowed"));
-
+            foreach (var file in documentFiles)
+            {
+                var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+                if (!allowedExtensions.Contains(fileExtension))
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, $"Only PDF, DOC, and DOCX files are allowed. Invalid file: {file.FileName}"));
+            }
+            
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-            await _conferenceService.AddConferenceDocument(conferenceId, documentFile, userId);
-            return Ok(new ApiResponse(StatusCodes.Status200OK, "Document uploaded successfully"));
+            await _conferenceService.AddConferenceDocuments(conferenceId, documentFiles, userId);
+            return Ok(new ApiResponse(StatusCodes.Status200OK, "Documents uploaded successfully"));
         }
         catch (ServiceException ex)
         {

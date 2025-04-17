@@ -326,14 +326,13 @@ public class ProjectService : IProjectService
         return true;
     }
 
-    public async Task<bool> ApproveProjectBySecretary(int projectId, int secretaryId, IFormFile documentFile)
+    public async Task<bool> ApproveProjectBySecretary(int projectId, int secretaryId, IEnumerable<IFormFile> documentFiles)
     {
         try
         {
-            if (documentFile == null)
-
+            if (documentFiles == null || !documentFiles.Any())
                 throw new ServiceException("Please upload the council meeting minutes document");
-
+            
             // Timeline validation code remains the same
             var currentDate = DateTime.Now.Date;
             var allReviewTimelines = await _context.Timelines
@@ -379,31 +378,35 @@ public class ProjectService : IProjectService
             if (approverGroup.GroupDepartment != project.DepartmentId)
                 throw new ServiceException("You don't belong to the same department as this project");
 
-            // Upload document and create records - remains the same
-            var documentUrl = await _s3Service.UploadFileAsync(documentFile, $"projects/{projectId}/council-documents");
+            // Upload documents and create records
+            var urls = await _s3Service.UploadFilesAsync(documentFiles, $"projects/{projectId}/council-documents");
+            int index = 0;
             
-            var projectResource = new ProjectResource
+            foreach (var file in documentFiles)
             {
-                ResourceName = documentFile.FileName,
-                ResourceType = 1, // Document
-                ProjectId = projectId,
-                Acquired = true,
-                Quantity = 1
-            };
-            var resourceId = await _projectRepository.AddResourceAsync(projectResource);
+                var projectResource = new ProjectResource
+                {
+                    ResourceName = file.FileName,
+                    ResourceType = 1, // Document
+                    ProjectId = projectId,
+                    Acquired = true,
+                    Quantity = 1
+                };
+                var resourceId = await _projectRepository.AddResourceAsync(projectResource);
 
-            var document = new Document
-            {
-                ProjectId = projectId,
-                DocumentUrl = documentUrl,
-                FileName = documentFile.FileName,
-                DocumentType = (int)DocumentTypeEnum.CouncilDecision,
-                UploadAt = DateTime.Now,
-                UploadedBy = secretaryId,
-                ProjectResourceId = resourceId
-            };
-            await _projectRepository.AddDocumentAsync(document);
-
+                var document = new Document
+                {
+                    ProjectId = projectId,
+                    DocumentUrl = urls[index],
+                    FileName = file.FileName,
+                    DocumentType = (int)DocumentTypeEnum.CouncilDecision,
+                    UploadAt = DateTime.Now,
+                    UploadedBy = secretaryId,
+                    ProjectResourceId = resourceId
+                };
+                await _projectRepository.AddDocumentAsync(document);
+                index++;
+            }
 
             // Update project status
             project.Status = (int)ProjectStatusEnum.Approved;
@@ -452,14 +455,13 @@ public class ProjectService : IProjectService
         }
     }
 
-    public async Task<bool> RejectProjectBySecretary(int projectId, int secretaryId, IFormFile documentFile)
+    public async Task<bool> RejectProjectBySecretary(int projectId, int secretaryId, IEnumerable<IFormFile> documentFiles)
     {
         try
         {
-            if (documentFile == null)
+            if (documentFiles == null || !documentFiles.Any())
                 throw new ServiceException("Please upload the council meeting minutes document");
-
-
+            
             // Timeline validation code remains the same
             var currentDate = DateTime.Now.Date;
             var allReviewTimelines = await _context.Timelines
@@ -505,30 +507,35 @@ public class ProjectService : IProjectService
             if (approverGroup.GroupDepartment != project.DepartmentId)
                 throw new ServiceException("You don't belong to the same department as this project");
 
-            // Upload document and create records - remains the same
-            var documentUrl = await _s3Service.UploadFileAsync(documentFile, $"projects/{projectId}/council-documents");
+            // Upload documents and create records
+            var urls = await _s3Service.UploadFilesAsync(documentFiles, $"projects/{projectId}/council-documents");
+            int index = 0;
             
-            var projectResource = new ProjectResource
+            foreach (var file in documentFiles)
             {
-                ResourceName = documentFile.FileName,
-                ResourceType = 1, // Document
-                ProjectId = projectId,
-                Acquired = true,
-                Quantity = 1
-            };
-            var resourceId = await _projectRepository.AddResourceAsync(projectResource);
+                var projectResource = new ProjectResource
+                {
+                    ResourceName = file.FileName,
+                    ResourceType = 1, // Document
+                    ProjectId = projectId,
+                    Acquired = true,
+                    Quantity = 1
+                };
+                var resourceId = await _projectRepository.AddResourceAsync(projectResource);
 
-            var document = new Document
-            {
-                ProjectId = projectId,
-                DocumentUrl = documentUrl,
-                FileName = documentFile.FileName,
-                DocumentType = (int)DocumentTypeEnum.CouncilDecision,
-                UploadAt = DateTime.Now,
-                UploadedBy = secretaryId,
-                ProjectResourceId = resourceId
-            };
-            await _projectRepository.AddDocumentAsync(document);
+                var document = new Document
+                {
+                    ProjectId = projectId,
+                    DocumentUrl = urls[index],
+                    FileName = file.FileName,
+                    DocumentType = (int)DocumentTypeEnum.CouncilDecision,
+                    UploadAt = DateTime.Now,
+                    UploadedBy = secretaryId,
+                    ProjectResourceId = resourceId
+                };
+                await _projectRepository.AddDocumentAsync(document);
+                index++;
+            }
 
             // Update project status
             project.Status = (int)ProjectStatusEnum.Rejected;
@@ -562,7 +569,7 @@ public class ProjectService : IProjectService
         }
     }
 
-    public async Task AddProjectDocument(int projectId, IFormFile documentFile, int userId)
+    public async Task AddProjectDocuments(int projectId, IEnumerable<IFormFile> documentFiles, int userId)
     {
         try
         {
@@ -570,42 +577,48 @@ public class ProjectService : IProjectService
             if (project == null)
                 throw new ServiceException("Project not found");
             
-            if (documentFile != null)
+            if (documentFiles != null && documentFiles.Any())
             {
-                var documentUrl = await _s3Service.UploadFileAsync(documentFile, $"projects/{projectId}/documents");
+                var urls = await _s3Service.UploadFilesAsync(documentFiles, $"projects/{projectId}/documents");
+                int index = 0;
                 
-                // Create ProjectResource for document
-                var projectResource = new ProjectResource
+                foreach (var file in documentFiles)
                 {
-                    ResourceName = documentFile.FileName,
-                    ResourceType = 1, // Document type
-                    ProjectId = projectId,
-                    Acquired = true,
-                    Quantity = 1
-                };
-                
-                await _context.ProjectResources.AddAsync(projectResource);
-                await _context.SaveChangesAsync();
-                
-                // Create document with the resource
-                var document = new Document
-                {
-                    ProjectId = projectId,
-                    DocumentUrl = documentUrl,
-                    FileName = documentFile.FileName,
-                    DocumentType = (int)DocumentTypeEnum.ProjectProposal,
-                    UploadAt = DateTime.Now,
-                    UploadedBy = userId,
-                    ProjectResourceId = projectResource.ProjectResourceId
-                };
+                    // Create ProjectResource for document
+                    var projectResource = new ProjectResource
+                    {
+                        ResourceName = file.FileName,
+                        ResourceType = 1, // Document type
+                        ProjectId = projectId,
+                        Acquired = true,
+                        Quantity = 1
+                    };
+                    
+                    await _context.ProjectResources.AddAsync(projectResource);
+                    await _context.SaveChangesAsync();
+                    
+                    // Create document with the resource
+                    var document = new Document
+                    {
+                        ProjectId = projectId,
+                        DocumentUrl = urls[index],
+                        FileName = file.FileName,
+                        DocumentType = (int)DocumentTypeEnum.ProjectProposal,
+                        UploadAt = DateTime.Now,
+                        UploadedBy = userId,
+                        ProjectResourceId = projectResource.ProjectResourceId
+                    };
 
-                await _context.Documents.AddAsync(document);
+                    await _context.Documents.AddAsync(document);
+                    index++;
+                }
+                
                 await _context.SaveChangesAsync();
             }
         }
         catch (Exception ex)
         {
-            throw new ServiceException($"Error adding document to project: {ex.Message}");
+            throw new ServiceException($"Error adding documents to project: {ex.Message}");
         }
     }
 
@@ -967,6 +980,53 @@ public class ProjectService : IProjectService
         {
             await transaction.RollbackAsync();
             throw new ServiceException($"Error updating project phase: {ex.Message}");
+        }
+    }
+
+    public async Task AddProjectDocument(int projectId, IFormFile documentFile, int userId)
+    {
+        try
+        {
+            var project = await _projectRepository.GetByIdAsync(projectId);
+            if (project == null)
+                throw new ServiceException("Project not found");
+            
+            if (documentFile != null)
+            {
+                var documentUrl = await _s3Service.UploadFileAsync(documentFile, $"projects/{projectId}/documents");
+                
+                // Create ProjectResource for document
+                var projectResource = new ProjectResource
+                {
+                    ResourceName = documentFile.FileName,
+                    ResourceType = 1, // Document type
+                    ProjectId = projectId,
+                    Acquired = true,
+                    Quantity = 1
+                };
+                
+                await _context.ProjectResources.AddAsync(projectResource);
+                await _context.SaveChangesAsync();
+                
+                // Create document with the resource
+                var document = new Document
+                {
+                    ProjectId = projectId,
+                    DocumentUrl = documentUrl,
+                    FileName = documentFile.FileName,
+                    DocumentType = (int)DocumentTypeEnum.ProjectProposal,
+                    UploadAt = DateTime.Now,
+                    UploadedBy = userId,
+                    ProjectResourceId = projectResource.ProjectResourceId
+                };
+
+                await _context.Documents.AddAsync(document);
+                await _context.SaveChangesAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new ServiceException($"Error adding document to project: {ex.Message}`");
         }
     }
 }

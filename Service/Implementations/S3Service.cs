@@ -4,6 +4,7 @@ using Amazon.S3.Model;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Service.Interfaces;
+using Domain.DTO.Responses;
 
 namespace Service.Implementations
 {
@@ -87,15 +88,6 @@ namespace Service.Implementations
             return uploadedUrls;
         }
 
-        public async Task<List<DocumentResponse>> SubmitDocuments(int projectId, IEnumerable<IFormFile> files, int documentType, int uploadedBy)
-        {
-            var responses = new List<DocumentResponse>();
-            foreach (var file in files)
-            {
-                var response = await SubmitDocument(projectId, file, documentType, uploadedBy, null);
-                responses.Add(response);
-            }
-            return responses;
-        }
+       
     }
 }
