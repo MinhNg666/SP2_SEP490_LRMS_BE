@@ -138,7 +138,7 @@ public class ProjectService : IProjectService
                 StartDate = request.StartDate?.Date,
                 EndDate = request.EndDate?.Date,
             ApprovedBudget = request.ApprovedBudget,
-                SpentBudget = 0, // Initialize with 0
+                SpentBudget = 0, 
             Status = (int)ProjectStatusEnum.Pending,
             CreatedAt = DateTime.Now,
             CreatedBy = createdBy,
@@ -656,6 +656,7 @@ public class ProjectService : IProjectService
                 DepartmentId = projectResponse.DepartmentId,
                 Documents = projectResponse.Documents,
                 ProjectPhases = projectResponse.ProjectPhases,
+                SpentBudget = projectResponse.SpentBudget,
                 
                 // Add enhanced creator info
                 CreatedByUser = project.CreatedByNavigation != null ? new UserShortInfo
@@ -855,6 +856,117 @@ public class ProjectService : IProjectService
         catch (Exception ex)
         {
             throw new ServiceException($"Error updating project phase statuses based on dates: {ex.Message}", ex);
+        }
+    }
+
+    public async Task<bool> UpdateProjectPhase(int projectPhaseId, int status, decimal spentBudget, DateTime? startDate, DateTime? endDate, string title, int userId)
+    {
+        using var transaction = await _context.Database.BeginTransactionAsync();
+        try
+        {
+            // Validate the status is in the enum range
+            if (!Enum.IsDefined(typeof(ProjectPhaseStatusEnum), status))
+                throw new ServiceException($"Invalid status value: {status}");
+            
+            // Get the project phase
+            var projectPhase = await _context.ProjectPhases
+                .Include(p => p.Project)
+                .FirstOrDefaultAsync(p => p.ProjectPhaseId == projectPhaseId);
+            
+            if (projectPhase == null)
+                throw new ServiceException("Project phase not found");
+            
+            // Get the project
+            var project = projectPhase.Project;
+            if (project == null)
+                throw new ServiceException("Project not found for this phase");
+            
+            // Check if user is a member of the project group
+            var userGroups = await _groupRepository.GetGroupsByUserId(userId);
+            var groupIds = userGroups.Select(g => g.GroupId);
+            
+            if (!project.GroupId.HasValue || !groupIds.Contains(project.GroupId.Value))
+                throw new ServiceException("You don't have permission to update this project phase");
+            
+            // Check if the project is approved (can't modify phases of pending or rejected projects)
+            if (project.Status != (int)ProjectStatusEnum.Approved)
+                throw new ServiceException("Cannot update phases of projects that are not approved");
+            
+            // Prevent ALL updates to completed project phases
+            if (projectPhase.Status == (int)ProjectPhaseStatusEnum.Completed)
+                throw new ServiceException("Cannot update a completed project phase");
+            
+            // Save the old spent budget for later calculation
+            decimal oldSpentBudget = projectPhase.SpentBudget;
+            
+            // Always update status and spent budget (these can be modified regardless of current status)
+            projectPhase.Status = status;
+            projectPhase.SpentBudget = spentBudget;
+            
+            // Only update title and dates if the phase is not being set to Completed
+            if (status != (int)ProjectPhaseStatusEnum.Completed)
+            {
+                // Update title if provided and not empty
+                if (!string.IsNullOrWhiteSpace(title))
+                {
+                    projectPhase.Title = title;
+                    // Update description to match title if that's your business logic
+                    projectPhase.Description = title;
+                }
+                
+                // Only update dates if project phase is in Pending status
+                if (projectPhase.Status == (int)ProjectPhaseStatusEnum.Pending)
+                {
+                    if (startDate.HasValue && endDate.HasValue)
+                    {
+                        // Validate dates
+                        if (startDate.Value > endDate.Value)
+                            throw new ServiceException("Start date cannot be after end date");
+                        
+                        // Validate dates against project dates
+                        if (project.StartDate.HasValue && project.EndDate.HasValue &&
+                            (startDate.Value < project.StartDate.Value || endDate.Value > project.EndDate.Value))
+                            throw new ServiceException($"Project phase dates must be within project dates ({project.StartDate.Value:yyyy-MM-dd} to {project.EndDate.Value:yyyy-MM-dd})");
+                        
+                        projectPhase.StartDate = startDate.Value;
+                        projectPhase.EndDate = endDate.Value;
+                    }
+                    else if (startDate.HasValue || endDate.HasValue)
+                    {
+                        throw new ServiceException("Both start date and end date must be provided to update dates");
+                    }
+                }
+                else if ((startDate.HasValue || endDate.HasValue) && projectPhase.Status != (int)ProjectPhaseStatusEnum.Pending)
+                {
+                    throw new ServiceException("Dates can only be updated for pending project phases");
+                }
+            }
+            
+            // Save the project phase first
+            _context.ProjectPhases.Update(projectPhase);
+            await _context.SaveChangesAsync();
+            
+            // Now recalculate the project's total spent budget directly
+            var projectId = project.ProjectId;
+            var totalSpent = await _context.ProjectPhases
+                .Where(p => p.ProjectId == projectId)
+                .SumAsync(p => p.SpentBudget);
+            
+            // Update the project's spent budget
+            project.SpentBudget = totalSpent;
+            project.UpdatedAt = DateTime.Now;
+            
+            _context.Projects.Update(project);
+            await _context.SaveChangesAsync();
+            
+            await transaction.CommitAsync();
+            
+            return true;
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            throw new ServiceException($"Error updating project phase: {ex.Message}");
         }
     }
 }

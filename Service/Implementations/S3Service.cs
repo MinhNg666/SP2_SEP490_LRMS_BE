@@ -75,5 +75,27 @@ namespace Service.Implementations
                 throw new Exception($"Error deleting file from S3: {ex.Message}");
             }
         }
+
+        public async Task<List<string>> UploadFilesAsync(IEnumerable<IFormFile> files, string folderName)
+        {
+            var uploadedUrls = new List<string>();
+            foreach (var file in files)
+            {
+                var fileUrl = await UploadFileAsync(file, folderName);
+                uploadedUrls.Add(fileUrl);
+            }
+            return uploadedUrls;
+        }
+
+        public async Task<List<DocumentResponse>> SubmitDocuments(int projectId, IEnumerable<IFormFile> files, int documentType, int uploadedBy)
+        {
+            var responses = new List<DocumentResponse>();
+            foreach (var file in files)
+            {
+                var response = await SubmitDocument(projectId, file, documentType, uploadedBy, null);
+                responses.Add(response);
+            }
+            return responses;
+        }
     }
 }

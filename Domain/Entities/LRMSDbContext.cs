@@ -413,6 +413,10 @@ public partial class LRMSDbContext : DbContext
             entity.Property(e => e.Title)
                 .HasMaxLength(255)
                 .HasColumnName("title");
+            entity.Property(e => e.SpentBudget)
+                .HasColumnType("decimal(18, 2)")
+                .HasColumnName("spent_budget")
+                .HasDefaultValue(0);
 
             entity.HasOne(d => d.AssignByNavigation).WithMany(p => p.ProjectPhaseAssignByNavigations)
                 .HasForeignKey(d => d.AssignBy)

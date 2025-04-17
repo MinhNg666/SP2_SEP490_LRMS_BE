@@ -11,4 +11,5 @@ public interface IProjectPhaseRepository : IGenericRepository<ProjectPhase>
     Task<int> AddProjectPhaseAsync(ProjectPhase projectPhase);
     Task<bool> UpdateProjectPhaseStatusAsync(int projectPhaseId, int status);
     Task UpdateProjectPhaseStatusesBasedOnDates();
+    Task<bool> UpdateProjectPhaseAsync(int projectPhaseId, int status, decimal spentBudget);
 }

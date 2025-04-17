@@ -13,7 +13,8 @@ namespace Domain.DTO.Responses
         public string ProjectName { get; set; }
         public int? ProjectType { get; set; }
         public string Description { get; set; }
-        public double ApprovedBudget { get; set; }
+        public decimal ApprovedBudget { get; set; }
+        public decimal SpentBudget { get; set; }
         public int? Status { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }

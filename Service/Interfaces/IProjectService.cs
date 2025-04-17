@@ -20,4 +20,5 @@ public interface IProjectService
     Task<IEnumerable<ProjectListResponse>> GetUserApprovedProjectsList(int userId);
     Task<bool> UpdateProjectPhaseStatus(int projectPhaseId, int status, int userId);
     Task UpdateProjectPhaseStatusesBasedOnDates();
+    Task<bool> UpdateProjectPhase(int projectPhaseId, int status, decimal spentBudget, DateTime? startDate, DateTime? endDate, string title, int userId);
 }

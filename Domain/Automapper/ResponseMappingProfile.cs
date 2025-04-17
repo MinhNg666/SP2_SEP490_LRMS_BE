@@ -44,12 +44,13 @@ public class ResponseMappingProfile : Profile
             .ForMember(dest => dest.DepartmentId, opt => opt.MapFrom(src => src.Department.DepartmentId))
             .ForMember(dest => dest.Documents, opt => opt.MapFrom(src => src.Documents))
             .ForMember(dest => dest.ProjectPhases, opt => opt.MapFrom(src => src.ProjectPhases))
-            .ForMember(dest => dest.Methodology, opt => opt.MapFrom(src => src.Methodlogy));
+            .ForMember(dest => dest.Methodology, opt => opt.MapFrom(src => src.Methodlogy))
+            .ForMember(dest => dest.SpentBudget, opt => opt.MapFrom(src => src.SpentBudget));
             
         CreateMap<Document, DocumentResponse>();
 
-        CreateMap<ProjectPhase, ProjectPhaseResponse>();
-
+        CreateMap<ProjectPhase, ProjectPhaseResponse>()
+            .ForMember(dest => dest.SpentBudget, opt => opt.MapFrom(src => src.SpentBudget));
 
         CreateMap<Journal, JournalResponse>()
             .ForMember(dest => dest.ProjectName, opt => 
@@ -76,5 +77,13 @@ public class ResponseMappingProfile : Profile
                 src.Project != null ? src.Project.ProjectName : null))
             .ForMember(dest => dest.AllocatorName, opt => opt.MapFrom(src => 
                 src.AllocatedByNavigation != null ? src.AllocatedByNavigation.FullName : null));
+
+        CreateMap<FundDisbursement, FundDisbursementResponse>()
+            .ForMember(dest => dest.StatusName, opt => opt.MapFrom(src => 
+                Enum.GetName(typeof(FundDisbursementStatusEnum), src.Status ?? 0)))
+            .ForMember(dest => dest.ProjectName, opt => opt.MapFrom(src => src.Project.ProjectName))
+            .ForMember(dest => dest.ProjectPhaseTitle, opt => opt.MapFrom(src => src.ProjectPhase.Title))
+            .ForMember(dest => dest.AuthorName, opt => opt.MapFrom(src => src.AuthorRequestNavigation.User.FullName))
+            .ForMember(dest => dest.SupervisorName, opt => opt.MapFrom(src => src.SupervisorRequestNavigation.User.FullName));
     } 
 }

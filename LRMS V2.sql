@@ -1209,6 +1209,10 @@ ADD CONSTRAINT [FK_FundDisbursement_ProjectPhase]
 FOREIGN KEY ([project_phase_id]) 
 REFERENCES [dbo].[ProjectPhase] ([project_phase_id]);
 
+-- Add SpentBudget column to ProjectPhase table
+ALTER TABLE ProjectPhase
+ADD spent_budget DECIMAL(18, 2) NOT NULL DEFAULT 0;
+
 
 
 

@@ -7,16 +7,22 @@ using Service.Interfaces;
 using Domain.DTO.Common;
 using Microsoft.AspNetCore.Authorization;
 using Domain.Constants;
+using Microsoft.EntityFrameworkCore;
+using System.Data;
+using Microsoft.Data.SqlClient;
+using LRMS_API;
 
 namespace LRMS_API.Controllers;
 [ApiController]
 public class ProjectController : ApiBaseController
 {
     private readonly IProjectService _projectService;
+    private readonly LRMSDbContext _context;
 
-    public ProjectController(IProjectService projectService)
+    public ProjectController(IProjectService projectService, LRMSDbContext context)
     {
         _projectService = projectService;
+        _context = context;
     }
     [HttpGet("project/list-all-project")]
     [Authorize(Roles = "Admin,Lecturer,Office")]
@@ -117,22 +123,25 @@ public class ProjectController : ApiBaseController
         }
     }
 
-    [HttpPost("project/{projectId}/upload-document")]
-    public async Task<IActionResult> UploadProjectDocument(int projectId, IFormFile documentFile)
+    [HttpPost("project/{projectId}/upload-documents")]
+    public async Task<IActionResult> UploadProjectDocuments(int projectId, List<IFormFile> documentFiles)
     {
         try
         {
-            if (documentFile == null)
-                return BadRequest("No file uploaded");
+            if (documentFiles == null || documentFiles.Count == 0)
+                return BadRequest("No files uploaded");
             
             var allowedExtensions = new[] { ".pdf", ".doc", ".docx" };
-            var fileExtension = Path.GetExtension(documentFile.FileName).ToLowerInvariant();
-            if (!allowedExtensions.Contains(fileExtension))
-                return BadRequest("Only PDF, DOC, and DOCX files are allowed");
+            foreach (var file in documentFiles)
+            {
+                var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+                if (!allowedExtensions.Contains(fileExtension))
+                    return BadRequest($"Only PDF, DOC, and DOCX files are allowed. File: {file.FileName}");
+            }
             
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-            await _projectService.AddProjectDocument(projectId, documentFile, userId);
-            return Ok(new ApiResponse(StatusCodes.Status200OK, "Document uploaded successfully"));
+            await _projectService.AddProjectDocuments(projectId, documentFiles, userId);
+            return Ok(new ApiResponse(StatusCodes.Status200OK, "Documents uploaded successfully"));
         }
         catch (ServiceException ex)
         {
@@ -261,9 +270,9 @@ public class ProjectController : ApiBaseController
         }
     }
 
-    [HttpPut("project-phases/{projectPhaseId}/status")]
+    [HttpPut("project-phases/{projectPhaseId}")]
     [Authorize]
-    public async Task<IActionResult> UpdateProjectPhaseStatus(int projectPhaseId, [FromBody] UpdateProjectPhaseStatusRequest request)
+    public async Task<IActionResult> UpdateProjectPhase(int projectPhaseId, [FromBody] UpdateProjectPhaseRequest request)
     {
         try
         {
@@ -271,9 +280,16 @@ public class ProjectController : ApiBaseController
                 return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Project phase IDs do not match"));
             
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-            var result = await _projectService.UpdateProjectPhaseStatus(projectPhaseId, request.Status, userId);
+            var result = await _projectService.UpdateProjectPhase(
+                projectPhaseId, 
+                request.Status, 
+                request.SpentBudget,
+                request.StartDate,
+                request.EndDate,
+                request.Title,
+                userId);
             
-            return Ok(new ApiResponse(StatusCodes.Status200OK, "Project phase status updated successfully"));
+            return Ok(new ApiResponse(StatusCodes.Status200OK, "Project phase updated successfully"));
         }
         catch (ServiceException ex)
         {
@@ -281,7 +297,7 @@ public class ProjectController : ApiBaseController
         }
     }
 
-    [HttpPost("admin/update-project-phase-statuses")]
+    [HttpPost("project-phases/update-statuses")]
     [Authorize]
     public async Task<IActionResult> UpdateProjectPhaseStatuses()
     {
@@ -295,4 +311,8 @@ public class ProjectController : ApiBaseController
             return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
         }
     }
+
+    
+
+    
 }

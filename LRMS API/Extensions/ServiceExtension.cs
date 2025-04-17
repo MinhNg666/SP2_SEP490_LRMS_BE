@@ -57,6 +57,8 @@ public static class ServiceExtension
         services.AddScoped<IJournalRepository, JournalRepository>();
         services.AddScoped<IConferenceRepository, ConferenceRepository>();
         services.AddScoped<IQuotaService, QuotaService>();
+        services.AddScoped<IFundDisbursementRepository, FundDisbursementRepository>();
+        services.AddScoped<IFundDisbursementService, FundDisbursementService>();
 
         return services;
     }

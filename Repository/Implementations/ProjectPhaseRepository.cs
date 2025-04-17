@@ -119,4 +119,25 @@ public class ProjectPhaseRepository : GenericRepository<ProjectPhase>, IProjectP
             Console.WriteLine(ex.StackTrace);
         }
     }
+
+    public async Task<bool> UpdateProjectPhaseAsync(int projectPhaseId, int status, decimal spentBudget)
+    {
+        try
+        {
+            var projectPhase = await _context.ProjectPhases.FindAsync(projectPhaseId);
+            if (projectPhase == null)
+                return false;
+            
+            projectPhase.Status = status;
+            projectPhase.SpentBudget = spentBudget;
+            _context.ProjectPhases.Update(projectPhase);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error updating project phase: {ex.Message}");
+            return false;
+        }
+    }
 }
