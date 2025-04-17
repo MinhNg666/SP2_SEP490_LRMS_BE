@@ -24,19 +24,20 @@ public class ConferenceRepository : GenericRepository<Conference>, IConferenceRe
     {
         return await _context.Conferences
             .Include(c => c.Project)
+                .ThenInclude(p => p.Department)
             .Include(c => c.ConferenceExpenses)
                 .ThenInclude(e => e.Documents)
             .AsNoTracking()
             .ToListAsync();
     }
 
-    public async Task<Conference> GetConferenceWithDetailsAsync(int conferenceId)
+    public async Task<Conference?> GetConferenceWithDetailsAsync(int conferenceId)
     {
         return await _context.Conferences
             .Include(c => c.Project)
+                .ThenInclude(p => p.Department)
             .Include(c => c.ConferenceExpenses)
                 .ThenInclude(e => e.Documents)
-            .AsNoTracking()
             .FirstOrDefaultAsync(c => c.ConferenceId == conferenceId);
     }
 } 

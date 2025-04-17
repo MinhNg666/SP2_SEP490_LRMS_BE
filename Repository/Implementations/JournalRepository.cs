@@ -18,6 +18,8 @@ public class JournalRepository : GenericRepository<Journal>, IJournalRepository
     {
         var journals = await _context.Journals
             .Include(j => j.Project)
+                .ThenInclude(p => p.Department)
+            .Include(j => j.Project)
                 .ThenInclude(p => p.Documents.Where(d => d.DocumentType == (int)DocumentTypeEnum.JournalPaper))
             .AsNoTracking()
             .ToListAsync();
@@ -28,6 +30,8 @@ public class JournalRepository : GenericRepository<Journal>, IJournalRepository
     public async Task<Journal> GetJournalWithDetailsAsync(int journalId)
     {
         var journal = await _context.Journals
+            .Include(j => j.Project)
+                .ThenInclude(p => p.Department)
             .Include(j => j.Project)
                 .ThenInclude(p => p.Documents.Where(d => d.DocumentType == (int)DocumentTypeEnum.JournalPaper))
             .AsNoTracking()

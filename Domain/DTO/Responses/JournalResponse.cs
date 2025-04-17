@@ -15,5 +15,6 @@ public class JournalResponse
     public string? ReviewerComments { get; set; }
     public int? ProjectId { get; set; }
     public string? ProjectName { get; set; }
+    public string? DepartmentName { get; set; }
     public DocumentResponse? Document { get; set; }
 } 

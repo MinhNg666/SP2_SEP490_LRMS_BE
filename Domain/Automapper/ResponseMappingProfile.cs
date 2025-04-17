@@ -54,6 +54,9 @@ public class ResponseMappingProfile : Profile
         CreateMap<Journal, JournalResponse>()
             .ForMember(dest => dest.ProjectName, opt => 
                 opt.MapFrom(src => src.Project == null ? string.Empty : src.Project.ProjectName))
+            .ForMember(dest => dest.DepartmentName, opt => 
+                opt.MapFrom(src => src.Project == null || src.Project.Department == null ? 
+                    string.Empty : src.Project.Department.DepartmentName))
             .ForMember(dest => dest.Document, opt => 
                 opt.MapFrom(src => (src.Project == null || src.Project.Documents == null) ? null : 
                     src.Project.Documents.FirstOrDefault(d => d.DocumentType == (int)DocumentTypeEnum.JournalPaper)));
@@ -61,6 +64,9 @@ public class ResponseMappingProfile : Profile
         CreateMap<Conference, ConferenceResponse>()
             .ForMember(dest => dest.ProjectName, opt => 
                 opt.MapFrom(src => src.Project == null ? string.Empty : src.Project.ProjectName))
+            .ForMember(dest => dest.DepartmentName, opt => 
+                opt.MapFrom(src => src.Project == null || src.Project.Department == null ? 
+                    string.Empty : src.Project.Department.DepartmentName))
             .ForMember(dest => dest.Expense, opt => 
                 opt.MapFrom(src => src.ConferenceExpenses == null ? null : src.ConferenceExpenses.FirstOrDefault()))
             .ForMember(dest => dest.Documents, opt => 

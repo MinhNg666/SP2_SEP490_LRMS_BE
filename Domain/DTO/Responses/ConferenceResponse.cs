@@ -14,6 +14,7 @@ public class ConferenceResponse
     public int PresentationType { get; set; }
     public int ProjectId { get; set; }
     public string ProjectName { get; set; }
+    public string DepartmentName { get; set; }
     public ConferenceExpenseResponse Expense { get; set; }
     public List<DocumentResponse> Documents { get; set; }
 }
