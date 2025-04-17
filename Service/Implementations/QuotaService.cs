@@ -29,10 +29,47 @@ namespace Service.Implementations
             {
                 var quotas = await _context.Quotas
                     .Include(q => q.Project)
+                        .ThenInclude(p => p.Department)
+                    .Include(q => q.Project)
+                        .ThenInclude(p => p.Group)
                     .Include(q => q.AllocatedByNavigation)
                     .ToListAsync();
 
-                return _mapper.Map<IEnumerable<QuotaResponse>>(quotas);
+                var responses = new List<QuotaResponse>();
+                
+                foreach (var quota in quotas)
+                {
+                    var response = new QuotaResponse
+                    {
+                        QuotaId = quota.QuotaId,
+                        AllocatedBudget = quota.AllocatedBudget,
+                        Status = quota.Status,
+                        CreatedAt = quota.CreatedAt,
+                        UpdateAt = quota.UpdateAt,
+                        ProjectId = quota.ProjectId,
+                        ProjectName = quota.Project?.ProjectName,
+                        
+                        // Additional project information
+                        ProjectApprovedBudget = quota.Project?.ApprovedBudget,
+                        ProjectSpentBudget = quota.Project?.SpentBudget ?? 0,
+                        
+                        // Department information
+                        DepartmentId = quota.Project?.DepartmentId,
+                        DepartmentName = quota.Project?.Department?.DepartmentName,
+                        
+                        // Group information
+                        GroupId = quota.Project?.GroupId,
+                        GroupName = quota.Project?.Group?.GroupName,
+                        
+                        // Allocator information
+                        AllocatedBy = quota.AllocatedBy,
+                        AllocatorName = quota.AllocatedByNavigation?.FullName
+                    };
+                    
+                    responses.Add(response);
+                }
+
+                return responses;
             }
             catch (Exception ex)
             {
@@ -69,11 +106,48 @@ namespace Service.Implementations
                 // Get quotas for these projects
                 var quotas = await _context.Quotas
                     .Include(q => q.Project)
+                        .ThenInclude(p => p.Department)
+                    .Include(q => q.Project)
+                        .ThenInclude(p => p.Group)
                     .Include(q => q.AllocatedByNavigation)
                     .Where(q => q.ProjectId.HasValue && projectIds.Contains(q.ProjectId.Value))
                     .ToListAsync();
 
-                return _mapper.Map<IEnumerable<QuotaResponse>>(quotas);
+                var responses = new List<QuotaResponse>();
+                
+                foreach (var quota in quotas)
+                {
+                    var response = new QuotaResponse
+                    {
+                        QuotaId = quota.QuotaId,
+                        AllocatedBudget = quota.AllocatedBudget,
+                        Status = quota.Status,
+                        CreatedAt = quota.CreatedAt,
+                        UpdateAt = quota.UpdateAt,
+                        ProjectId = quota.ProjectId,
+                        ProjectName = quota.Project?.ProjectName,
+                        
+                        // Additional project information
+                        ProjectApprovedBudget = quota.Project?.ApprovedBudget,
+                        ProjectSpentBudget = quota.Project?.SpentBudget ?? 0,
+                        
+                        // Department information
+                        DepartmentId = quota.Project?.DepartmentId,
+                        DepartmentName = quota.Project?.Department?.DepartmentName,
+                        
+                        // Group information
+                        GroupId = quota.Project?.GroupId,
+                        GroupName = quota.Project?.Group?.GroupName,
+                        
+                        // Allocator information
+                        AllocatedBy = quota.AllocatedBy,
+                        AllocatorName = quota.AllocatedByNavigation?.FullName
+                    };
+                    
+                    responses.Add(response);
+                }
+
+                return responses;
             }
             catch (Exception ex)
             {
