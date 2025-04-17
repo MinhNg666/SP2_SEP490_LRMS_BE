@@ -171,15 +171,33 @@ public class ProjectService : IProjectService
                             throw new ServiceException($"Project phase dates ({phaseStartDate:yyyy-MM-dd} to {phaseEndDate:yyyy-MM-dd}) must be within project start and end dates ({project.StartDate?.Date:yyyy-MM-dd} to {project.EndDate?.Date:yyyy-MM-dd}).");
                         }
                         
-                        // Create a new project phase
+                        // Determine the initial status based on dates
+                        int initialStatus;
+                        if (phaseStartDate > currentDate)
+                        {
+                            // If start date is in the future, set as Pending
+                            initialStatus = (int)ProjectPhaseStatusEnum.Pending;
+                        }
+                        else if (phaseStartDate <= currentDate && phaseEndDate >= currentDate)
+                        {
+                            // If current date is between start and end dates, set as In_progress
+                            initialStatus = (int)ProjectPhaseStatusEnum.In_progress;
+                        }
+                        else
+                        {
+                            // If end date is in the past, set as Overdued
+                            initialStatus = (int)ProjectPhaseStatusEnum.Overdued;
+                        }
+                        
+                        // Create a new project phase with the appropriate initial status
                         var projectPhase = new ProjectPhase
                         {
                             Title = phaseRequest.Title,
                             Description = phaseRequest.Title, // Using title as description
                             StartDate = phaseStartDate,
                             EndDate = phaseEndDate,
-                            Status = (int)ProjectPhaseStatusEnum.In_progress,
-                    ProjectId = project.ProjectId,
+                            Status = initialStatus, // Set the calculated status instead of hardcoded value
+                            ProjectId = project.ProjectId,
                             AssignBy = createdBy,
                             // These are optional fields based on your schema
                             AssignTo = null
