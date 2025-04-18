@@ -1214,6 +1214,74 @@ ALTER TABLE ProjectPhase
 ADD spent_budget DECIMAL(18, 2) NOT NULL DEFAULT 0;
 
 
+-- Step 1: Add the new column
+ALTER TABLE [dbo].[Fund_Disbursement]
+ADD [user_request] INT NULL;
+
+-- Step 2: Drop the CHECK constraint
+ALTER TABLE [dbo].[Fund_Disbursement]
+DROP CONSTRAINT [CHK_Fund_Disbursement_Requests];
+
+-- Step 3: Add a new constraint to ensure user_request is not null
+ALTER TABLE [dbo].[Fund_Disbursement]
+ADD CONSTRAINT [CHK_Fund_Disbursement_User_Request]
+CHECK ([user_request] IS NOT NULL);
+
+-- Step 4: Add a foreign key constraint if needed
+ALTER TABLE [dbo].[Fund_Disbursement]
+ADD CONSTRAINT [FK_Fund_Disbursement_User]
+FOREIGN KEY ([user_request]) REFERENCES [Users]([user_id]);
+
+-- Step 5: Drop the old columns after migrating data if needed
+ALTER TABLE [dbo].[Fund_Disbursement]
+DROP COLUMN [supervisor_request], [author_request];
+
+
+-- Step 1: Add the new column
+ALTER TABLE [dbo].[Fund_Disbursement]
+ADD [user_request] INT NULL;
+
+-- Step 2: Update existing rows to populate user_request with data from author_request or supervisor_request
+UPDATE [dbo].[Fund_Disbursement]
+SET [user_request] = COALESCE(
+    (SELECT [user_id] FROM [dbo].[Authors] WHERE [author_id] = [author_request]),
+    (SELECT [user_id] FROM [dbo].[Group_Member] WHERE [group_member_id] = [supervisor_request])
+);
+
+-- Step 3: Add a new constraint to ensure user_request is not null
+ALTER TABLE [dbo].[Fund_Disbursement]
+ADD CONSTRAINT [CHK_Fund_Disbursement_User_Request]
+CHECK ([user_request] IS NOT NULL);
+
+-- Step 4: Add a foreign key constraint if needed
+ALTER TABLE [dbo].[Fund_Disbursement]
+ADD CONSTRAINT [FK_Fund_Disbursement_User]
+FOREIGN KEY ([user_request]) REFERENCES [Users]([user_id]);
+
+-- Step 5: Drop the old columns
+-- Drop the foreign key constraint on supervisor_request
+ALTER TABLE [dbo].[Fund_Disbursement]
+DROP CONSTRAINT [FK_FundDisbursement_GroupMember];
+
+-- Drop the foreign key constraint on author_request (if it exists)
+-- The name might be different, you can check with:
+-- SELECT name FROM sys.foreign_keys WHERE parent_object_id = OBJECT_ID('Fund_Disbursement')
+ALTER TABLE [dbo].[Fund_Disbursement] 
+DROP CONSTRAINT [FK_FundDisbursement_Author];
+
+-- Drop the check constraint
+ALTER TABLE [dbo].[Fund_Disbursement]
+DROP CONSTRAINT [CHK_Fund_Disbursement_Requests];
+
+ALTER TABLE [dbo].[Fund_Disbursement]
+DROP COLUMN [supervisor_request], [author_request];
+
+USE LRMSDB
+-- Run this in SQL Server Management Studio
+ALTER TABLE [Fund_Disbursement] DROP COLUMN IF EXISTS [AuthorId];
+ALTER TABLE [Fund_Disbursement] DROP COLUMN IF EXISTS [GroupMemberId];
+
+
 
 
 

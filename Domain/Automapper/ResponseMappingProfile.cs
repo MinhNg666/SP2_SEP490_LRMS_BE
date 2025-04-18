@@ -81,9 +81,14 @@ public class ResponseMappingProfile : Profile
         CreateMap<FundDisbursement, FundDisbursementResponse>()
             .ForMember(dest => dest.StatusName, opt => opt.MapFrom(src => 
                 Enum.GetName(typeof(FundDisbursementStatusEnum), src.Status ?? 0)))
-            .ForMember(dest => dest.ProjectName, opt => opt.MapFrom(src => src.Project.ProjectName))
-            .ForMember(dest => dest.ProjectPhaseTitle, opt => opt.MapFrom(src => src.ProjectPhase.Title))
-            .ForMember(dest => dest.AuthorName, opt => opt.MapFrom(src => src.AuthorRequestNavigation.User.FullName))
-            .ForMember(dest => dest.SupervisorName, opt => opt.MapFrom(src => src.SupervisorRequestNavigation.User.FullName));
+            .ForMember(dest => dest.ProjectName, opt => opt.MapFrom(src => 
+                src.Project != null ? src.Project.ProjectName : null))
+            .ForMember(dest => dest.ProjectPhaseTitle, opt => opt.MapFrom(src => 
+                src.ProjectPhase != null ? src.ProjectPhase.Title : null))
+            .ForMember(dest => dest.RequesterId, opt => opt.MapFrom(src => src.UserRequest))
+            .ForMember(dest => dest.RequesterName, opt => opt.MapFrom(src => 
+                src.UserRequestNavigation != null ? src.UserRequestNavigation.FullName : null))
+            .ForMember(dest => dest.SupervisorId, opt => opt.MapFrom(src => 0))
+            .ForMember(dest => dest.SupervisorName, opt => opt.MapFrom(src => ""));
     } 
 }

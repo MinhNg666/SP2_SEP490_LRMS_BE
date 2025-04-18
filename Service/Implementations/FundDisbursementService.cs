@@ -49,102 +49,74 @@ public class FundDisbursementService : IFundDisbursementService
             if (project.Status != (int)ProjectStatusEnum.Approved)
                 throw new ServiceException("Cannot request funds for projects that are not approved");
                 
-            bool isAuthorized = false;
-            int authorId = 0;
-            int supervisorId = 0;
+            // Get the user making the request
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.UserId == userId);
             
-            // Different authorization logic based on project type
+            if (user == null)
+                throw new ServiceException("User not found");
+            
+            // Check if user is a lecturer 
+            bool isLecturer = false;
+            if (user != null)
+            {
+                isLecturer = user.Role == (int)SystemRoleEnum.Lecturer;
+            }
+            
+            // Check project permissions based on project type
             if (project.ProjectType == (int)ProjectTypeEnum.Research)
             {
-                // For Research projects - check if user is a group member with appropriate role
+                // For Research projects - check if user is a group member
                 if (project.GroupId == null)
                     throw new ServiceException("Research project must have an associated group");
                     
-                var groupMember = await _context.GroupMembers
+                var userGroupMember = await _context.GroupMembers
                     .FirstOrDefaultAsync(gm => gm.GroupId == project.GroupId && 
                                          gm.UserId == userId &&
                                          gm.Status == (int)GroupMemberStatus.Active);
                     
-                if (groupMember != null)
-                {
-                    isAuthorized = true;
-                    
-                    // Find an existing author for the project (any author) to use for AuthorRequest
-                    var projectAuthor = await _context.Authors
-                        .FirstOrDefaultAsync(a => a.ProjectId == request.ProjectId);
-                        
-                    if (projectAuthor == null)
-                    {
-                        // Create a placeholder author if none exists
-                        projectAuthor = new Author
-                        {
-                            ProjectId = request.ProjectId,
-                            UserId = userId,
-                            Role = 0 // Main author or appropriate role
-                        };
-                        
-                        _context.Authors.Add(projectAuthor);
-                        await _context.SaveChangesAsync();
-                    }
-                    
-                    authorId = projectAuthor.AuthorId;
-                    
-                    // Find a supervisor for the project
-                    var supervisor = await _context.GroupMembers
-                        .FirstOrDefaultAsync(gm => gm.GroupId == project.GroupId && 
-                                            (gm.Role == (int)GroupMemberRoleEnum.Leader || 
-                                             gm.Role == (int)GroupMemberRoleEnum.Supervisor) &&
-                                             gm.Status == (int)GroupMemberStatus.Active);
-                                             
-                    if (supervisor == null)
-                        throw new ServiceException("Research project must have a supervisor or leader");
-                        
-                    supervisorId = supervisor.GroupMemberId;
-                }
+                if (userGroupMember == null)
+                    throw new ServiceException("You are not a member of this project's research group");
+                
+                // Find the supervisor for the project (just for permission check)
+                var supervisor = await _context.GroupMembers
+                    .FirstOrDefaultAsync(gm => gm.GroupId == project.GroupId && 
+                                         (gm.Role == (int)GroupMemberRoleEnum.Supervisor) &&
+                                         gm.Status == (int)GroupMemberStatus.Active);
+                                        
+                if (supervisor == null)
+                    throw new ServiceException("Research project must have a supervisor");
+                
+                // Only allow lecturers or the supervisor to create disbursement requests
+                if (!isLecturer && userGroupMember.GroupMemberId != supervisor.GroupMemberId)
+                    throw new ServiceException("Only supervisors or lecturers can create fund disbursement requests");
             }
             else if (project.ProjectType == (int)ProjectTypeEnum.Conference || 
                      project.ProjectType == (int)ProjectTypeEnum.Journal)
             {
-                // For Paper/Conference projects - check if user is an author
+                // For Conference/Journal papers - check if user is an author
                 var author = await _context.Authors
                     .FirstOrDefaultAsync(a => a.ProjectId == request.ProjectId && a.UserId == userId);
                     
-                if (author != null)
-                {
-                    isAuthorized = true;
-                    authorId = author.AuthorId;
+                if (author == null)
+                    throw new ServiceException("You are not an author of this publication");
+                
+                // Get the user's group membership 
+                var userGroupMember = await _context.GroupMembers
+                    .FirstOrDefaultAsync(gm => gm.UserId == userId);
                     
-                    // For conference/journal papers, find a supervisor or use another author as supervisor
-                    // This is a placeholder - adjust according to your business rules
-                    var otherAuthor = await _context.Authors
-                        .FirstOrDefaultAsync(a => a.ProjectId == request.ProjectId && a.AuthorId != authorId);
-                        
-                    if (otherAuthor != null && otherAuthor.UserId.HasValue)
-                    {
-                        // Find this user's group membership to use as supervisor
-                        var authorAsSupervisor = await _context.GroupMembers
-                            .FirstOrDefaultAsync(gm => gm.UserId == otherAuthor.UserId);
-                            
-                        if (authorAsSupervisor != null)
-                        {
-                            supervisorId = authorAsSupervisor.GroupMemberId;
-                        }
-                        else
-                        {
-                            // If no group membership found, create one for this purpose
-                            throw new ServiceException("No suitable supervisor found for fund request");
-                        }
-                    }
-                    else
-                    {
-                        throw new ServiceException("Papers must have at least two authors for fund requests");
-                    }
-                }
+                if (userGroupMember == null)
+                    throw new ServiceException("You must be a member of a research group to request funds");
+                
+                // Only allow lecturers to create disbursement requests for publications
+                if (!isLecturer)
+                    throw new ServiceException("Only lecturers can create fund disbursement requests for publications");
+            }
+            else
+            {
+                throw new ServiceException("Unsupported project type for fund disbursement");
             }
             
-            if (!isAuthorized)
-                throw new ServiceException("You are not authorized to request funds for this project");
-                
             // Continue with the rest of the validation...
             // Check active quotas for this project
             var availableQuota = await _context.Quotas
@@ -193,7 +165,7 @@ public class FundDisbursementService : IFundDisbursementService
             if (activeFundRequestTimeline == null)
                 throw new ServiceException("Fund requests are not currently open. Please check the funding schedule.");
                 
-            // Create the fund disbursement request
+            // Create the fund disbursement request with the new UserRequest field
             var fundDisbursement = new FundDisbursement
             {
                 FundRequest = request.FundRequest,
@@ -203,26 +175,10 @@ public class FundDisbursementService : IFundDisbursementService
                 QuotaId = availableQuota.QuotaId,
                 Status = (int)FundDisbursementStatusEnum.Pending,
                 CreatedAt = DateTime.Now,
-                AuthorRequest = authorId,
-                SupervisorRequest = supervisorId
+                UserRequest = userId  // Use the user ID directly
             };
             
             await _fundDisbursementRepository.AddAsync(fundDisbursement);
-            
-            // Update the project's spent budget
-            project.SpentBudget += fundDisbursement.FundRequest ?? 0;
-            project.UpdatedAt = DateTime.Now;
-
-            // Update the project phase's spent budget
-            if (fundDisbursement.ProjectPhaseId.HasValue)
-            {
-                var projectPhase = await _context.ProjectPhases.FindAsync(fundDisbursement.ProjectPhaseId.Value);
-                if (projectPhase != null)
-                {
-                    projectPhase.SpentBudget += fundDisbursement.FundRequest ?? 0;
-                    _context.ProjectPhases.Update(projectPhase);
-                }
-            }
             
             return fundDisbursement.FundDisbursementId;
         }
@@ -237,11 +193,13 @@ public class FundDisbursementService : IFundDisbursementService
         try
         {
             var disbursements = await _fundDisbursementRepository.GetAllWithDetailsAsync();
+            Console.WriteLine($"Service received {disbursements.Count()} disbursements from repository.");
             return MapToDisbursementResponses(disbursements);
         }
         catch (Exception ex)
         {
-            throw new ServiceException($"Error retrieving fund disbursements: {ex.Message}");
+            Console.WriteLine($"ERROR in FundDisbursementService.GetAllFundDisbursements: {ex.ToString()}");
+            throw new ServiceException($"Error retrieving fund disbursements: {ex.Message}", ex);
         }
     }
     
@@ -295,11 +253,8 @@ public class FundDisbursementService : IFundDisbursementService
             if (disbursement == null)
                 throw new ServiceException("Fund disbursement not found");
                 
-            // Check if user is authorized (author or supervisor)
-            var author = disbursement.AuthorRequestNavigation;
-            var supervisor = disbursement.SupervisorRequestNavigation;
-            
-            if (author?.UserId != userId && supervisor?.UserId != userId)
+            // Check if user is authorized (the requester)
+            if (disbursement.UserRequest != userId)
                 throw new ServiceException("You are not authorized to upload documents for this disbursement");
                 
             // Upload documents to S3
@@ -314,7 +269,7 @@ public class FundDisbursementService : IFundDisbursementService
                     ResourceName = file.FileName,
                     ResourceType = 1, // Document
                     ProjectId = disbursement.ProjectId,
-                    Acquired = true,
+                    Acquired = (bool?)true,
                     Quantity = 1
                 };
                 
@@ -348,14 +303,18 @@ public class FundDisbursementService : IFundDisbursementService
         }
     }
     
-    public async Task<bool> ApproveFundDisbursement(int fundDisbursementId, string approvalComments, int approverId)
+    public async Task<bool> ApproveFundDisbursement(
+        int fundDisbursementId, 
+        string approvalComments, 
+        int approverId,
+        IEnumerable<IFormFile> documentFiles)
     {
         try
         {
             // Use a transaction to ensure all database changes succeed or fail together
             using var transaction = await _context.Database.BeginTransactionAsync();
 
-            // Get the fund disbursement with details
+            // Original approval logic (same as before)
             var fundDisbursement = await _fundDisbursementRepository.GetByIdWithDetailsAsync(fundDisbursementId);
             if (fundDisbursement == null)
                 throw new ServiceException("Fund disbursement request not found");
@@ -417,12 +376,12 @@ public class FundDisbursementService : IFundDisbursementService
                 await _context.SaveChangesAsync();
             }
             
-            // 1. Update the fund disbursement
+            // Update the fund disbursement
             fundDisbursement.Status = (int)FundDisbursementStatusEnum.Approved;
             fundDisbursement.AppovedBy = groupMember.GroupMemberId;
             fundDisbursement.UpdateAt = DateTime.Now;
             
-            // 2. Update the quota's remaining budget
+            // Update the quota's remaining budget
             quota.AllocatedBudget -= fundDisbursement.FundRequest;
             quota.UpdateAt = DateTime.Now;
             
@@ -432,7 +391,7 @@ public class FundDisbursementService : IFundDisbursementService
                 quota.Status = (int)QuotaStatusEnum.Used;
             }
             
-            // 3. Update the project's spent budget
+            // Update the project's spent budget
             project.SpentBudget += fundDisbursement.FundRequest ?? 0;
             project.UpdatedAt = DateTime.Now;
 
@@ -447,31 +406,57 @@ public class FundDisbursementService : IFundDisbursementService
                 }
             }
             
-            // 4. Optional: Create a financial transaction record if you have such a table
-            // var transaction = new FinancialTransaction
-            // {
-            //     ProjectId = project.ProjectId,
-            //     Amount = fundDisbursement.FundRequest,
-            //     TransactionType = "Disbursement",
-            //     TransactionDate = DateTime.Now,
-            //     ApprovedBy = approverId,
-            //     Description = $"Fund disbursement #{fundDisbursement.FundDisbursementId}: {fundDisbursement.Description}"
-            // };
-            // _context.FinancialTransactions.Add(transaction);
-            
             // Save all changes
             await _fundDisbursementRepository.UpdateAsync(fundDisbursement);
+            await _context.SaveChangesAsync();
+            
+            // Upload documents
+            var urls = await _s3Service.UploadFilesAsync(documentFiles, $"projects/{fundDisbursement.ProjectId}/disbursements/{fundDisbursementId}/approval");
+            int index = 0;
+            
+            foreach (var file in documentFiles)
+            {
+                // Create resource
+                var projectResource = new ProjectResource
+                {
+                    ResourceName = file.FileName,
+                    ResourceType = 1, // Document
+                    ProjectId = fundDisbursement.ProjectId,
+                    Acquired = (bool?)true,
+                    Quantity = 1
+                };
+                
+                await _context.ProjectResources.AddAsync(projectResource);
+                await _context.SaveChangesAsync();
+                
+                // Create document
+                var document = new Document
+                {
+                    FundDisbursementId = fundDisbursementId,
+                    DocumentUrl = urls[index],
+                    FileName = file.FileName,
+                    DocumentType = (int)DocumentTypeEnum.DisbursementConfirmation,
+                    UploadAt = DateTime.Now,
+                    UploadedBy = approverId,
+                    ProjectResourceId = projectResource.ProjectResourceId,
+                    ProjectId = fundDisbursement.ProjectId
+                };
+                
+                await _context.Documents.AddAsync(document);
+                index++;
+            }
+            
             await _context.SaveChangesAsync();
             
             // Commit the transaction
             await transaction.CommitAsync();
             
             // Create notification for requester
-            if (fundDisbursement.AuthorRequestNavigation?.UserId != null)
+            if (fundDisbursement.UserRequest.HasValue)
             {
                 var notificationRequest = new CreateNotificationRequest
                 {
-                    UserId = fundDisbursement.AuthorRequestNavigation.UserId.Value,
+                    UserId = fundDisbursement.UserRequest.Value,
                     Title = "Fund Disbursement Approved",
                     Message = $"Your fund disbursement request of {fundDisbursement.FundRequest:C} has been approved. {approvalComments}",
                     ProjectId = fundDisbursement.ProjectId,
@@ -491,10 +476,17 @@ public class FundDisbursementService : IFundDisbursementService
         }
     }
     
-    public async Task<bool> RejectFundDisbursement(int fundDisbursementId, string rejectionReason, int rejectorId)
+    public async Task<bool> RejectFundDisbursement(
+        int fundDisbursementId, 
+        string rejectionReason, 
+        int rejectorId,
+        IEnumerable<IFormFile> documentFiles)
     {
         try
         {
+            // Use a transaction for consistency
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            
             // Get the fund disbursement with details
             var fundDisbursement = await _fundDisbursementRepository.GetByIdWithDetailsAsync(fundDisbursementId);
             if (fundDisbursement == null)
@@ -546,12 +538,53 @@ public class FundDisbursementService : IFundDisbursementService
             
             await _fundDisbursementRepository.UpdateAsync(fundDisbursement);
             
+            // Upload documents
+            var urls = await _s3Service.UploadFilesAsync(documentFiles, $"projects/{fundDisbursement.ProjectId}/disbursements/{fundDisbursementId}/rejection");
+            int index = 0;
+            
+            foreach (var file in documentFiles)
+            {
+                // Create resource
+                var projectResource = new ProjectResource
+                {
+                    ResourceName = file.FileName,
+                    ResourceType = 1, // Document
+                    ProjectId = fundDisbursement.ProjectId,
+                    Acquired = (bool?)true,
+                    Quantity = 1
+                };
+                
+                await _context.ProjectResources.AddAsync(projectResource);
+                await _context.SaveChangesAsync();
+                
+                // Create document
+                var document = new Document
+                {
+                    FundDisbursementId = fundDisbursementId,
+                    DocumentUrl = urls[index],
+                    FileName = file.FileName,
+                    DocumentType = (int)DocumentTypeEnum.DisbursementConfirmation,
+                    UploadAt = DateTime.Now,
+                    UploadedBy = rejectorId,
+                    ProjectResourceId = projectResource.ProjectResourceId,
+                    ProjectId = fundDisbursement.ProjectId
+                };
+                
+                await _context.Documents.AddAsync(document);
+                index++;
+            }
+            
+            await _context.SaveChangesAsync();
+            
+            // Commit the transaction
+            await transaction.CommitAsync();
+            
             // Create notification for requester
-            if (fundDisbursement.AuthorRequestNavigation?.UserId != null)
+            if (fundDisbursement.UserRequest.HasValue)
             {
                 var notificationRequest = new CreateNotificationRequest
                 {
-                    UserId = fundDisbursement.AuthorRequestNavigation.UserId.Value,
+                    UserId = fundDisbursement.UserRequest.Value,
                     Title = "Fund Disbursement Rejected",
                     Message = $"Your fund disbursement request of {fundDisbursement.FundRequest:C} has been rejected. Reason: {rejectionReason}",
                     ProjectId = fundDisbursement.ProjectId,
@@ -579,11 +612,8 @@ public class FundDisbursementService : IFundDisbursementService
             if (disbursement == null)
                 throw new ServiceException("Fund disbursement not found");
                 
-            // Check if user is authorized (author or supervisor)
-            var author = disbursement.AuthorRequestNavigation;
-            var supervisor = disbursement.SupervisorRequestNavigation;
-            
-            if (author?.UserId != userId && supervisor?.UserId != userId)
+            // Check if user is authorized
+            if (disbursement.UserRequest != userId)
                 throw new ServiceException("You are not authorized to upload documents for this disbursement");
                 
             // Upload document to S3
@@ -595,7 +625,7 @@ public class FundDisbursementService : IFundDisbursementService
                 ResourceName = documentFile.FileName,
                 ResourceType = 1, // Document
                 ProjectId = disbursement.ProjectId,
-                Acquired = true,
+                Acquired = (bool?)true,
                 Quantity = 1
             };
             
@@ -628,6 +658,16 @@ public class FundDisbursementService : IFundDisbursementService
     
     private FundDisbursementResponse MapToDisbursementResponse(FundDisbursement disbursement)
     {
+        // Calculate total disbursed amount for the project
+        decimal projectDisbursedAmount = 0;
+        if (disbursement.Project?.FundDisbursements != null)
+        {
+            projectDisbursedAmount = disbursement.Project.FundDisbursements
+                .Where(fd => fd.Status == (int)FundDisbursementStatusEnum.Approved || 
+                             fd.Status == (int)FundDisbursementStatusEnum.Disbursed)
+                .Sum(fd => fd.FundRequest ?? 0);
+        }
+
         var response = new FundDisbursementResponse
         {
             FundDisbursementId = disbursement.FundDisbursementId,
@@ -641,12 +681,14 @@ public class FundDisbursementService : IFundDisbursementService
             QuotaId = disbursement.QuotaId,
             ProjectPhaseId = disbursement.ProjectPhaseId,
             ProjectPhaseTitle = disbursement.ProjectPhase?.Title,
-            AuthorRequest = disbursement.AuthorRequest,
-            AuthorName = disbursement.AuthorRequestNavigation?.User?.FullName,
-            SupervisorRequest = disbursement.SupervisorRequest,
-            SupervisorName = disbursement.SupervisorRequestNavigation?.User?.FullName,
             
-            // Map documents if they exist
+            // User information
+            RequesterId = disbursement.UserRequest ?? 0,
+            RequesterName = disbursement.UserRequestNavigation?.FullName,
+            SupervisorId = 0,
+            SupervisorName = "",
+            
+            // Documents
             Documents = disbursement.Documents != null
                 ? disbursement.Documents.Select(d => new DocumentResponse
                 {
@@ -656,7 +698,28 @@ public class FundDisbursementService : IFundDisbursementService
                     DocumentType = d.DocumentType ?? 0,
                     UploadAt = d.UploadAt ?? DateTime.MinValue
                 }).ToList()
-                : new List<DocumentResponse>()
+                : new List<DocumentResponse>(),
+            
+            // Project additional info
+            ProjectType = disbursement.Project?.ProjectType,
+            ProjectTypeName = disbursement.Project?.ProjectType.HasValue == true ? 
+                Enum.GetName(typeof(ProjectTypeEnum), disbursement.Project.ProjectType.Value) : null,
+            ProjectApprovedBudget = disbursement.Project?.ApprovedBudget,
+            ProjectSpentBudget = disbursement.Project?.SpentBudget ?? 0,
+            ProjectDisbursedAmount = projectDisbursedAmount,
+            
+            // Project phases
+            ProjectPhases = disbursement.Project?.ProjectPhases?.Select(pp => new ProjectPhaseInfo
+            {
+                ProjectPhaseId = pp.ProjectPhaseId,
+                Title = pp.Title,
+                StartDate = pp.StartDate,
+                EndDate = pp.EndDate,
+                Status = pp.Status,
+                StatusName = pp.Status.HasValue == true ? 
+                    Enum.GetName(typeof(ProjectPhaseStatusEnum), pp.Status.Value) : null,
+                SpentBudget = pp.SpentBudget
+            }).ToList()
         };
         
         return response;

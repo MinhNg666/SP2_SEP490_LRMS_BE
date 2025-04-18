@@ -124,25 +124,35 @@ public class FundDisbursementController : ApiBaseController
     
     [HttpPost("fund-disbursements/{disbursementId}/approve")]
     [Authorize]
-    public async Task<IActionResult> ApproveFundDisbursement(int disbursementId, [FromBody] ApproveFundDisbursementRequest request)
+    public async Task<IActionResult> ApproveFundDisbursement(
+        int disbursementId, 
+        [FromForm] ApproveFundDisbursementRequest request,
+        List<IFormFile> documentFiles)
     {
         try
         {
             if (disbursementId != request.FundDisbursementId)
                 return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Disbursement IDs do not match"));
+            
+            if (documentFiles == null || !documentFiles.Any())
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Please attach confirmation documents"));
+            
+            var allowedExtensions = new[] { ".pdf", ".doc", ".docx" };
+            foreach (var file in documentFiles)
+            {
+                var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+                if (!allowedExtensions.Contains(fileExtension))
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, $"Only PDF, DOC, and DOCX files are allowed. Invalid file: {file.FileName}"));
+            }
                 
             var approverId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
             var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
-            
-            // Only Office users or Admins can approve
-            // if (userRole != SystemRoleEnum.Office.ToString() && userRole != SystemRoleEnum.Admin.ToString())
-            //     return StatusCode(StatusCodes.Status403Forbidden, 
-            //         new ApiResponse(StatusCodes.Status403Forbidden, "Only Office staff or Admins can approve fund disbursements"));
                     
             var result = await _fundDisbursementService.ApproveFundDisbursement(
                 disbursementId, 
                 request.ApprovalComments ?? "", 
-                approverId);
+                approverId,
+                documentFiles);
                 
             return Ok(new ApiResponse(StatusCodes.Status200OK, "Fund disbursement approved successfully"));
         }
@@ -154,7 +164,10 @@ public class FundDisbursementController : ApiBaseController
     
     [HttpPost("fund-disbursements/{disbursementId}/reject")]
     [Authorize]
-    public async Task<IActionResult> RejectFundDisbursement(int disbursementId, [FromBody] RejectFundDisbursementRequest request)
+    public async Task<IActionResult> RejectFundDisbursement(
+        int disbursementId, 
+        [FromForm] RejectFundDisbursementRequest request,
+        List<IFormFile> documentFiles)
     {
         try
         {
@@ -163,19 +176,26 @@ public class FundDisbursementController : ApiBaseController
                 
             if (string.IsNullOrWhiteSpace(request.RejectionReason))
                 return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Rejection reason is required"));
+            
+            if (documentFiles == null || !documentFiles.Any())
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Please attach rejection documents"));
+            
+            var allowedExtensions = new[] { ".pdf", ".doc", ".docx" };
+            foreach (var file in documentFiles)
+            {
+                var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+                if (!allowedExtensions.Contains(fileExtension))
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, $"Only PDF, DOC, and DOCX files are allowed. Invalid file: {file.FileName}"));
+            }
                 
             var rejectorId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
             var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
-            
-            // Only Office users or Admins can reject
-            // if (userRole != SystemRoleEnum.Office.ToString() && userRole != SystemRoleEnum.Admin.ToString())
-            //     return StatusCode(StatusCodes.Status403Forbidden, 
-            //         new ApiResponse(StatusCodes.Status403Forbidden, "Only Office staff or Admins can reject fund disbursements"));
                     
             var result = await _fundDisbursementService.RejectFundDisbursement(
                 disbursementId, 
                 request.RejectionReason, 
-                rejectorId);
+                rejectorId,
+                documentFiles);
                 
             return Ok(new ApiResponse(StatusCodes.Status200OK, "Fund disbursement rejected successfully"));
         }

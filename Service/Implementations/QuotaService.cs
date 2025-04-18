@@ -33,12 +33,18 @@ namespace Service.Implementations
                     .Include(q => q.Project)
                         .ThenInclude(p => p.Group)
                     .Include(q => q.AllocatedByNavigation)
+                    .Include(q => q.FundDisbursements)
                     .ToListAsync();
 
                 var responses = new List<QuotaResponse>();
                 
                 foreach (var quota in quotas)
                 {
+                    decimal disbursedAmount = quota.FundDisbursements
+                        .Where(fd => fd.Status == (int)FundDisbursementStatusEnum.Approved || 
+                                    fd.Status == (int)FundDisbursementStatusEnum.Disbursed)
+                        .Sum(fd => fd.FundRequest ?? 0);
+                    
                     var response = new QuotaResponse
                     {
                         QuotaId = quota.QuotaId,
@@ -63,7 +69,14 @@ namespace Service.Implementations
                         
                         // Allocator information
                         AllocatedBy = quota.AllocatedBy,
-                        AllocatorName = quota.AllocatedByNavigation?.FullName
+                        AllocatorName = quota.AllocatedByNavigation?.FullName,
+
+                        ProjectType = quota.Project?.ProjectType,
+                        ProjectTypeName = quota.Project?.ProjectType.HasValue == true
+                            ? Enum.GetName(typeof(ProjectTypeEnum), quota.Project.ProjectType) 
+                            : null,
+                            
+                        DisbursedAmount = disbursedAmount
                     };
                     
                     responses.Add(response);
@@ -110,6 +123,7 @@ namespace Service.Implementations
                     .Include(q => q.Project)
                         .ThenInclude(p => p.Group)
                     .Include(q => q.AllocatedByNavigation)
+                    .Include(q => q.FundDisbursements)
                     .Where(q => q.ProjectId.HasValue && projectIds.Contains(q.ProjectId.Value))
                     .ToListAsync();
 
@@ -117,6 +131,11 @@ namespace Service.Implementations
                 
                 foreach (var quota in quotas)
                 {
+                    decimal disbursedAmount = quota.FundDisbursements
+                        .Where(fd => fd.Status == (int)FundDisbursementStatusEnum.Approved || 
+                                    fd.Status == (int)FundDisbursementStatusEnum.Disbursed)
+                        .Sum(fd => fd.FundRequest ?? 0);
+                    
                     var response = new QuotaResponse
                     {
                         QuotaId = quota.QuotaId,
@@ -141,7 +160,14 @@ namespace Service.Implementations
                         
                         // Allocator information
                         AllocatedBy = quota.AllocatedBy,
-                        AllocatorName = quota.AllocatedByNavigation?.FullName
+                        AllocatorName = quota.AllocatedByNavigation?.FullName,
+
+                        ProjectType = quota.Project?.ProjectType,
+                        ProjectTypeName = quota.Project?.ProjectType.HasValue == true
+                            ? Enum.GetName(typeof(ProjectTypeEnum), quota.Project.ProjectType) 
+                            : null,
+                            
+                        DisbursedAmount = disbursedAmount
                     };
                     
                     responses.Add(response);

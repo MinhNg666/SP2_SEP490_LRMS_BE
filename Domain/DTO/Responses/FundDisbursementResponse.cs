@@ -7,17 +7,38 @@ public class FundDisbursementResponse
     public int FundDisbursementId { get; set; }
     public decimal FundRequest { get; set; }
     public int Status { get; set; }
-    public string StatusName { get; set; }
+    public string? StatusName { get; set; }
     public DateTime? CreatedAt { get; set; }
-    public string Description { get; set; }
+    public string? Description { get; set; }
     public int ProjectId { get; set; }
-    public string ProjectName { get; set; }
+    public string? ProjectName { get; set; }
     public int? QuotaId { get; set; }
     public int? ProjectPhaseId { get; set; }
-    public string ProjectPhaseTitle { get; set; }
-    public int AuthorRequest { get; set; }
-    public string AuthorName { get; set; }
-    public int SupervisorRequest { get; set; }
-    public string SupervisorName { get; set; }
+    public string? ProjectPhaseTitle { get; set; }
+    
+    // Renamed properties to better reflect their meaning
+    public int RequesterId { get; set; }  
+    public string? RequesterName { get; set; }  
+    public int SupervisorId { get; set; }  
+    public string? SupervisorName { get; set; }  
+    
     public ICollection<DocumentResponse> Documents { get; set; } = new List<DocumentResponse>();
+
+    public int? ProjectType { get; set; }
+    public string? ProjectTypeName { get; set; }
+    public decimal? ProjectApprovedBudget { get; set; }
+    public decimal ProjectSpentBudget { get; set; } = 0;
+    public decimal ProjectDisbursedAmount { get; set; } = 0;
+    public ICollection<ProjectPhaseInfo>? ProjectPhases { get; set; }
+}
+
+public class ProjectPhaseInfo
+{
+    public int ProjectPhaseId { get; set; }
+    public string? Title { get; set; }
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
+    public int? Status { get; set; }
+    public string? StatusName { get; set; }
+    public decimal SpentBudget { get; set; } = 0;
 }

@@ -19,8 +19,6 @@ public partial class GroupMember
 
     public virtual ICollection<FundDisbursement> FundDisbursementAppovedByNavigations { get; set; } = new List<FundDisbursement>();
 
-    public virtual ICollection<FundDisbursement> FundDisbursementSupervisorRequestNavigations { get; set; } = new List<FundDisbursement>();
-
     public virtual Group? Group { get; set; }
 
     public virtual ICollection<ProjectPhase> ProjectPhaseAssignByNavigations { get; set; } = new List<ProjectPhase>();

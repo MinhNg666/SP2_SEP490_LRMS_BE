@@ -27,5 +27,11 @@ namespace Domain.DTO.Responses
         // Allocator information
         public int? AllocatedBy { get; set; }
         public string AllocatorName { get; set; }
+        
+        // Project type information
+        public int? ProjectType { get; set; }
+        public string ProjectTypeName { get; set; }
+        
+        public decimal DisbursedAmount { get; set; }
     }
 }

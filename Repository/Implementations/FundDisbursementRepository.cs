@@ -18,11 +18,9 @@ public class FundDisbursementRepository : GenericRepository<FundDisbursement>, I
     public async Task<IEnumerable<FundDisbursement>> GetAllWithDetailsAsync()
     {
         return await _context.FundDisbursements
+            .AsNoTracking() // Keep this
             .Include(f => f.Project)
-            .Include(f => f.AuthorRequestNavigation)
-                .ThenInclude(a => a.User)
-            .Include(f => f.SupervisorRequestNavigation)
-                .ThenInclude(s => s.User)
+            .Include(f => f.UserRequestNavigation)
             .Include(f => f.ProjectPhase)
             .Include(f => f.Quota)
             .Include(f => f.Documents)
@@ -32,25 +30,27 @@ public class FundDisbursementRepository : GenericRepository<FundDisbursement>, I
     public async Task<FundDisbursement> GetByIdWithDetailsAsync(int fundDisbursementId)
     {
         return await _context.FundDisbursements
-            .Include(f => f.Project)
-            .Include(f => f.AuthorRequestNavigation)
-                .ThenInclude(a => a.User)
-            .Include(f => f.SupervisorRequestNavigation)
-                .ThenInclude(s => s.User)
-            .Include(f => f.ProjectPhase)
-            .Include(f => f.Quota)
-            .Include(f => f.Documents)
-            .FirstOrDefaultAsync(f => f.FundDisbursementId == fundDisbursementId);
+            .Include(fd => fd.Project)
+                .ThenInclude(p => p.ProjectPhases)
+            .Include(fd => fd.Project)
+                .ThenInclude(p => p.Department)
+            .Include(fd => fd.Project)
+                .ThenInclude(p => p.Group)
+            .Include(fd => fd.Project)
+                .ThenInclude(p => p.FundDisbursements)
+            .Include(fd => fd.UserRequestNavigation)
+            .Include(fd => fd.Quota)
+                .ThenInclude(q => q.AllocatedByNavigation)
+            .Include(fd => fd.ProjectPhase)
+            .Include(fd => fd.Documents)
+            .FirstOrDefaultAsync(fd => fd.FundDisbursementId == fundDisbursementId);
     }
     
     public async Task<IEnumerable<FundDisbursement>> GetByProjectIdAsync(int projectId)
     {
         return await _context.FundDisbursements
             .Include(f => f.Project)
-            .Include(f => f.AuthorRequestNavigation)
-                .ThenInclude(a => a.User)
-            .Include(f => f.SupervisorRequestNavigation)
-                .ThenInclude(s => s.User)
+            .Include(f => f.UserRequestNavigation)
             .Include(f => f.ProjectPhase)
             .Include(f => f.Quota)
             .Include(f => f.Documents)
@@ -62,15 +62,11 @@ public class FundDisbursementRepository : GenericRepository<FundDisbursement>, I
     {
         return await _context.FundDisbursements
             .Include(f => f.Project)
-            .Include(f => f.AuthorRequestNavigation)
-                .ThenInclude(a => a.User)
-            .Include(f => f.SupervisorRequestNavigation)
-                .ThenInclude(s => s.User)
+            .Include(f => f.UserRequestNavigation)
             .Include(f => f.ProjectPhase)
             .Include(f => f.Quota)
             .Include(f => f.Documents)
-            .Where(f => f.AuthorRequestNavigation.UserId == userId || 
-                        f.SupervisorRequestNavigation.UserId == userId)
+            .Where(f => f.UserRequest == userId)
             .ToListAsync();
     }
 }
