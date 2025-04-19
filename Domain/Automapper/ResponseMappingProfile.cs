@@ -88,7 +88,36 @@ public class ResponseMappingProfile : Profile
             .ForMember(dest => dest.RequesterId, opt => opt.MapFrom(src => src.UserRequest))
             .ForMember(dest => dest.RequesterName, opt => opt.MapFrom(src => 
                 src.UserRequestNavigation != null ? src.UserRequestNavigation.FullName : null))
-            .ForMember(dest => dest.SupervisorId, opt => opt.MapFrom(src => 0))
-            .ForMember(dest => dest.SupervisorName, opt => opt.MapFrom(src => ""));
+            .ForMember(dest => dest.ApprovedById, opt => opt.MapFrom(src => 
+                src.AppovedByNavigation != null ? src.AppovedByNavigation.UserId : (int?)null))
+            .ForMember(dest => dest.ApprovedByName, opt => opt.MapFrom(src => 
+                src.AppovedByNavigation != null && src.AppovedByNavigation.User != null ? src.AppovedByNavigation.User.FullName : null))
+            .ForMember(dest => dest.DisbursedById, opt => opt.MapFrom(src => src.DisburseBy))
+            .ForMember(dest => dest.DisbursedByName, opt => opt.MapFrom(src => 
+                src.DisburseByNavigation != null ? src.DisburseByNavigation.FullName : null))
+            .ForMember(dest => dest.RejectionReason, opt => opt.MapFrom(src => src.RejectionReason))
+            .ForMember(dest => dest.ProjectType, opt => opt.MapFrom(src => src.Project != null ? src.Project.ProjectType : (int?)null))
+            .ForMember(dest => dest.ProjectTypeName, opt => opt.MapFrom(src => src.Project != null && src.Project.ProjectType.HasValue ? Enum.GetName(typeof(ProjectTypeEnum), src.Project.ProjectType.Value) : null))
+            .ForMember(dest => dest.ProjectApprovedBudget, opt => opt.MapFrom(src => src.Project != null ? src.Project.ApprovedBudget : (decimal?)null))
+            .ForMember(dest => dest.ProjectSpentBudget, opt => opt.MapFrom(src => src.Project != null ? src.Project.SpentBudget : 0))
+            .ForMember(dest => dest.ProjectDisbursedAmount, opt => opt.MapFrom(src => 
+                src.Project != null && src.Project.FundDisbursements != null ?
+                src.Project.FundDisbursements
+                    .Where(fd => fd.Status == (int)FundDisbursementStatusEnum.Approved || fd.Status == (int)FundDisbursementStatusEnum.Disbursed)
+                    .Sum(fd => fd.FundRequest ?? 0) : 0
+            ))
+            .ForMember(dest => dest.ProjectPhases, opt => opt.MapFrom(src => 
+                src.Project != null && src.Project.ProjectPhases != null ?
+                src.Project.ProjectPhases.Select(pp => new ProjectPhaseInfo
+                {
+                    ProjectPhaseId = pp.ProjectPhaseId,
+                    Title = pp.Title,
+                    StartDate = pp.StartDate,
+                    EndDate = pp.EndDate,
+                    Status = pp.Status,
+                    StatusName = pp.Status.HasValue ? Enum.GetName(typeof(ProjectPhaseStatusEnum), pp.Status.Value) : null,
+                    SpentBudget = pp.SpentBudget
+                }).ToList() : new List<ProjectPhaseInfo>()
+            ));
     } 
 }

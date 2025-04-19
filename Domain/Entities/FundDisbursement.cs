@@ -29,6 +29,8 @@ public partial class FundDisbursement
 
     public int? ProjectPhaseId { get; set; }
 
+    public string? RejectionReason { get; set; }
+
     public virtual GroupMember? AppovedByNavigation { get; set; }
 
     public virtual User? UserRequestNavigation { get; set; }

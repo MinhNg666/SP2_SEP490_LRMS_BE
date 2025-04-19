@@ -122,7 +122,7 @@ public class FundDisbursementController : ApiBaseController
         }
     }
     
-    [HttpPost("fund-disbursements/{disbursementId}/approve")]
+    [HttpPost("fund-disbursements/{disbursementId}/office-approve")]
     [Authorize]
     public async Task<IActionResult> ApproveFundDisbursement(
         int disbursementId, 
@@ -149,8 +149,7 @@ public class FundDisbursementController : ApiBaseController
             var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
                     
             var result = await _fundDisbursementService.ApproveFundDisbursement(
-                disbursementId, 
-                request.ApprovalComments ?? "", 
+                disbursementId,
                 approverId,
                 documentFiles);
                 
@@ -162,7 +161,7 @@ public class FundDisbursementController : ApiBaseController
         }
     }
     
-    [HttpPost("fund-disbursements/{disbursementId}/reject")]
+    [HttpPost("fund-disbursements/{disbursementId}/office-reject")]
     [Authorize]
     public async Task<IActionResult> RejectFundDisbursement(
         int disbursementId, 

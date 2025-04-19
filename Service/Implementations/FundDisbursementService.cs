@@ -305,7 +305,6 @@ public class FundDisbursementService : IFundDisbursementService
     
     public async Task<bool> ApproveFundDisbursement(
         int fundDisbursementId, 
-        string approvalComments, 
         int approverId,
         IEnumerable<IFormFile> documentFiles)
     {
@@ -458,7 +457,7 @@ public class FundDisbursementService : IFundDisbursementService
                 {
                     UserId = fundDisbursement.UserRequest.Value,
                     Title = "Fund Disbursement Approved",
-                    Message = $"Your fund disbursement request of {fundDisbursement.FundRequest:C} has been approved. {approvalComments}",
+                    Message = $"Your fund disbursement request of {fundDisbursement.FundRequest:C} has been approved.",
                     ProjectId = fundDisbursement.ProjectId,
                     Status = 0,
                     IsRead = false
@@ -534,6 +533,7 @@ public class FundDisbursementService : IFundDisbursementService
             // Update fund disbursement
             fundDisbursement.Status = (int)FundDisbursementStatusEnum.Rejected;
             fundDisbursement.AppovedBy = groupMember.GroupMemberId; // Used for both approval and rejection
+            fundDisbursement.RejectionReason = rejectionReason; // Save the reason here
             fundDisbursement.UpdateAt = DateTime.Now;
             
             await _fundDisbursementRepository.UpdateAsync(fundDisbursement);
@@ -685,8 +685,14 @@ public class FundDisbursementService : IFundDisbursementService
             // User information
             RequesterId = disbursement.UserRequest ?? 0,
             RequesterName = disbursement.UserRequestNavigation?.FullName,
-            SupervisorId = 0,
-            SupervisorName = "",
+
+            // Map Approver Info (using AppovedBy from entity)
+            ApprovedById = disbursement.AppovedByNavigation?.UserId, 
+            ApprovedByName = disbursement.AppovedByNavigation?.User?.FullName, 
+
+            // Map Disburser Info
+            DisbursedById = disbursement.DisburseBy,
+            DisbursedByName = disbursement.DisburseByNavigation?.FullName, 
             
             // Documents
             Documents = disbursement.Documents != null
@@ -719,7 +725,10 @@ public class FundDisbursementService : IFundDisbursementService
                 StatusName = pp.Status.HasValue == true ? 
                     Enum.GetName(typeof(ProjectPhaseStatusEnum), pp.Status.Value) : null,
                 SpentBudget = pp.SpentBudget
-            }).ToList()
+            }).ToList(),
+
+            // Map the RejectionReason
+            RejectionReason = disbursement.RejectionReason
         };
         
         return response;

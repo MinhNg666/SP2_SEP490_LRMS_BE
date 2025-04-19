@@ -24,6 +24,9 @@ public class FundDisbursementRepository : GenericRepository<FundDisbursement>, I
             .Include(f => f.ProjectPhase)
             .Include(f => f.Quota)
             .Include(f => f.Documents)
+            .Include(f => f.AppovedByNavigation)
+                .ThenInclude(gm => gm.User)
+            .Include(f => f.DisburseByNavigation)
             .ToListAsync();
     }
     
@@ -43,6 +46,9 @@ public class FundDisbursementRepository : GenericRepository<FundDisbursement>, I
                 .ThenInclude(q => q.AllocatedByNavigation)
             .Include(fd => fd.ProjectPhase)
             .Include(fd => fd.Documents)
+            .Include(fd => fd.AppovedByNavigation)
+                .ThenInclude(gm => gm.User)
+            .Include(fd => fd.DisburseByNavigation)
             .FirstOrDefaultAsync(fd => fd.FundDisbursementId == fundDisbursementId);
     }
     
@@ -54,6 +60,9 @@ public class FundDisbursementRepository : GenericRepository<FundDisbursement>, I
             .Include(f => f.ProjectPhase)
             .Include(f => f.Quota)
             .Include(f => f.Documents)
+            .Include(f => f.AppovedByNavigation)
+                .ThenInclude(gm => gm.User)
+            .Include(f => f.DisburseByNavigation)
             .Where(f => f.ProjectId == projectId)
             .ToListAsync();
     }
@@ -66,6 +75,9 @@ public class FundDisbursementRepository : GenericRepository<FundDisbursement>, I
             .Include(f => f.ProjectPhase)
             .Include(f => f.Quota)
             .Include(f => f.Documents)
+            .Include(f => f.AppovedByNavigation)
+                .ThenInclude(gm => gm.User)
+            .Include(f => f.DisburseByNavigation)
             .Where(f => f.UserRequest == userId)
             .ToListAsync();
     }

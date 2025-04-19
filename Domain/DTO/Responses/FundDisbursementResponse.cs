@@ -16,11 +16,17 @@ public class FundDisbursementResponse
     public int? ProjectPhaseId { get; set; }
     public string? ProjectPhaseTitle { get; set; }
     
-    // Renamed properties to better reflect their meaning
+    // Requester Information
     public int RequesterId { get; set; }  
     public string? RequesterName { get; set; }  
-    public int SupervisorId { get; set; }  
-    public string? SupervisorName { get; set; }  
+
+    // Add Approver Information
+    public int? ApprovedById { get; set; } 
+    public string? ApprovedByName { get; set; } 
+
+    // Add Disburser Information
+    public int? DisbursedById { get; set; }
+    public string? DisbursedByName { get; set; }
     
     public ICollection<DocumentResponse> Documents { get; set; } = new List<DocumentResponse>();
 
@@ -30,6 +36,7 @@ public class FundDisbursementResponse
     public decimal ProjectSpentBudget { get; set; } = 0;
     public decimal ProjectDisbursedAmount { get; set; } = 0;
     public ICollection<ProjectPhaseInfo>? ProjectPhases { get; set; }
+    public string? RejectionReason { get; set; }
 }
 
 public class ProjectPhaseInfo

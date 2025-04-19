@@ -1277,9 +1277,13 @@ ALTER TABLE [dbo].[Fund_Disbursement]
 DROP COLUMN [supervisor_request], [author_request];
 
 USE LRMSDB
--- Run this in SQL Server Management Studio
+-- Drop author_id and group_member_id from Fund_Disbursement table
 ALTER TABLE [Fund_Disbursement] DROP COLUMN IF EXISTS [AuthorId];
 ALTER TABLE [Fund_Disbursement] DROP COLUMN IF EXISTS [GroupMemberId];
+
+-- add reject_reason for fund_disbursement
+    ALTER TABLE Fund_Disbursement
+    ADD RejectionReason NVARCHAR(MAX) NULL; 
 
 
 
