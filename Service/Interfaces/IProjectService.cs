@@ -22,4 +22,5 @@ public interface IProjectService
     Task UpdateProjectPhaseStatusesBasedOnDates();
     Task<bool> UpdateProjectPhase(int projectPhaseId, int status, decimal spentBudget, DateTime? startDate, DateTime? endDate, string title, int userId);
     Task AddProjectDocuments(int projectId, IEnumerable<IFormFile> documentFiles, int userId);
+    Task<bool> MarkProjectAsCompleted(int projectId, int userId);
 }

@@ -1047,4 +1047,69 @@ public class ProjectService : IProjectService
             throw new ServiceException($"Error adding document to project: {ex.Message}`");
         }
     }
+
+    public async Task<bool> MarkProjectAsCompleted(int projectId, int userId)
+    {
+        try
+        {
+            // Get project with phases
+            var project = await _context.Projects
+                .Include(p => p.ProjectPhases)
+                .FirstOrDefaultAsync(p => p.ProjectId == projectId);
+            
+            if (project == null)
+                throw new ServiceException("Project not found");
+            
+            // Check if project is in appropriate state
+            if (project.Status != (int)ProjectStatusEnum.Approved && 
+                project.Status != (int)ProjectStatusEnum.Work_in_progress)
+                throw new ServiceException("Only approved or in-progress projects can be marked as completed");
+            
+            // Check user permissions (member of the project group)
+            var userGroups = await _groupRepository.GetGroupsByUserId(userId);
+            var groupIds = userGroups.Select(g => g.GroupId);
+            
+            if (!project.GroupId.HasValue || !groupIds.Contains(project.GroupId.Value))
+                throw new ServiceException("You don't have permission to complete this project");
+            
+            // Verify all phases are completed
+            if (!project.ProjectPhases.Any())
+                throw new ServiceException("Project has no phases to complete");
+            
+            var incompletePhasesCount = project.ProjectPhases
+                .Count(p => p.Status != (int)ProjectPhaseStatusEnum.Completed);
+            
+            if (incompletePhasesCount > 0)
+                throw new ServiceException($"Cannot mark project as completed. {incompletePhasesCount} phases are not yet completed.");
+            
+            // Update project status
+            project.Status = (int)ProjectStatusEnum.Completed;
+            project.UpdatedAt = DateTime.Now;
+            
+            await _projectRepository.UpdateAsync(project);
+            
+            // Send notifications to group members
+            var groupMembers = await _groupRepository.GetMembersByGroupId(project.GroupId.Value);
+            foreach (var member in groupMembers)
+            {
+                var notificationRequest = new CreateNotificationRequest
+                {
+                    UserId = member.UserId.Value,
+                    Title = "Project Completed",
+                    Message = $"Project '{project.ProjectName}' has been marked as completed",
+                    ProjectId = project.ProjectId,
+                    Status = 0,
+                    IsRead = false
+                };
+                
+                await _notificationService.CreateNotification(notificationRequest);
+            }
+            
+            return true;
+        }
+        catch (Exception ex)
+        {
+            throw new ServiceException($"Error marking project as completed: {ex.Message}");
+        }
+    }
 }

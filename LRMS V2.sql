@@ -1283,7 +1283,7 @@ ALTER TABLE [Fund_Disbursement] DROP COLUMN IF EXISTS [GroupMemberId];
 
 -- add reject_reason for fund_disbursement
     ALTER TABLE Fund_Disbursement
-    ADD RejectionReason NVARCHAR(MAX) NULL; 
+    ADD RejectionReason NVARCHAR(500) NULL; 
 
 
 

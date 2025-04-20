@@ -6,4 +6,5 @@ public enum ProjectStatusEnum
     Approved = 1,
     Work_in_progress = 2,
     Rejected = 3,
+    Completed = 4
 }

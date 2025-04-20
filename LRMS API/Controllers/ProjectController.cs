@@ -312,6 +312,22 @@ public class ProjectController : ApiBaseController
         }
     }
 
+    [HttpPost("project/{projectId}/mark-completed")]
+    [Authorize]
+    public async Task<IActionResult> MarkProjectAsCompleted(int projectId)
+    {
+        try
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            var result = await _projectService.MarkProjectAsCompleted(projectId, userId);
+            return Ok(new ApiResponse(StatusCodes.Status200OK, "Project marked as completed successfully"));
+        }
+        catch (ServiceException ex)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
+        }
+    }
+
     
 
     
