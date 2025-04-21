@@ -13,7 +13,7 @@ public interface IProjectService
     Task<IEnumerable<ProjectResponse>> GetProjectsByDepartmentId(int departmentId);
     Task<IEnumerable<ProjectResponse>> GetProjectsByUserId(int userId);
     Task<bool> ApproveProjectBySecretary(int projectId, int secretaryId, IEnumerable<IFormFile> documentFiles);
-    Task<bool> RejectProjectBySecretary(int projectId, int secretaryId, IEnumerable<IFormFile> documentFiles);
+    Task<bool> RejectProjectBySecretary(int projectId, int secretaryId, string rejectionReason, IEnumerable<IFormFile> documentFiles);
     Task AddProjectDocument(int projectId, IFormFile documentFile, int userId);
     Task<ProjectDetailResponse> GetProjectDetails(int projectId);
     Task<IEnumerable<ProjectListResponse>> GetUserPendingProjectsList(int userId);
@@ -23,4 +23,7 @@ public interface IProjectService
     Task<bool> UpdateProjectPhase(int projectPhaseId, int status, decimal spentBudget, DateTime? startDate, DateTime? endDate, string title, int userId);
     Task AddProjectDocuments(int projectId, IEnumerable<IFormFile> documentFiles, int userId);
     Task<bool> MarkProjectAsCompleted(int projectId, int userId);
+    Task RequestProjectCompletionAsync(int projectId, int userId, RequestProjectCompletionRequest request, IEnumerable<IFormFile>? finalDocuments);
+    Task AddCompletionDocumentsAsync(int projectId, IEnumerable<IFormFile> documentFiles, int userId);
+    Task<IEnumerable<CompletionRequestResponse>> GetCompletionRequestsAsync();
 }

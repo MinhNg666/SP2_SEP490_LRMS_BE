@@ -4,6 +4,7 @@ using LRMS_API;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Domain.Migrations
 {
     [DbContext(typeof(LRMSDbContext))]
-    partial class LRMSDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250420111747_AddRejectionReasonToProject")]
+    partial class AddRejectionReasonToProject
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -81,43 +84,6 @@ namespace Domain.Migrations
                     b.HasIndex("ProjectId");
 
                     b.ToTable("Category", (string)null);
-                });
-
-            modelBuilder.Entity("LRMS_API.CompletionRequestDetail", b =>
-                {
-                    b.Property<int>("CompletionDetailId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("completion_detail_id");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CompletionDetailId"));
-
-                    b.Property<bool>("BudgetReconciled")
-                        .HasColumnType("bit")
-                        .HasColumnName("budget_reconciled");
-
-                    b.Property<decimal?>("BudgetRemaining")
-                        .HasColumnType("decimal(18, 2)")
-                        .HasColumnName("budget_remaining");
-
-                    b.Property<string>("BudgetVarianceExplanation")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("budget_variance_explanation");
-
-                    b.Property<string>("CompletionSummary")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("completion_summary");
-
-                    b.Property<int>("RequestId")
-                        .HasColumnType("int")
-                        .HasColumnName("request_id");
-
-                    b.HasKey("CompletionDetailId");
-
-                    b.HasIndex("RequestId")
-                        .IsUnique();
-
-                    b.ToTable("CompletionRequestDetails");
                 });
 
             modelBuilder.Entity("LRMS_API.Conference", b =>
@@ -269,9 +235,6 @@ namespace Domain.Migrations
                         .HasColumnType("int")
                         .HasColumnName("project_resource_id");
 
-                    b.Property<int?>("RequestId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime?>("UploadAt")
                         .HasColumnType("datetime")
                         .HasColumnName("upload_at");
@@ -292,8 +255,6 @@ namespace Domain.Migrations
                     b.HasIndex("ProjectPhaseId");
 
                     b.HasIndex("ProjectResourceId");
-
-                    b.HasIndex("RequestId");
 
                     b.HasIndex("UploadedBy");
 
@@ -794,76 +755,6 @@ namespace Domain.Migrations
                     b.ToTable("ProjectPhase", (string)null);
                 });
 
-            modelBuilder.Entity("LRMS_API.ProjectRequest", b =>
-                {
-                    b.Property<int>("RequestId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("request_id");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RequestId"));
-
-                    b.Property<int?>("ApprovalStatus")
-                        .HasColumnType("int")
-                        .HasColumnName("approval_status");
-
-                    b.Property<DateTime?>("ApprovedAt")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("approved_at");
-
-                    b.Property<int?>("ApprovedById")
-                        .HasColumnType("int")
-                        .HasColumnName("approved_by");
-
-                    b.Property<int?>("AssignedCouncilId")
-                        .HasColumnType("int")
-                        .HasColumnName("assigned_council");
-
-                    b.Property<int?>("PhaseId")
-                        .HasColumnType("int")
-                        .HasColumnName("phase_id");
-
-                    b.Property<int>("ProjectId")
-                        .HasColumnType("int")
-                        .HasColumnName("project_id");
-
-                    b.Property<string>("RejectionReason")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("rejection_reason");
-
-                    b.Property<int>("RequestType")
-                        .HasColumnType("int")
-                        .HasColumnName("request_type");
-
-                    b.Property<DateTime>("RequestedAt")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("requested_at");
-
-                    b.Property<int>("RequestedById")
-                        .HasColumnType("int")
-                        .HasColumnName("requested_by");
-
-                    b.Property<int?>("TimelineId")
-                        .HasColumnType("int")
-                        .HasColumnName("timeline_id");
-
-                    b.HasKey("RequestId");
-
-                    b.HasIndex("ApprovedById");
-
-                    b.HasIndex("AssignedCouncilId");
-
-                    b.HasIndex("PhaseId");
-
-                    b.HasIndex("ProjectId");
-
-                    b.HasIndex("RequestedById");
-
-                    b.HasIndex("TimelineId");
-
-                    b.ToTable("ProjectRequests");
-                });
-
             modelBuilder.Entity("LRMS_API.ProjectResource", b =>
                 {
                     b.Property<int>("ProjectResourceId")
@@ -1154,17 +1045,6 @@ namespace Domain.Migrations
                     b.Navigation("Project");
                 });
 
-            modelBuilder.Entity("LRMS_API.CompletionRequestDetail", b =>
-                {
-                    b.HasOne("LRMS_API.ProjectRequest", "ProjectRequest")
-                        .WithOne("CompletionRequestDetail")
-                        .HasForeignKey("LRMS_API.CompletionRequestDetail", "RequestId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ProjectRequest");
-                });
-
             modelBuilder.Entity("LRMS_API.Conference", b =>
                 {
                     b.HasOne("LRMS_API.Project", "Project")
@@ -1212,10 +1092,6 @@ namespace Domain.Migrations
                         .HasForeignKey("ProjectResourceId")
                         .HasConstraintName("FK_Documents_ProjectResources");
 
-                    b.HasOne("LRMS_API.ProjectRequest", "ProjectRequest")
-                        .WithMany()
-                        .HasForeignKey("RequestId");
-
                     b.HasOne("LRMS_API.User", "UploadedByNavigation")
                         .WithMany("Documents")
                         .HasForeignKey("UploadedBy")
@@ -1228,8 +1104,6 @@ namespace Domain.Migrations
                     b.Navigation("Project");
 
                     b.Navigation("ProjectPhase");
-
-                    b.Navigation("ProjectRequest");
 
                     b.Navigation("ProjectResource");
 
@@ -1435,49 +1309,6 @@ namespace Domain.Migrations
                     b.Navigation("Project");
                 });
 
-            modelBuilder.Entity("LRMS_API.ProjectRequest", b =>
-                {
-                    b.HasOne("LRMS_API.User", "ApprovedBy")
-                        .WithMany()
-                        .HasForeignKey("ApprovedById");
-
-                    b.HasOne("LRMS_API.Group", "AssignedCouncil")
-                        .WithMany()
-                        .HasForeignKey("AssignedCouncilId");
-
-                    b.HasOne("LRMS_API.ProjectPhase", "ProjectPhase")
-                        .WithMany()
-                        .HasForeignKey("PhaseId");
-
-                    b.HasOne("LRMS_API.Project", "Project")
-                        .WithMany()
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("LRMS_API.User", "RequestedBy")
-                        .WithMany()
-                        .HasForeignKey("RequestedById")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("LRMS_API.Timeline", "Timeline")
-                        .WithMany()
-                        .HasForeignKey("TimelineId");
-
-                    b.Navigation("ApprovedBy");
-
-                    b.Navigation("AssignedCouncil");
-
-                    b.Navigation("Project");
-
-                    b.Navigation("ProjectPhase");
-
-                    b.Navigation("RequestedBy");
-
-                    b.Navigation("Timeline");
-                });
-
             modelBuilder.Entity("LRMS_API.ProjectResource", b =>
                 {
                     b.HasOne("LRMS_API.Project", "Project")
@@ -1619,11 +1450,6 @@ namespace Domain.Migrations
                     b.Navigation("Documents");
 
                     b.Navigation("FundDisbursements");
-                });
-
-            modelBuilder.Entity("LRMS_API.ProjectRequest", b =>
-                {
-                    b.Navigation("CompletionRequestDetail");
                 });
 
             modelBuilder.Entity("LRMS_API.ProjectResource", b =>

@@ -52,6 +52,10 @@ public partial class LRMSDbContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
 
+    public virtual DbSet<ProjectRequest> ProjectRequests { get; set; }
+
+    public virtual DbSet<CompletionRequestDetail> CompletionRequestDetails { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

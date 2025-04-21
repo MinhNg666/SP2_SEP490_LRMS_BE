@@ -180,12 +180,18 @@ public class ProjectController : ApiBaseController
 
     [HttpPost("project/{projectId}/council-reject")]
     [Authorize]
-    public async Task<IActionResult> RejectProjectBySecretary(int projectId, List<IFormFile> documentFiles)
+    public async Task<IActionResult> RejectProjectBySecretary(
+        int projectId, 
+        [FromForm] string rejectionReason, 
+        List<IFormFile> documentFiles)
     {
         try
         {
+            if (string.IsNullOrWhiteSpace(rejectionReason))
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Rejection reason is required"));
+            
             var secretaryId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-            var result = await _projectService.RejectProjectBySecretary(projectId, secretaryId, documentFiles);
+            var result = await _projectService.RejectProjectBySecretary(projectId, secretaryId, rejectionReason, documentFiles);
             return Ok(new ApiResponse(StatusCodes.Status200OK, "Project rejected successfully"));
         }
         catch (ServiceException ex)
@@ -328,7 +334,90 @@ public class ProjectController : ApiBaseController
         }
     }
 
-    
+    [HttpPost("project/{projectId}/request-completion")]
+    [Authorize]
+    public async Task<IActionResult> RequestProjectCompletion(int projectId, [FromBody] RequestProjectCompletionRequest request)
+    {
+        if (!ModelState.IsValid)
+        {
+            var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Validation failed", errors));
+        }
 
-    
+        if (!request.BudgetReconciled)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Budget reconciliation confirmation is required."));
+        }
+
+        try
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+            if (userId == 0)
+            {
+                return Unauthorized(new ApiResponse(StatusCodes.Status401Unauthorized, "User not found or not authenticated."));
+            }
+
+            // Pass null for documents since we'll handle them separately
+            await _projectService.RequestProjectCompletionAsync(projectId, userId, request, null);
+
+            return Ok(new ApiResponse(StatusCodes.Status200OK, "Project completion request submitted successfully."));
+        }
+        catch (ServiceException ex)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Unexpected error in RequestProjectCompletion: {ex}");
+            return StatusCode(StatusCodes.Status500InternalServerError, new ApiResponse(StatusCodes.Status500InternalServerError, "An unexpected error occurred."));
+        }
+    }
+
+    [HttpPost("project/{projectId}/upload-completion-documents")]
+    [Authorize]
+    public async Task<IActionResult> UploadCompletionDocuments(int projectId, [FromForm] List<IFormFile> documentFiles)
+    {
+        try
+        {
+            if (documentFiles == null || !documentFiles.Any())
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "No files uploaded"));
+            
+            var allowedExtensions = new[] { ".pdf", ".doc", ".docx" };
+            foreach (var file in documentFiles)
+            {
+                var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+                if (!allowedExtensions.Contains(fileExtension))
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, $"Only PDF, DOC, and DOCX files are allowed. Invalid file: {file.FileName}"));
+            }
+            
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            await _projectService.AddCompletionDocumentsAsync(projectId, documentFiles, userId);
+            
+            return Ok(new ApiResponse(StatusCodes.Status200OK, "Completion documents uploaded successfully"));
+        }
+        catch (ServiceException ex)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Unexpected error in UploadCompletionDocuments: {ex}");
+            return StatusCode(StatusCodes.Status500InternalServerError, new ApiResponse(StatusCodes.Status500InternalServerError, "An unexpected error occurred."));
+        }
+    }
+
+    [HttpGet("completion-requests")]
+    [Authorize]
+    public async Task<IActionResult> GetCompletionRequests()
+    {
+        try
+        {
+            var requests = await _projectService.GetCompletionRequestsAsync();
+            return Ok(new ApiResponse(StatusCodes.Status200OK, "Completion requests retrieved successfully", requests));
+        }
+        catch (ServiceException ex)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
+        }
+    }
 }

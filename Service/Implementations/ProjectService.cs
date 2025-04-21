@@ -197,7 +197,7 @@ public class ProjectService : IProjectService
                             StartDate = phaseStartDate,
                             EndDate = phaseEndDate,
                             Status = initialStatus, // Set the calculated status instead of hardcoded value
-                            ProjectId = project.ProjectId,
+                    ProjectId = project.ProjectId,
                             AssignBy = createdBy,
                             // These are optional fields based on your schema
                             AssignTo = null
@@ -402,27 +402,27 @@ public class ProjectService : IProjectService
             
             foreach (var file in documentFiles)
             {
-                var projectResource = new ProjectResource
-                {
+            var projectResource = new ProjectResource
+            {
                     ResourceName = file.FileName,
-                    ResourceType = 1, // Document
-                    ProjectId = projectId,
-                    Acquired = true,
-                    Quantity = 1
-                };
-                var resourceId = await _projectRepository.AddResourceAsync(projectResource);
+                ResourceType = 1, // Document
+                ProjectId = projectId,
+                Acquired = true,
+                Quantity = 1
+            };
+            var resourceId = await _projectRepository.AddResourceAsync(projectResource);
 
-                var document = new Document
-                {
-                    ProjectId = projectId,
+            var document = new Document
+            {
+                ProjectId = projectId,
                     DocumentUrl = urls[index],
                     FileName = file.FileName,
-                    DocumentType = (int)DocumentTypeEnum.CouncilDecision,
-                    UploadAt = DateTime.Now,
-                    UploadedBy = secretaryId,
-                    ProjectResourceId = resourceId
-                };
-                await _projectRepository.AddDocumentAsync(document);
+                DocumentType = (int)DocumentTypeEnum.CouncilDecision,
+                UploadAt = DateTime.Now,
+                UploadedBy = secretaryId,
+                ProjectResourceId = resourceId
+            };
+            await _projectRepository.AddDocumentAsync(document);
                 index++;
             }
 
@@ -473,7 +473,7 @@ public class ProjectService : IProjectService
         }
     }
 
-    public async Task<bool> RejectProjectBySecretary(int projectId, int secretaryId, IEnumerable<IFormFile> documentFiles)
+    public async Task<bool> RejectProjectBySecretary(int projectId, int secretaryId, string rejectionReason, IEnumerable<IFormFile> documentFiles)
     {
         try
         {
@@ -485,8 +485,6 @@ public class ProjectService : IProjectService
             var allReviewTimelines = await _context.Timelines
                 .Where(t => t.TimelineType == (int)TimelineTypeEnum.ReviewPeriod)
                 .ToListAsync();
-
-            // Console logging code remains the same
             
             var activeReviewTimeline = await _context.Timelines
                 .Include(t => t.Sequence)
@@ -504,7 +502,6 @@ public class ProjectService : IProjectService
             var project = await _projectRepository.GetByIdAsync(projectId);
             if (project == null)
                 throw new ServiceException("Project not found");
-
 
             // Check if project is in pending status
             if (project.Status != (int)ProjectStatusEnum.Pending)
@@ -531,33 +528,34 @@ public class ProjectService : IProjectService
             
             foreach (var file in documentFiles)
             {
-                var projectResource = new ProjectResource
-                {
+            var projectResource = new ProjectResource
+            {
                     ResourceName = file.FileName,
-                    ResourceType = 1, // Document
-                    ProjectId = projectId,
-                    Acquired = true,
-                    Quantity = 1
-                };
-                var resourceId = await _projectRepository.AddResourceAsync(projectResource);
+                ResourceType = 1, // Document
+                ProjectId = projectId,
+                Acquired = true,
+                Quantity = 1
+            };
+            var resourceId = await _projectRepository.AddResourceAsync(projectResource);
 
-                var document = new Document
-                {
-                    ProjectId = projectId,
+            var document = new Document
+            {
+                ProjectId = projectId,
                     DocumentUrl = urls[index],
                     FileName = file.FileName,
-                    DocumentType = (int)DocumentTypeEnum.CouncilDecision,
-                    UploadAt = DateTime.Now,
-                    UploadedBy = secretaryId,
-                    ProjectResourceId = resourceId
-                };
-                await _projectRepository.AddDocumentAsync(document);
+                DocumentType = (int)DocumentTypeEnum.CouncilDecision,
+                UploadAt = DateTime.Now,
+                UploadedBy = secretaryId,
+                ProjectResourceId = resourceId
+            };
+            await _projectRepository.AddDocumentAsync(document);
                 index++;
             }
 
-            // Update project status
+            // Update project status and rejection reason
             project.Status = (int)ProjectStatusEnum.Rejected;
             project.ApprovedBy = approver.GroupMemberId; // Store the approver
+            project.RejectionReason = rejectionReason; // Store the rejection reason
             await _projectRepository.UpdateAsync(project);
 
             // Get approver role name for notification
@@ -572,12 +570,11 @@ public class ProjectService : IProjectService
                 {
                     UserId = member.UserId.Value,
                     Title = "Project Rejected",
-                    Message = $"Project '{project.ProjectName}' has been rejected by the {approverRoleName}",
+                    Message = $"Project '{project.ProjectName}' has been rejected by the {approverRoleName}. Reason: {rejectionReason}",
                     ProjectId = project.ProjectId
                 };
                 await _notificationService.CreateNotification(notificationRequest);
             }
-
 
             return true;
         }
@@ -1060,34 +1057,50 @@ public class ProjectService : IProjectService
             if (project == null)
                 throw new ServiceException("Project not found");
             
-            // Check if project is in appropriate state
-            if (project.Status != (int)ProjectStatusEnum.Approved && 
-                project.Status != (int)ProjectStatusEnum.Work_in_progress)
-                throw new ServiceException("Only approved or in-progress projects can be marked as completed");
-            
-            // Check user permissions (member of the project group)
+            // Check if project is in appropriate state - NOW CHECK FOR Completion_Requested
+            // Or potentially allow re-marking completed? Depends on workflow. Let's assume only requested projects.
+             if (project.Status != (int)ProjectStatusEnum.Completion_Requested)
+                 throw new ServiceException($"Project must be in '{ProjectStatusEnum.Completion_Requested}' status to be marked as completed. Current status: {(ProjectStatusEnum?)project.Status}");
+
+            // Check user permissions (member of the project group) - Or should this be approver role?
+            // For now, keeping original logic, but approval should likely be restricted.
             var userGroups = await _groupRepository.GetGroupsByUserId(userId);
             var groupIds = userGroups.Select(g => g.GroupId);
-            
+
             if (!project.GroupId.HasValue || !groupIds.Contains(project.GroupId.Value))
-                throw new ServiceException("You don't have permission to complete this project");
-            
-            // Verify all phases are completed
-            if (!project.ProjectPhases.Any())
-                throw new ServiceException("Project has no phases to complete");
-            
-            var incompletePhasesCount = project.ProjectPhases
-                .Count(p => p.Status != (int)ProjectPhaseStatusEnum.Completed);
-            
-            if (incompletePhasesCount > 0)
-                throw new ServiceException($"Cannot mark project as completed. {incompletePhasesCount} phases are not yet completed.");
-            
-            // Update project status
-            project.Status = (int)ProjectStatusEnum.Completed;
-            project.UpdatedAt = DateTime.Now;
-            
+                 throw new ServiceException("You don't have permission to mark this project as completed."); // Modify permission check later
+
+            // Verify all phases are completed - This check is done before requesting completion, maybe remove here?
+            // if (!project.ProjectPhases.Any())
+            //    throw new ServiceException("Project has no phases to complete");
+
+            // var incompletePhasesCount = project.ProjectPhases
+            //    .Count(p => p.Status != (int)ProjectPhaseStatusEnum.Completed);
+
+            // if (incompletePhasesCount > 0)
+            //    throw new ServiceException($"Cannot mark project as completed. {incompletePhasesCount} phases are not yet completed.");
+
+            // Update project status - Should this be Completion_Approved instead?
+            project.Status = (int)ProjectStatusEnum.Completion_Approved; // Use the new status
+            project.UpdatedAt = DateTime.UtcNow;
+            // Potentially store the user who approved it in the ProjectRequests table
+
             await _projectRepository.UpdateAsync(project);
-            
+
+            // Update the corresponding ProjectRequest status
+             var requestToUpdate = await _context.ProjectRequests
+                 .FirstOrDefaultAsync(r => r.ProjectId == projectId && r.RequestType == ProjectRequestTypeEnum.Completion && r.ApprovalStatus == ApprovalStatusEnum.Pending);
+
+             if (requestToUpdate != null)
+             {
+                 requestToUpdate.ApprovalStatus = ApprovalStatusEnum.Approved;
+                 requestToUpdate.ApprovedById = userId; // Assuming the user calling this IS the approver
+                 requestToUpdate.ApprovedAt = DateTime.UtcNow;
+                 _context.ProjectRequests.Update(requestToUpdate);
+                 await _context.SaveChangesAsync();
+             }
+
+
             // Send notifications to group members
             var groupMembers = await _groupRepository.GetMembersByGroupId(project.GroupId.Value);
             foreach (var member in groupMembers)
@@ -1095,21 +1108,276 @@ public class ProjectService : IProjectService
                 var notificationRequest = new CreateNotificationRequest
                 {
                     UserId = member.UserId.Value,
-                    Title = "Project Completed",
-                    Message = $"Project '{project.ProjectName}' has been marked as completed",
+                    Title = "Project Completion Approved", // Update title
+                    Message = $"Project '{project.ProjectName}' completion request has been approved.", // Update message
                     ProjectId = project.ProjectId,
-                    Status = 0,
+                    Status = 0, // Or appropriate status
                     IsRead = false
                 };
-                
+
                 await _notificationService.CreateNotification(notificationRequest);
             }
-            
+
             return true;
         }
         catch (Exception ex)
         {
             throw new ServiceException($"Error marking project as completed: {ex.Message}");
+        }
+    }
+
+    public async Task RequestProjectCompletionAsync(int projectId, int userId, RequestProjectCompletionRequest request, IEnumerable<IFormFile>? finalDocuments)
+    {
+        // Use a transaction to ensure atomicity
+        using var transaction = await _context.Database.BeginTransactionAsync();
+        try
+        {
+            // --- Validation ---
+            var project = await _context.Projects
+                .Include(p => p.ProjectPhases)
+                .Include(p => p.Group) // Include group to check user membership
+                .FirstOrDefaultAsync(p => p.ProjectId == projectId);
+
+            if (project == null)
+                throw new ServiceException("Project not found");
+
+            // Check user permissions (must be a member of the project group)
+            var isMember = await _context.GroupMembers
+                .AnyAsync(gm => gm.GroupId == project.GroupId && gm.UserId == userId && gm.Status == (int)GroupMemberStatus.Active);
+
+            if (!isMember)
+                throw new ServiceException("You are not authorized to request completion for this project.");
+
+            // Check project status (must be Approved to request completion)
+            if (project.Status != (int)ProjectStatusEnum.Approved)
+                throw new ServiceException($"Project must be in '{ProjectStatusEnum.Approved}' status to request completion. Current status: {(ProjectStatusEnum?)project.Status}");
+
+            // Verify all phases are completed
+            if (!project.ProjectPhases.Any())
+                throw new ServiceException("Project has no phases defined.");
+
+            var incompletePhasesCount = project.ProjectPhases
+                .Count(p => p.Status != (int)ProjectPhaseStatusEnum.Completed);
+
+            if (incompletePhasesCount > 0)
+                throw new ServiceException($"Cannot request completion. {incompletePhasesCount} project phases are not yet marked as completed.");
+
+            // Verify budget reconciliation confirmation
+            if (!request.BudgetReconciled)
+                throw new ServiceException("Budget must be confirmed as reconciled before submitting completion request.");
+
+            // --- Create Request Records ---
+
+            // 1. Create the main ProjectRequest entry
+            var projectRequest = new ProjectRequest
+            {
+                ProjectId = projectId,
+                RequestType = ProjectRequestTypeEnum.Completion,
+                RequestedById = userId,
+                RequestedAt = DateTime.UtcNow, // Use UTC for consistency
+                ApprovalStatus = ApprovalStatusEnum.Pending,
+                // TODO: Determine how to assign council/timeline if needed for completion review
+                // AssignedCouncilId = DetermineCouncilGroup(project.DepartmentId),
+                // TimelineId = FindActiveReviewTimeline(),
+            };
+            await _context.ProjectRequests.AddAsync(projectRequest);
+            await _context.SaveChangesAsync(); // Save to get the request_id
+
+            // Calculate the remaining budget from project data
+            decimal calculatedBudgetRemaining = (project.ApprovedBudget ?? 0) - project.SpentBudget;
+
+            // Create CompletionRequestDetail entry with the calculated budget
+            var completionDetail = new CompletionRequestDetail
+            {
+                RequestId = projectRequest.RequestId,
+                CompletionSummary = request.CompletionSummary,
+                BudgetReconciled = request.BudgetReconciled,
+                BudgetVarianceExplanation = request.BudgetVarianceExplanation,
+                BudgetRemaining = calculatedBudgetRemaining // Use server-calculated value
+            };
+            await _context.CompletionRequestDetails.AddAsync(completionDetail);
+
+            // --- Handle Document Uploads ---
+            if (finalDocuments != null && finalDocuments.Any())
+            {
+                var urls = await _s3Service.UploadFilesAsync(finalDocuments, $"projects/{projectId}/completion-documents");
+                int index = 0;
+                foreach (var file in finalDocuments)
+                {
+                    // Create ProjectResource
+                    var projectResource = new ProjectResource
+                    {
+                        ResourceName = file.FileName,
+                        ResourceType = 1, // Document type
+                        ProjectId = projectId,
+                        Acquired = true, // Assuming acquired upon upload
+                        Quantity = 1
+                    };
+                    await _context.ProjectResources.AddAsync(projectResource);
+                    await _context.SaveChangesAsync(); // Save to get ResourceId
+
+                    // Create Document linked to the resource and project
+                    var document = new Document
+                    {
+                        ProjectId = projectId,
+                        DocumentUrl = urls[index],
+                        FileName = file.FileName,
+                        // TODO: Add a specific DocumentTypeEnum value for final reports, e.g., FinalReport
+                        DocumentType = (int)DocumentTypeEnum.ProjectProposal, // Replace with actual final report type
+                        UploadAt = DateTime.UtcNow,
+                        UploadedBy = userId,
+                        ProjectResourceId = projectResource.ProjectResourceId
+                    };
+                    await _context.Documents.AddAsync(document);
+                    index++;
+                }
+            }
+
+            // --- Update Project Status ---
+            project.Status = (int)ProjectStatusEnum.Completion_Requested;
+            project.UpdatedAt = DateTime.UtcNow;
+            _context.Projects.Update(project);
+
+            // --- Save All Changes ---
+            await _context.SaveChangesAsync();
+
+            // --- Notifications ---
+            // TODO: Implement notification logic
+            // Find relevant council members/secretary based on department or assigned council
+            // var councilMembers = await FindCouncilMembersToNotify(project.DepartmentId, projectRequest.AssignedCouncilId);
+            // foreach (var member in councilMembers)
+            // {
+            //     await _notificationService.CreateNotification(new CreateNotificationRequest { ... });
+            // }
+
+            // --- Commit Transaction ---
+            await transaction.CommitAsync();
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            // Log the exception details (using a proper logging framework is recommended)
+            Console.WriteLine($"Error requesting project completion for project {projectId}: {ex.Message}");
+            Console.WriteLine(ex.StackTrace);
+            // Re-throw as ServiceException or a more specific exception type
+            throw new ServiceException($"An error occurred while submitting the completion request: {ex.Message}", ex);
+        }
+    }
+
+    public async Task AddCompletionDocumentsAsync(int projectId, IEnumerable<IFormFile> documentFiles, int userId)
+    {
+        try
+        {
+            // Verification code remains the same
+            var project = await _context.Projects.FindAsync(projectId);
+            if (project == null)
+                throw new ServiceException("Project not found");
+            
+            if (project.Status != (int)ProjectStatusEnum.Completion_Requested && 
+                project.Status != (int)ProjectStatusEnum.Approved)
+                throw new ServiceException("Documents can only be added to projects with a pending completion request or approved status");
+            
+            // Permission check remains the same
+            var isMember = await _context.GroupMembers
+                .AnyAsync(gm => gm.GroupId == project.GroupId && gm.UserId == userId && gm.Status == (int)GroupMemberStatus.Active);
+            
+            if (!isMember)
+                throw new ServiceException("You are not authorized to add completion documents to this project");
+            
+            // Find the associated completion request
+            var completionRequest = await _context.ProjectRequests
+                .FirstOrDefaultAsync(r => r.ProjectId == projectId && 
+                                    r.RequestType == ProjectRequestTypeEnum.Completion &&
+                                    r.ApprovalStatus != ApprovalStatusEnum.Rejected);
+            
+            if (completionRequest == null)
+                throw new ServiceException("No active completion request found for this project");
+            
+            // File upload logic
+            if (documentFiles != null && documentFiles.Any())
+            {
+                var urls = await _s3Service.UploadFilesAsync(documentFiles, $"projects/{projectId}/completion-documents");
+                int index = 0;
+                
+                foreach (var file in documentFiles)
+                {
+                    var projectResource = new ProjectResource
+                    {
+                        ResourceName = file.FileName,
+                        ResourceType = 1, // Document type
+                        ProjectId = projectId,
+                        Acquired = true,
+                        Quantity = 1
+                    };
+                    
+                    await _context.ProjectResources.AddAsync(projectResource);
+                    await _context.SaveChangesAsync();
+                    
+                    var document = new Document
+                    {
+                        ProjectId = projectId,
+                        DocumentUrl = urls[index],
+                        FileName = file.FileName,
+                        DocumentType = (int)DocumentTypeEnum.ProjectCompletion, // Use the new document type
+                        UploadAt = DateTime.UtcNow,
+                        UploadedBy = userId,
+                        ProjectResourceId = projectResource.ProjectResourceId,
+                        RequestId = completionRequest.RequestId // Link to the request
+                    };
+                    
+                    await _context.Documents.AddAsync(document);
+                    index++;
+                }
+                
+                await _context.SaveChangesAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error adding completion documents: {ex.Message}");
+            throw new ServiceException($"Error adding completion documents: {ex.Message}", ex);
+        }
+    }
+
+    public async Task<IEnumerable<CompletionRequestResponse>> GetCompletionRequestsAsync()
+    {
+        try
+        {
+            var completionRequests = await _context.ProjectRequests
+                .Include(r => r.Project)
+                .Include(r => r.RequestedBy)
+                .Include(r => r.ApprovedBy)
+                .Include(r => r.CompletionRequestDetail)
+                .Where(r => r.RequestType == ProjectRequestTypeEnum.Completion)
+                .ToListAsync();
+
+            return completionRequests.Select(r => new CompletionRequestResponse
+            {
+                RequestId = r.RequestId,
+                ProjectId = r.ProjectId,
+                ProjectName = r.Project?.ProjectName ?? "Unknown Project",
+                ApprovalStatus = r.ApprovalStatus,
+                RequestedAt = r.RequestedAt,
+                RequestedById = r.RequestedById,
+                RequesterName = r.RequestedBy?.FullName ?? "Unknown",
+                ApprovedAt = r.ApprovedAt,
+                ApproverName = r.ApprovedBy?.FullName ?? "",
+                
+                // CompletionRequestDetail data
+                BudgetRemaining = r.CompletionRequestDetail?.BudgetRemaining,
+                BudgetReconciled = r.CompletionRequestDetail?.BudgetReconciled ?? false,
+                CompletionSummary = r.CompletionRequestDetail?.CompletionSummary,
+                BudgetVarianceExplanation = r.CompletionRequestDetail?.BudgetVarianceExplanation,
+                
+                // Additional project data
+                ApprovedBudget = r.Project?.ApprovedBudget,
+                SpentBudget = r.Project?.SpentBudget ?? 0
+            }).ToList();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error getting completion requests: {ex.Message}");
+            throw new ServiceException($"Error retrieving project completion requests: {ex.Message}", ex);
         }
     }
 }

@@ -4,6 +4,7 @@ using LRMS_API;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Domain.Migrations
 {
     [DbContext(typeof(LRMSDbContext))]
-    partial class LRMSDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250421080811_AddRequestTrackingTables")]
+    partial class AddRequestTrackingTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -269,9 +272,6 @@ namespace Domain.Migrations
                         .HasColumnType("int")
                         .HasColumnName("project_resource_id");
 
-                    b.Property<int?>("RequestId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime?>("UploadAt")
                         .HasColumnType("datetime")
                         .HasColumnName("upload_at");
@@ -292,8 +292,6 @@ namespace Domain.Migrations
                     b.HasIndex("ProjectPhaseId");
 
                     b.HasIndex("ProjectResourceId");
-
-                    b.HasIndex("RequestId");
 
                     b.HasIndex("UploadedBy");
 
@@ -1212,10 +1210,6 @@ namespace Domain.Migrations
                         .HasForeignKey("ProjectResourceId")
                         .HasConstraintName("FK_Documents_ProjectResources");
 
-                    b.HasOne("LRMS_API.ProjectRequest", "ProjectRequest")
-                        .WithMany()
-                        .HasForeignKey("RequestId");
-
                     b.HasOne("LRMS_API.User", "UploadedByNavigation")
                         .WithMany("Documents")
                         .HasForeignKey("UploadedBy")
@@ -1228,8 +1222,6 @@ namespace Domain.Migrations
                     b.Navigation("Project");
 
                     b.Navigation("ProjectPhase");
-
-                    b.Navigation("ProjectRequest");
 
                     b.Navigation("ProjectResource");
 

@@ -14,5 +14,6 @@ namespace Domain.Constants
         ConferenceProposal = 3,
         JournalPaper = 4,
         DisbursementConfirmation =5,
+        ProjectCompletion = 6,
     }
 }

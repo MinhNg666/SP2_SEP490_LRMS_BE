@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace LRMS_API;
 
@@ -26,6 +27,11 @@ public partial class Document
     public int? UploadedBy { get; set; }
 
     public int? ProjectPhaseId { get; set; }
+
+    public int? RequestId { get; set; } // Nullable RequestId
+
+    [ForeignKey("RequestId")]
+    public virtual ProjectRequest? ProjectRequest { get; set; }
 
     public virtual ConferenceExpense ConferenceExpense { get; set; } = null!;
 

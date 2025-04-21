@@ -26,7 +26,8 @@ namespace LRMS_API.Services
                     {
                         var repository = scope.ServiceProvider.GetRequiredService<IProjectPhaseRepository>();
                         await repository.UpdateProjectPhaseStatusesBasedOnDates();
-                        Console.WriteLine($"Project phase statuses updated automatically at {DateTime.Now}");
+                        await repository.UpdateProjectStatusBasedOnPhases();
+                        Console.WriteLine($"Project statuses updated automatically at {DateTime.Now}");
                     }
                 }
                 catch (Exception ex)

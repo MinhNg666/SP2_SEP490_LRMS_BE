@@ -140,4 +140,43 @@ public class ProjectPhaseRepository : GenericRepository<ProjectPhase>, IProjectP
             return false;
         }
     }
+
+    public async Task UpdateProjectStatusBasedOnPhases()
+    {
+        try
+        {
+            // Get all projects that are in Approved status
+            var approvedProjects = await _context.Projects
+                .Where(p => p.Status == (int)ProjectStatusEnum.Approved)
+                .Include(p => p.ProjectPhases)
+                .ToListAsync();
+            
+            foreach (var project in approvedProjects)
+            {
+                // Skip projects with no phases
+                if (!project.ProjectPhases.Any())
+                    continue;
+                    
+                // Check if all phases are Overdued
+                bool allPhasesOverdued = project.ProjectPhases.All(p => 
+                    p.Status == (int)ProjectPhaseStatusEnum.Overdued);
+                    
+                // If all phases are overdued, mark the project as Closed
+                if (allPhasesOverdued)
+                {
+                    Console.WriteLine($"Marking project {project.ProjectId} ({project.ProjectName}) as Closed because all phases are Overdued");
+                    project.Status = (int)ProjectStatusEnum.Closed;
+                    project.UpdatedAt = DateTime.Now;
+                    _context.Projects.Update(project);
+                }
+            }
+            
+            await _context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in UpdateProjectStatusBasedOnPhases: {ex.Message}");
+            Console.WriteLine(ex.StackTrace);
+        }
+    }
 }

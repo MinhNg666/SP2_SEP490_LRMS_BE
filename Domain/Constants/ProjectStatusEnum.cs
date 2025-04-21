@@ -4,7 +4,10 @@ public enum ProjectStatusEnum
 {
     Pending = 0,
     Approved = 1,
-    Work_in_progress = 2,
+    Closed = 2,
     Rejected = 3,
-    Completed = 4
+    Completed = 4,
+    Completion_Requested = 5,
+    Completion_Approved = 6,
+    Completion_Rejected = 7,
 }
