@@ -40,6 +40,9 @@ public class FundDisbursementService : IFundDisbursementService
     {
         try
         {
+            // Use a transaction to ensure both the fund disbursement and project request are created atomically
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
             // Check if the project exists
             var project = await _projectRepository.GetByIdAsync(request.ProjectId);
             if (project == null)
@@ -165,7 +168,7 @@ public class FundDisbursementService : IFundDisbursementService
             if (activeFundRequestTimeline == null)
                 throw new ServiceException("Fund requests are not currently open. Please check the funding schedule.");
                 
-            // Create the fund disbursement request with the new UserRequest field
+            // Create the fund disbursement request
             var fundDisbursement = new FundDisbursement
             {
                 FundRequest = request.FundRequest,
@@ -175,10 +178,28 @@ public class FundDisbursementService : IFundDisbursementService
                 QuotaId = availableQuota.QuotaId,
                 Status = (int)FundDisbursementStatusEnum.Pending,
                 CreatedAt = DateTime.Now,
-                UserRequest = userId  // Use the user ID directly
+                UserRequest = userId
             };
             
             await _fundDisbursementRepository.AddAsync(fundDisbursement);
+            
+            // Create corresponding project request
+            var projectRequest = new ProjectRequest
+            {
+                ProjectId = request.ProjectId,
+                PhaseId = request.ProjectPhaseId,
+                RequestType = ProjectRequestTypeEnum.Fund_Disbursement,
+                RequestedById = userId,
+                RequestedAt = DateTime.Now,
+                ApprovalStatus = ApprovalStatusEnum.Pending,
+                FundDisbursementId = fundDisbursement.FundDisbursementId
+            };
+            
+            await _context.ProjectRequests.AddAsync(projectRequest);
+            await _context.SaveChangesAsync();
+            
+            // Commit the transaction
+            await transaction.CommitAsync();
             
             return fundDisbursement.FundDisbursementId;
         }

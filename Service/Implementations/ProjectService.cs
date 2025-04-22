@@ -129,7 +129,7 @@ public class ProjectService : IProjectService
             // Use the sequence ID from the active timeline
             int sequenceId = activeRegistrationTimeline.SequenceId.Value;
             
-            // Create project with the automatically determined sequence ID
+            // Create project with initial Pending status
             var project = new Project
             {
             ProjectName = request.ProjectName,
@@ -145,10 +145,23 @@ public class ProjectService : IProjectService
             GroupId = request.GroupId,
             DepartmentId = request.DepartmentId,
                 ProjectType = (int)ProjectTypeEnum.Research,
-                SequenceId = sequenceId // Set the automatically determined sequence ID
+                SequenceId = sequenceId
         };
 
         await _projectRepository.AddAsync(project);
+            
+            // Create ProjectRequest for this project creation
+            var projectRequest = new ProjectRequest
+            {
+                ProjectId = project.ProjectId,
+                RequestType = ProjectRequestTypeEnum.Research_Creation,
+                RequestedById = createdBy,
+                RequestedAt = DateTime.UtcNow,
+                ApprovalStatus = ApprovalStatusEnum.Pending
+            };
+            
+            await _context.ProjectRequests.AddAsync(projectRequest);
+            await _context.SaveChangesAsync();
             
             // Modified project phase creation code with detailed error handling
             if (request.ProjectPhases != null && request.ProjectPhases.Any())
@@ -346,6 +359,7 @@ public class ProjectService : IProjectService
 
     public async Task<bool> ApproveProjectBySecretary(int projectId, int secretaryId, IEnumerable<IFormFile> documentFiles)
     {
+        using var transaction = await _context.Database.BeginTransactionAsync();
         try
         {
             if (documentFiles == null || !documentFiles.Any())
@@ -376,6 +390,14 @@ public class ProjectService : IProjectService
             if (project == null)
                 throw new ServiceException("Project not found");
 
+            // Find the corresponding ProjectRequest
+            var projectRequest = await _context.ProjectRequests
+                .FirstOrDefaultAsync(r => r.ProjectId == projectId && 
+                                     r.RequestType == ProjectRequestTypeEnum.Research_Creation &&
+                                     r.ApprovalStatus == ApprovalStatusEnum.Pending);
+                                     
+            if (projectRequest == null)
+                throw new ServiceException("No pending project request found for this project");
 
             // Check if project is in pending status
             if (project.Status != (int)ProjectStatusEnum.Pending)
@@ -426,9 +448,15 @@ public class ProjectService : IProjectService
                 index++;
             }
 
-            // Update project status
+            // First update ProjectRequest status
+            projectRequest.ApprovalStatus = ApprovalStatusEnum.Approved;
+            projectRequest.ApprovedById = secretaryId;
+            projectRequest.ApprovedAt = DateTime.UtcNow;
+            _context.ProjectRequests.Update(projectRequest);
+            
+            // Then update project status
             project.Status = (int)ProjectStatusEnum.Approved;
-            project.ApprovedBy = approver.GroupMemberId; // Store the approver
+            project.ApprovedBy = approver.GroupMemberId;
             await _projectRepository.UpdateAsync(project);
 
             // Get approver role name for notification
@@ -465,16 +493,19 @@ public class ProjectService : IProjectService
             // debug
             Console.WriteLine($"Created quota {quota.QuotaId} for project {projectId} with budget {quota.AllocatedBudget}");
 
+            await transaction.CommitAsync();
             return true;
         }
         catch (Exception ex)
         {
+            await transaction.RollbackAsync();
             throw new ServiceException($"Error while approving project: {ex.Message}");
         }
     }
 
     public async Task<bool> RejectProjectBySecretary(int projectId, int secretaryId, string rejectionReason, IEnumerable<IFormFile> documentFiles)
     {
+        using var transaction = await _context.Database.BeginTransactionAsync();
         try
         {
             if (documentFiles == null || !documentFiles.Any())
@@ -502,6 +533,15 @@ public class ProjectService : IProjectService
             var project = await _projectRepository.GetByIdAsync(projectId);
             if (project == null)
                 throw new ServiceException("Project not found");
+
+            // Find the corresponding ProjectRequest
+            var projectRequest = await _context.ProjectRequests
+                .FirstOrDefaultAsync(r => r.ProjectId == projectId && 
+                                     r.RequestType == ProjectRequestTypeEnum.Research_Creation &&
+                                     r.ApprovalStatus == ApprovalStatusEnum.Pending);
+                                     
+            if (projectRequest == null)
+                throw new ServiceException("No pending project request found for this project");
 
             // Check if project is in pending status
             if (project.Status != (int)ProjectStatusEnum.Pending)
@@ -552,10 +592,17 @@ public class ProjectService : IProjectService
                 index++;
             }
 
-            // Update project status and rejection reason
+            // First update ProjectRequest status
+            projectRequest.ApprovalStatus = ApprovalStatusEnum.Rejected;
+            projectRequest.ApprovedById = secretaryId; // Using same field even for rejection
+            projectRequest.ApprovedAt = DateTime.UtcNow;
+            projectRequest.RejectionReason = rejectionReason;
+            _context.ProjectRequests.Update(projectRequest);
+            
+            // Then update project status and rejection reason
             project.Status = (int)ProjectStatusEnum.Rejected;
-            project.ApprovedBy = approver.GroupMemberId; // Store the approver
-            project.RejectionReason = rejectionReason; // Store the rejection reason
+            project.ApprovedBy = approver.GroupMemberId;
+            project.RejectionReason = rejectionReason;
             await _projectRepository.UpdateAsync(project);
 
             // Get approver role name for notification
@@ -576,10 +623,12 @@ public class ProjectService : IProjectService
                 await _notificationService.CreateNotification(notificationRequest);
             }
 
+            await transaction.CommitAsync();
             return true;
         }
         catch (Exception ex)
         {
+            await transaction.RollbackAsync();
             throw new ServiceException($"Error while rejecting project: {ex.Message}");
         }
     }
@@ -1024,11 +1073,11 @@ public class ProjectService : IProjectService
                 await _context.SaveChangesAsync();
                 
                 // Create document with the resource
-                var document = new Document
-                {
-                    ProjectId = projectId,
-                    DocumentUrl = documentUrl,
-                    FileName = documentFile.FileName,
+            var document = new Document
+            {
+                ProjectId = projectId,
+                DocumentUrl = documentUrl,
+                FileName = documentFile.FileName,
                     DocumentType = (int)DocumentTypeEnum.ProjectProposal,
                     UploadAt = DateTime.Now,
                     UploadedBy = userId,
@@ -1345,13 +1394,350 @@ public class ProjectService : IProjectService
         {
             var completionRequests = await _context.ProjectRequests
                 .Include(r => r.Project)
+                    .ThenInclude(p => p.Department)
+                .Include(r => r.Project)
+                    .ThenInclude(p => p.Group)
                 .Include(r => r.RequestedBy)
                 .Include(r => r.ApprovedBy)
-                .Include(r => r.CompletionRequestDetail)
-                .Where(r => r.RequestType == ProjectRequestTypeEnum.Completion)
+                .OrderByDescending(r => r.RequestedAt)
                 .ToListAsync();
 
             return completionRequests.Select(r => new CompletionRequestResponse
+            {
+                // Request information
+                RequestId = r.RequestId,
+                RequestType = r.RequestType,
+                ApprovalStatus = r.ApprovalStatus,
+                RequestedAt = r.RequestedAt,
+                RejectionReason = r.RejectionReason,
+                
+                // Requester information
+                RequestedById = r.RequestedById,
+                RequesterName = r.RequestedBy?.FullName ?? "Unknown",
+                
+                // Approver information
+                ApprovedById = r.ApprovedById,
+                ApproverName = r.ApprovedBy?.FullName,
+                ApprovedAt = r.ApprovedAt,
+                
+                // Project information
+                ProjectId = r.ProjectId,
+                ProjectName = r.Project?.ProjectName ?? "Unknown Project",
+                ProjectDescription = r.Project?.Description ?? "",
+                ProjectStatus = (ProjectStatusEnum)(r.Project?.Status ?? 0),
+                ApprovedBudget = r.Project?.ApprovedBudget,
+                SpentBudget = r.Project?.SpentBudget ?? 0,
+                
+                // Department information
+                DepartmentId = r.Project?.DepartmentId,
+                DepartmentName = r.Project?.Department?.DepartmentName ?? "Unknown Department",
+                
+                // Group information
+                GroupId = r.Project?.GroupId,
+                GroupName = r.Project?.Group?.GroupName ?? "Unknown Group"
+            }).ToList();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error getting project requests: {ex.Message}");
+            throw new ServiceException($"Error retrieving project requests: {ex.Message}", ex);
+        }
+    }
+
+    public async Task<bool> ApproveCompletionRequestAsync(int requestId, int approverId, IEnumerable<IFormFile> documents)
+    {
+        using var transaction = await _context.Database.BeginTransactionAsync();
+        try
+        {
+            // 1. Verify request exists and is in pending state
+            var request = await _context.ProjectRequests
+                .Include(r => r.Project)
+                .FirstOrDefaultAsync(r => r.RequestId == requestId && 
+                                    r.RequestType == ProjectRequestTypeEnum.Completion);
+            
+            if (request == null)
+                throw new ServiceException("Completion request not found");
+            
+            if (request.ApprovalStatus != ApprovalStatusEnum.Pending)
+                throw new ServiceException($"Cannot approve request with status: {request.ApprovalStatus}");
+            
+            // 2. Verify project is in Completion_Requested status
+            var project = request.Project;
+            if (project.Status != (int)ProjectStatusEnum.Completion_Requested)
+                throw new ServiceException("Project is not in a completion requested state");
+            
+            // 3. Verify approver has permission (council member)
+            var approverGroups = await _groupRepository.GetGroupsByUserId(approverId);
+            bool isCouncilMember = await _context.GroupMembers
+                .AnyAsync(gm => gm.UserId == approverId && 
+                         gm.Group.GroupType == (int)GroupTypeEnum.Council &&
+                         gm.Status == (int)GroupMemberStatus.Active);
+                         
+            if (!isCouncilMember)
+                throw new ServiceException("Only council members can approve completion requests");
+            
+            // 4. Process document uploads if any
+            if (documents != null && documents.Any())
+            {
+                var urls = await _s3Service.UploadFilesAsync(documents, $"projects/{project.ProjectId}/completion-approval");
+                int index = 0;
+                
+                foreach (var file in documents)
+                {
+                    var projectResource = new ProjectResource
+                    {
+                        ResourceName = file.FileName,
+                        ResourceType = 1, // Document type
+                        ProjectId = project.ProjectId,
+                        Acquired = true,
+                        Quantity = 1
+                    };
+                    
+                    await _context.ProjectResources.AddAsync(projectResource);
+                    await _context.SaveChangesAsync();
+                    
+                    var document = new Document
+                    {
+                        ProjectId = project.ProjectId,
+                        DocumentUrl = urls[index],
+                        FileName = file.FileName,
+                        DocumentType = (int)DocumentTypeEnum.CouncilDecision,
+                        UploadAt = DateTime.UtcNow,
+                        UploadedBy = approverId,
+                        ProjectResourceId = projectResource.ProjectResourceId,
+                        RequestId = requestId // Link to the request
+                    };
+                    
+                    await _context.Documents.AddAsync(document);
+                    index++;
+                }
+                
+                await _context.SaveChangesAsync();
+            }
+            
+            // 5. Update request status
+            request.ApprovalStatus = ApprovalStatusEnum.Approved;
+            request.ApprovedById = approverId;
+            request.ApprovedAt = DateTime.UtcNow;
+            
+            // 6. Update project status to Completion_Approved
+            project.Status = (int)ProjectStatusEnum.Completion_Approved;
+            project.UpdatedAt = DateTime.UtcNow;
+            
+            _context.ProjectRequests.Update(request);
+            _context.Projects.Update(project);
+            await _context.SaveChangesAsync();
+            
+            // 7. Send notifications
+            var groupMembers = await _groupRepository.GetMembersByGroupId(project.GroupId.Value);
+            foreach (var member in groupMembers)
+            {
+                var notificationRequest = new CreateNotificationRequest
+                {
+                    UserId = member.UserId.Value,
+                    Title = "Project Completion Approved",
+                    Message = $"Project '{project.ProjectName}' completion request has been approved.",
+                    ProjectId = project.ProjectId
+                };
+                
+                await _notificationService.CreateNotification(notificationRequest);
+            }
+            
+            await transaction.CommitAsync();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            throw new ServiceException($"Error approving completion request: {ex.Message}", ex);
+        }
+    }
+
+    public async Task<bool> RejectCompletionRequestAsync(int requestId, int rejecterId, string rejectionReason, IEnumerable<IFormFile> documents)
+    {
+        using var transaction = await _context.Database.BeginTransactionAsync();
+        try
+        {
+            // Similar validations as approve method
+            var request = await _context.ProjectRequests
+                .Include(r => r.Project)
+                .FirstOrDefaultAsync(r => r.RequestId == requestId && 
+                                    r.RequestType == ProjectRequestTypeEnum.Completion);
+            
+            if (request == null)
+                throw new ServiceException("Completion request not found");
+            
+            if (request.ApprovalStatus != ApprovalStatusEnum.Pending)
+                throw new ServiceException($"Cannot reject request with status: {request.ApprovalStatus}");
+            
+            var project = request.Project;
+            if (project.Status != (int)ProjectStatusEnum.Completion_Requested)
+                throw new ServiceException("Project is not in a completion requested state");
+            
+            // Verify rejecter has permission
+            var rejecterGroups = await _groupRepository.GetGroupsByUserId(rejecterId);
+            bool isCouncilMember = await _context.GroupMembers
+                .AnyAsync(gm => gm.UserId == rejecterId && 
+                         gm.Group.GroupType == (int)GroupTypeEnum.Council &&
+                         gm.Status == (int)GroupMemberStatus.Active);
+                         
+            if (!isCouncilMember)
+                throw new ServiceException("Only council members can reject completion requests");
+            
+            // Require rejection reason
+            if (string.IsNullOrWhiteSpace(rejectionReason))
+                throw new ServiceException("Rejection reason is required");
+            
+            // Process documents
+            if (documents != null && documents.Any())
+            {
+                var urls = await _s3Service.UploadFilesAsync(documents, $"projects/{project.ProjectId}/completion-rejection");
+                int index = 0;
+                
+                foreach (var file in documents)
+                {
+                    var projectResource = new ProjectResource
+                    {
+                        ResourceName = file.FileName,
+                        ResourceType = 1, // Document type
+                        ProjectId = project.ProjectId,
+                        Acquired = true,
+                        Quantity = 1
+                    };
+                    
+                    await _context.ProjectResources.AddAsync(projectResource);
+                    await _context.SaveChangesAsync();
+                    
+                    var document = new Document
+                    {
+                        ProjectId = project.ProjectId,
+                        DocumentUrl = urls[index],
+                        FileName = file.FileName,
+                        DocumentType = (int)DocumentTypeEnum.CouncilDecision,
+                        UploadAt = DateTime.UtcNow,
+                        UploadedBy = rejecterId,
+                        ProjectResourceId = projectResource.ProjectResourceId,
+                        RequestId = requestId // Link to the request
+                    };
+                    
+                    await _context.Documents.AddAsync(document);
+                    index++;
+                }
+                
+                await _context.SaveChangesAsync();
+            }
+            
+            // Update request status
+            request.ApprovalStatus = ApprovalStatusEnum.Rejected;
+            request.ApprovedById = rejecterId; // Using same field even for rejection
+            request.ApprovedAt = DateTime.UtcNow;
+            request.RejectionReason = rejectionReason;
+            
+            // Update project status back to Approved to allow resubmission
+            project.Status = (int)ProjectStatusEnum.Approved;
+            project.UpdatedAt = DateTime.UtcNow;
+            
+            _context.ProjectRequests.Update(request);
+            _context.Projects.Update(project);
+            await _context.SaveChangesAsync();
+            
+            // Send notifications
+            var groupMembers = await _groupRepository.GetMembersByGroupId(project.GroupId.Value);
+            foreach (var member in groupMembers)
+            {
+                var notificationRequest = new CreateNotificationRequest
+                {
+                    UserId = member.UserId.Value,
+                    Title = "Project Completion Rejected",
+                    Message = $"Project '{project.ProjectName}' completion request has been rejected. Reason: {rejectionReason}",
+                    ProjectId = project.ProjectId
+                };
+                
+                await _notificationService.CreateNotification(notificationRequest);
+            }
+            
+            await transaction.CommitAsync();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            throw new ServiceException($"Error rejecting completion request: {ex.Message}", ex);
+        }
+    }
+
+    public async Task<CompletionRequestDetailResponse> GetCompletionRequestByIdAsync(int requestId)
+    {
+        try
+        {
+            var request = await _context.ProjectRequests
+                .Include(r => r.Project)
+                .Include(r => r.RequestedBy)
+                .Include(r => r.ApprovedBy)
+                .Include(r => r.CompletionRequestDetail)
+                .FirstOrDefaultAsync(r => r.RequestId == requestId && 
+                                    r.RequestType == ProjectRequestTypeEnum.Completion);
+            
+            if (request == null)
+                throw new ServiceException("Completion request not found");
+            
+            // Fetch documents related to this request
+            var documents = await _context.Documents
+                .Where(d => d.RequestId == requestId)
+                .ToListAsync();
+            
+            return new CompletionRequestDetailResponse
+            {
+                // Basic info from the request
+                RequestId = request.RequestId,
+                ProjectId = request.ProjectId,
+                ProjectName = request.Project?.ProjectName ?? "Unknown Project",
+                ApprovalStatus = request.ApprovalStatus,
+                RequestedAt = request.RequestedAt,
+                RequestedById = request.RequestedById,
+                RequesterName = request.RequestedBy?.FullName ?? "Unknown",
+                ApprovedAt = request.ApprovedAt,
+                ApproverName = request.ApprovedBy?.FullName ?? "",
+                
+                // CompletionRequestDetail data
+                BudgetRemaining = request.CompletionRequestDetail?.BudgetRemaining,
+                BudgetReconciled = request.CompletionRequestDetail?.BudgetReconciled ?? false,
+                CompletionSummary = request.CompletionRequestDetail?.CompletionSummary,
+                BudgetVarianceExplanation = request.CompletionRequestDetail?.BudgetVarianceExplanation,
+                
+                // Additional project data
+                ApprovedBudget = request.Project?.ApprovedBudget,
+                SpentBudget = request.Project?.SpentBudget ?? 0,
+                ProjectStatus = (ProjectStatusEnum)(request.Project?.Status ?? 0),
+                ProjectDescription = request.Project?.Description,
+                ProjectStartDate = request.Project?.StartDate,
+                ProjectEndDate = request.Project?.EndDate,
+                
+                // Documents related to this request
+                Documents = _mapper.Map<ICollection<DocumentResponse>>(documents)
+            };
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error getting completion request details: {ex.Message}");
+            throw new ServiceException($"Error retrieving completion request details: {ex.Message}", ex);
+        }
+    }
+
+    public async Task<IEnumerable<CompletionRequestResponse>> GetUserCompletionRequestsAsync(int userId)
+    {
+        try
+        {
+            var userRequests = await _context.ProjectRequests
+                .Include(r => r.Project)
+                .Include(r => r.RequestedBy)
+                .Include(r => r.ApprovedBy)
+                .Include(r => r.CompletionRequestDetail)
+                .Where(r => r.RequestType == ProjectRequestTypeEnum.Completion && 
+                           r.RequestedById == userId)
+                .ToListAsync();
+            
+            return userRequests.Select(r => new CompletionRequestResponse
             {
                 RequestId = r.RequestId,
                 ProjectId = r.ProjectId,
@@ -1376,8 +1762,638 @@ public class ProjectService : IProjectService
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error getting completion requests: {ex.Message}");
-            throw new ServiceException($"Error retrieving project completion requests: {ex.Message}", ex);
+            Console.WriteLine($"Error getting user completion requests: {ex.Message}");
+            throw new ServiceException($"Error retrieving user's completion requests: {ex.Message}", ex);
         }
     }
+
+    public async Task<bool> ApproveProjectRequestAsync(int requestId, int secretaryId, IEnumerable<IFormFile> documentFiles)
+    {
+        using var transaction = await _context.Database.BeginTransactionAsync();
+        try
+        {
+            var request = await _context.ProjectRequests
+                .Include(r => r.Project)
+                .FirstOrDefaultAsync(r => r.RequestId == requestId);
+            
+            if (request == null)
+                throw new ServiceException("Project request not found");
+            
+            // Check existing logic for approving different request types...
+            
+            // Add this new section for Fund_Disbursement request type
+            if (request.RequestType == ProjectRequestTypeEnum.Fund_Disbursement)
+            {
+                if (!request.FundDisbursementId.HasValue)
+                    throw new ServiceException("Fund disbursement request is missing a reference to the fund disbursement");
+                
+                // Get the fund disbursement
+                var fundDisbursement = await _context.FundDisbursements
+                    .Include(fd => fd.Project)
+                    .Include(fd => fd.Quota)
+                    .FirstOrDefaultAsync(fd => fd.FundDisbursementId == request.FundDisbursementId.Value);
+                
+                if (fundDisbursement == null)
+                    throw new ServiceException("Associated fund disbursement not found");
+                
+                // Check if fund disbursement is already processed
+                if (fundDisbursement.Status != (int)FundDisbursementStatusEnum.Pending)
+                    throw new ServiceException($"This fund disbursement request has already been {(fundDisbursement.Status == (int)FundDisbursementStatusEnum.Approved ? "approved" : "rejected")}");
+                
+                // Find or create a group member for the secretary
+                var groupMember = await _context.GroupMembers
+                    .FirstOrDefaultAsync(gm => gm.UserId == secretaryId);
+                
+                if (groupMember == null)
+                {
+                    // Create a temporary group member entry for the secretary
+                    var defaultGroup = await _context.Groups.FirstOrDefaultAsync();
+                    if (defaultGroup == null)
+                        throw new ServiceException("No groups available to associate with approver");
+                    
+                    groupMember = new GroupMember
+                    {
+                        UserId = secretaryId,
+                        GroupId = defaultGroup.GroupId,
+                        Role = (int)GroupMemberRoleEnum.Member,
+                        Status = (int)GroupMemberStatus.Active,
+                        JoinDate = DateTime.Now
+                    };
+                    
+                    _context.GroupMembers.Add(groupMember);
+                    await _context.SaveChangesAsync();
+                }
+                
+                // Update the fund disbursement
+                fundDisbursement.Status = (int)FundDisbursementStatusEnum.Approved;
+                fundDisbursement.AppovedBy = groupMember.GroupMemberId;
+                fundDisbursement.UpdateAt = DateTime.Now;
+                
+                // Update the quota's remaining budget
+                var quota = fundDisbursement.Quota;
+                if (quota == null)
+                    throw new ServiceException("Quota not found for this fund disbursement");
+                
+                quota.AllocatedBudget -= fundDisbursement.FundRequest ?? 0;
+                quota.UpdateAt = DateTime.Now;
+                
+                // If quota is fully used, update its status
+                if (quota.AllocatedBudget <= 0)
+                {
+                    quota.Status = (int)QuotaStatusEnum.Used;
+                }
+                
+                // Update the project's spent budget
+                var project = fundDisbursement.Project;
+                if (project == null)
+                    throw new ServiceException("Project not found for this fund disbursement");
+                
+                project.SpentBudget += fundDisbursement.FundRequest ?? 0;
+                project.UpdatedAt = DateTime.Now;
+
+                // Update project phase if applicable
+                if (fundDisbursement.ProjectPhaseId.HasValue)
+                {
+                    var projectPhase = await _context.ProjectPhases.FindAsync(fundDisbursement.ProjectPhaseId.Value);
+                    if (projectPhase != null)
+                    {
+                        projectPhase.SpentBudget += fundDisbursement.FundRequest ?? 0;
+                        _context.ProjectPhases.Update(projectPhase);
+                    }
+                }
+                
+                _context.FundDisbursements.Update(fundDisbursement);
+            }
+            
+            // Common request update code
+            request.ApprovalStatus = ApprovalStatusEnum.Approved;
+            request.ApprovedById = secretaryId;
+            request.ApprovedAt = DateTime.Now;
+            
+            _context.ProjectRequests.Update(request);
+            await _context.SaveChangesAsync();
+            
+            // Process documents...
+            
+            await transaction.CommitAsync();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            throw new ServiceException($"Error approving project request: {ex.Message}");
+        }
+    }
+
+    public async Task<bool> RejectProjectRequestAsync(int requestId, int secretaryId, string rejectionReason, IEnumerable<IFormFile> documentFiles)
+    {
+        using var transaction = await _context.Database.BeginTransactionAsync();
+        try
+        {
+            var request = await _context.ProjectRequests
+                .Include(r => r.Project)
+                .FirstOrDefaultAsync(r => r.RequestId == requestId);
+            
+            // Existing logic...
+            
+            // Add this section for Fund_Disbursement request type
+            if (request.RequestType == ProjectRequestTypeEnum.Fund_Disbursement)
+            {
+                if (!request.FundDisbursementId.HasValue)
+                    throw new ServiceException("Fund disbursement request is missing a reference to the fund disbursement");
+                
+                var fundDisbursement = await _context.FundDisbursements
+                    .FirstOrDefaultAsync(fd => fd.FundDisbursementId == request.FundDisbursementId.Value);
+                
+                if (fundDisbursement == null)
+                    throw new ServiceException("Associated fund disbursement not found");
+                
+                if (fundDisbursement.Status != (int)FundDisbursementStatusEnum.Pending)
+                    throw new ServiceException($"This fund disbursement request has already been {(fundDisbursement.Status == (int)FundDisbursementStatusEnum.Approved ? "approved" : "rejected")}");
+                
+                // Find or create a group member for the secretary
+                var groupMember = await _context.GroupMembers
+                    .FirstOrDefaultAsync(gm => gm.UserId == secretaryId);
+                
+                if (groupMember == null)
+                {
+                    // Create a temporary group member entry for the secretary
+                    var defaultGroup = await _context.Groups.FirstOrDefaultAsync();
+                    if (defaultGroup == null)
+                        throw new ServiceException("No groups available to associate with rejector");
+                    
+                    groupMember = new GroupMember
+                    {
+                        UserId = secretaryId,
+                        GroupId = defaultGroup.GroupId,
+                        Role = (int)GroupMemberRoleEnum.Member,
+                        Status = (int)GroupMemberStatus.Active,
+                        JoinDate = DateTime.Now
+                    };
+                    
+                    _context.GroupMembers.Add(groupMember);
+                    await _context.SaveChangesAsync();
+                }
+                
+                // Update fund disbursement
+                fundDisbursement.Status = (int)FundDisbursementStatusEnum.Rejected;
+                fundDisbursement.AppovedBy = groupMember.GroupMemberId; // Used for both approval and rejection
+                fundDisbursement.RejectionReason = rejectionReason;
+                fundDisbursement.UpdateAt = DateTime.Now;
+                
+                _context.FundDisbursements.Update(fundDisbursement);
+            }
+            
+            // Common request update
+            request.ApprovalStatus = ApprovalStatusEnum.Rejected;
+            request.ApprovedById = secretaryId;
+            request.ApprovedAt = DateTime.Now;
+            request.RejectionReason = rejectionReason;
+            
+            _context.ProjectRequests.Update(request);
+            await _context.SaveChangesAsync();
+            
+            // Process documents...
+            
+            await transaction.CommitAsync();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            throw new ServiceException($"Error rejecting project request: {ex.Message}");
+        }
+    }
+
+    public async Task<IEnumerable<ProjectRequestResponse>> GetAllProjectRequestsAsync()
+    {
+        try
+        {
+            var requests = await _context.ProjectRequests
+                .Include(r => r.Project)
+                    .ThenInclude(p => p.Department)
+                .Include(r => r.Project)
+                    .ThenInclude(p => p.Group)
+                .Include(r => r.RequestedBy)
+                .Include(r => r.ApprovedBy)
+                .Include(r => r.FundDisbursement)
+                .ToListAsync();
+
+            return requests.Select(r => new ProjectRequestResponse
+            {
+                RequestId = r.RequestId,
+                ProjectId = r.ProjectId,
+                RequestType = r.RequestType,
+                RequestedById = r.RequestedById,
+                RequesterName = r.RequestedBy?.FullName ?? "Unknown",
+                ApprovalStatus = r.ApprovalStatus,
+                StatusName = r.ApprovalStatus.HasValue ? 
+                    Enum.GetName(typeof(ApprovalStatusEnum), r.ApprovalStatus.Value) : null,
+                RequestedAt = r.RequestedAt,
+                ApprovedById = r.ApprovedById,
+                ApproverName = r.ApprovedBy?.FullName,
+                ApprovedAt = r.ApprovedAt,
+                RejectionReason = r.RejectionReason,
+                ProjectName = r.Project?.ProjectName ?? "Unknown",
+                ProjectDescription = r.Project?.Description ?? "",
+                ProjectStatus = (ProjectStatusEnum)(r.Project?.Status ?? 0),
+                ApprovedBudget = r.Project?.ApprovedBudget,
+                SpentBudget = r.Project?.SpentBudget ?? 0,
+                DepartmentId = r.Project?.DepartmentId,
+                DepartmentName = r.Project?.Department?.DepartmentName ?? "Unknown",
+                GroupId = r.Project?.GroupId,
+                GroupName = r.Project?.Group?.GroupName ?? "Unknown",
+                ProjectType = r.Project?.ProjectType,
+                ProjectTypeName = r.Project?.ProjectType.HasValue == true ? 
+                    Enum.GetName(typeof(ProjectTypeEnum), r.Project.ProjectType.Value) : null,
+                FundDisbursementId = r.FundDisbursementId,
+                FundRequestAmount = r.FundDisbursement?.FundRequest
+            }).ToList();
+        }
+        catch (Exception ex)
+        {
+            throw new ServiceException($"Error retrieving project requests: {ex.Message}");
+        }
+    }
+
+    public async Task<IEnumerable<ProjectRequestResponse>> GetDepartmentProjectRequestsAsync(int departmentId)
+    {
+        try
+        {
+            var requests = await _context.ProjectRequests
+                .Include(r => r.Project)
+                    .ThenInclude(p => p.Department)
+                .Include(r => r.Project)
+                    .ThenInclude(p => p.Group)
+                .Include(r => r.RequestedBy)
+                .Include(r => r.ApprovedBy)
+                .Include(r => r.FundDisbursement)
+                .Where(r => r.Project.DepartmentId == departmentId)
+                .ToListAsync();
+
+            return requests.Select(r => new ProjectRequestResponse
+            {
+                // Request information
+                RequestId = r.RequestId,
+                RequestType = r.RequestType,
+                ApprovalStatus = r.ApprovalStatus,
+                RequestedAt = r.RequestedAt,
+                RejectionReason = r.RejectionReason,
+                
+                // Requester information
+                RequestedById = r.RequestedById,
+                RequesterName = r.RequestedBy?.FullName ?? "Unknown",
+                
+                // Approver information
+                ApprovedById = r.ApprovedById,
+                ApproverName = r.ApprovedBy?.FullName,
+                ApprovedAt = r.ApprovedAt,
+                
+                // Project information
+                ProjectId = r.ProjectId,
+                ProjectName = r.Project?.ProjectName ?? "Unknown Project",
+                ProjectDescription = r.Project?.Description ?? "",
+                ProjectStatus = (ProjectStatusEnum)(r.Project?.Status ?? 0),
+                ApprovedBudget = r.Project?.ApprovedBudget,
+                SpentBudget = r.Project?.SpentBudget ?? 0,
+                
+                // Department information
+                DepartmentId = r.Project?.DepartmentId,
+                DepartmentName = r.Project?.Department?.DepartmentName ?? "Unknown Department",
+                
+                // Group information
+                GroupId = r.Project?.GroupId,
+                GroupName = r.Project?.Group?.GroupName ?? "Unknown Group",
+                
+                // Status name
+                StatusName = ((ApprovalStatusEnum?)r.ApprovalStatus)?.ToString() ?? "Unknown",
+                ProjectType = r.Project?.ProjectType,
+                ProjectTypeName = r.Project?.ProjectType.HasValue == true ? 
+                    Enum.GetName(typeof(ProjectTypeEnum), r.Project.ProjectType.Value) : null,
+                FundDisbursementId = r.FundDisbursementId,
+                FundRequestAmount = r.FundDisbursement?.FundRequest
+            }).ToList();
+        }
+        catch (Exception ex)
+        {
+            throw new ServiceException($"Error retrieving department project requests: {ex.Message}");
+        }
+    }
+
+    public async Task<bool> AssignTimelineToRequestAsync(int requestId, int timelineId)
+    {
+        var request = await _context.ProjectRequests.FindAsync(requestId);
+        if (request == null)
+            throw new ServiceException("Request not found");
+        
+    var timeline = await _context.Timelines.FindAsync(timelineId);
+    if (timeline == null)
+        throw new ServiceException("Timeline not found");
+    
+    request.TimelineId = timelineId;
+    await _context.SaveChangesAsync();
+    return true;
+    }
+
+    public async Task<int> AssignTimelineToDepartmentRequestsAsync(int departmentId, int timelineId, ProjectRequestTypeEnum? requestType = null)
+    {
+        var timeline = await _context.Timelines.FindAsync(timelineId);
+        if (timeline == null)
+            throw new ServiceException("Timeline not found");
+        
+        // Find all requests for projects in the specified department
+        var query = _context.ProjectRequests
+            .Include(r => r.Project)
+            .Where(r => r.Project.DepartmentId == departmentId && r.ApprovalStatus == ApprovalStatusEnum.Pending);
+        
+        // Optionally filter by request type if specified
+        if (requestType.HasValue)
+            query = query.Where(r => r.RequestType == requestType.Value);
+        
+        var requests = await query.ToListAsync();
+        
+        if (!requests.Any())
+            throw new ServiceException("No pending project requests found for this department");
+        
+        // Assign the timeline to all matching requests
+        foreach (var request in requests)
+        {
+            request.TimelineId = timelineId;
+        }
+        
+        await _context.SaveChangesAsync();
+        return requests.Count; // Return the number of affected requests
+    }
+
+    public async Task<ProjectRequestDetailResponse> GetProjectRequestDetailsAsync(int requestId)
+    {
+        try
+        {
+            var request = await _context.ProjectRequests
+                .Include(r => r.Project)
+                    .ThenInclude(p => p.Department)
+                .Include(r => r.Project)
+                    .ThenInclude(p => p.Group)
+                        .ThenInclude(g => g.GroupMembers)
+                            .ThenInclude(gm => gm.User)
+                .Include(r => r.Project)
+                    .ThenInclude(p => p.Documents)
+                .Include(r => r.Project)
+                    .ThenInclude(p => p.ProjectPhases)
+                .Include(r => r.Project)
+                    .ThenInclude(p => p.CreatedByNavigation)
+                .Include(r => r.Project)
+                    .ThenInclude(p => p.ApprovedByNavigation)
+                        .ThenInclude(gm => gm.User)
+                .Include(r => r.RequestedBy)
+                .Include(r => r.ApprovedBy)
+                .Include(r => r.FundDisbursement)
+                .FirstOrDefaultAsync(r => r.RequestId == requestId);
+
+            if (request == null)
+                throw new ServiceException("Project request not found");
+
+            var project = request.Project;
+            if (project == null)
+                throw new ServiceException("Project associated with this request not found");
+
+            return new ProjectRequestDetailResponse
+            {
+                // Request information
+                RequestId = request.RequestId,
+                RequestType = request.RequestType,
+                ApprovalStatus = request.ApprovalStatus,
+                StatusName = request.ApprovalStatus.HasValue ? 
+                    Enum.GetName(typeof(ApprovalStatusEnum), request.ApprovalStatus.Value) : null,
+                RequestedAt = request.RequestedAt,
+                RejectionReason = request.RejectionReason,
+                
+                // Requester information
+                RequestedBy = request.RequestedBy != null ? new UserShortInfo
+                {
+                    UserId = request.RequestedBy.UserId,
+                    Username = request.RequestedBy.Username,
+                    FullName = request.RequestedBy.FullName,
+                    Email = request.RequestedBy.Email
+                } : null,
+                
+                // Approver information
+                ApprovedBy = request.ApprovedBy != null ? new UserShortInfo
+                {
+                    UserId = request.ApprovedBy.UserId,
+                    Username = request.ApprovedBy.Username,
+                    FullName = request.ApprovedBy.FullName,
+                    Email = request.ApprovedBy.Email
+                } : null,
+                ApprovedAt = request.ApprovedAt,
+                
+                // Fund disbursement information
+                FundDisbursementId = request.FundDisbursementId,
+                FundRequestAmount = request.FundDisbursement?.FundRequest,
+                
+                // Project information
+                ProjectId = project.ProjectId,
+                ProjectName = project.ProjectName,
+                ProjectType = project.ProjectType,
+                ProjectTypeName = project.ProjectType.HasValue ? 
+                    Enum.GetName(typeof(ProjectTypeEnum), project.ProjectType.Value) : null,
+                Description = project.Description,
+                ApprovedBudget = project.ApprovedBudget,
+                SpentBudget = project.SpentBudget,
+                Status = project.Status,
+                StartDate = project.StartDate,
+                EndDate = project.EndDate,
+                CreatedAt = project.CreatedAt,
+                UpdatedAt = project.UpdatedAt,
+                Methodology = project.Methodlogy,
+                
+                // Group information
+                Group = project.Group != null ? new GroupDetailInfo
+                {
+                    GroupId = project.Group.GroupId,
+                    GroupName = project.Group.GroupName,
+                    GroupType = project.Group.GroupType ?? 0,
+                    CurrentMember = project.Group.CurrentMember ?? 0,
+                    MaxMember = project.Group.MaxMember ?? 0,
+                    GroupDepartment = project.Group.GroupDepartment,
+                    DepartmentName = project.Group?.GroupDepartmentNavigation?.DepartmentName,
+                    Members = _mapper.Map<IEnumerable<GroupMemberResponse>>(
+                        project.Group.GroupMembers.Where(gm => gm.Status == (int)GroupMemberStatus.Active))
+                } : null,
+                
+                // Department information
+                Department = project.Department != null ? new DepartmentResponse
+                {
+                    DepartmentId = project.Department.DepartmentId,
+                    DepartmentName = project.Department.DepartmentName
+                } : null,
+                
+                // Project phases and documents
+                ProjectPhases = _mapper.Map<ICollection<ProjectPhaseResponse>>(project.ProjectPhases),
+                Documents = _mapper.Map<ICollection<DocumentResponse>>(project.Documents)
+            };
+        }
+        catch (Exception ex)
+        {
+            throw new ServiceException($"Error retrieving project request details: {ex.Message}");
+        }
+    }
+
+    public async Task<IEnumerable<ProjectRequestResponse>> GetPendingDepartmentRequestsAsync(int departmentId)
+    {
+        try
+        {
+            var requests = await _context.ProjectRequests
+                .Include(r => r.Project)
+                    .ThenInclude(p => p.Department)
+                .Include(r => r.Project)
+                    .ThenInclude(p => p.Group)
+                .Include(r => r.RequestedBy)
+                .Include(r => r.ApprovedBy)
+                .Include(r => r.FundDisbursement)
+                .Where(r => r.Project.DepartmentId == departmentId && 
+                            r.ApprovalStatus == ApprovalStatusEnum.Pending &&
+                            r.RequestType != ProjectRequestTypeEnum.Fund_Disbursement)
+                .ToListAsync();
+
+            return requests.Select(r => new ProjectRequestResponse
+            {
+                // Map all the properties as before
+                RequestId = r.RequestId,
+                RequestType = r.RequestType,
+                ApprovalStatus = r.ApprovalStatus,
+                RequestedAt = r.RequestedAt,
+                RejectionReason = r.RejectionReason,
+                RequestedById = r.RequestedById,
+                RequesterName = r.RequestedBy?.FullName ?? "Unknown",
+                ApprovedById = r.ApprovedById,
+                ApproverName = r.ApprovedBy?.FullName,
+                ApprovedAt = r.ApprovedAt,
+                ProjectId = r.ProjectId,
+                ProjectName = r.Project?.ProjectName ?? "Unknown Project",
+                ProjectDescription = r.Project?.Description ?? "",
+                ProjectStatus = (ProjectStatusEnum)(r.Project?.Status ?? 0),
+                ApprovedBudget = r.Project?.ApprovedBudget,
+                SpentBudget = r.Project?.SpentBudget ?? 0,
+                DepartmentId = r.Project?.DepartmentId,
+                DepartmentName = r.Project?.Department?.DepartmentName ?? "Unknown Department",
+                GroupId = r.Project?.GroupId,
+                GroupName = r.Project?.Group?.GroupName ?? "Unknown Group",
+                StatusName = ((ApprovalStatusEnum?)r.ApprovalStatus)?.ToString() ?? "Unknown",
+                ProjectType = r.Project?.ProjectType,
+                ProjectTypeName = r.Project?.ProjectType.HasValue == true ? 
+                    Enum.GetName(typeof(ProjectTypeEnum), r.Project.ProjectType.Value) : null,
+                FundDisbursementId = null, // We won't include fund disbursement info
+                FundRequestAmount = null    // We won't include fund disbursement info
+            }).ToList();
+        }
+        catch (Exception ex)
+        {
+            throw new ServiceException($"Error retrieving pending department project requests: {ex.Message}");
+        }
+    }
+
+    public async Task<IEnumerable<ProjectRequestResponse>> GetUserProjectRequestsAsync(int userId)
+    {
+        try
+        {
+            var requests = await _context.ProjectRequests
+                .Include(r => r.Project)
+                    .ThenInclude(p => p.Department)
+                .Include(r => r.Project)
+                    .ThenInclude(p => p.Group)
+                .Include(r => r.RequestedBy)
+                .Include(r => r.ApprovedBy)
+                .Include(r => r.FundDisbursement)
+                .Where(r => r.RequestedById == userId)
+                .ToListAsync();
+
+            return requests.Select(r => new ProjectRequestResponse
+            {
+                RequestId = r.RequestId,
+                RequestType = r.RequestType,
+                ApprovalStatus = r.ApprovalStatus,
+                RequestedAt = r.RequestedAt,
+                RejectionReason = r.RejectionReason,
+                RequestedById = r.RequestedById,
+                RequesterName = r.RequestedBy?.FullName ?? "Unknown",
+                ApprovedById = r.ApprovedById,
+                ApproverName = r.ApprovedBy?.FullName,
+                ApprovedAt = r.ApprovedAt,
+                ProjectId = r.ProjectId,
+                ProjectName = r.Project?.ProjectName ?? "Unknown Project",
+                ProjectDescription = r.Project?.Description ?? "",
+                ProjectStatus = (ProjectStatusEnum)(r.Project?.Status ?? 0),
+                ApprovedBudget = r.Project?.ApprovedBudget,
+                SpentBudget = r.Project?.SpentBudget ?? 0,
+                DepartmentId = r.Project?.DepartmentId,
+                DepartmentName = r.Project?.Department?.DepartmentName ?? "Unknown Department",
+                GroupId = r.Project?.GroupId,
+                GroupName = r.Project?.Group?.GroupName ?? "Unknown Group",
+                StatusName = ((ApprovalStatusEnum?)r.ApprovalStatus)?.ToString() ?? "Unknown",
+                ProjectType = r.Project?.ProjectType,
+                ProjectTypeName = r.Project?.ProjectType.HasValue == true ? 
+                    Enum.GetName(typeof(ProjectTypeEnum), r.Project.ProjectType.Value) : null,
+                FundDisbursementId = r.FundDisbursementId,
+                FundRequestAmount = r.FundDisbursement?.FundRequest
+            }).ToList();
+        }
+        catch (Exception ex)
+        {
+            throw new ServiceException($"Error retrieving user project requests: {ex.Message}");
+        }
+    }
+
+    public async Task<IEnumerable<ProjectRequestResponse>> GetUserPendingProjectRequestsAsync(int userId)
+    {
+        try
+        {
+            var requests = await _context.ProjectRequests
+                .Include(r => r.Project)
+                    .ThenInclude(p => p.Department)
+                .Include(r => r.Project)
+                    .ThenInclude(p => p.Group)
+                .Include(r => r.RequestedBy)
+                .Include(r => r.ApprovedBy)
+                .Include(r => r.FundDisbursement)
+                .Where(r => r.RequestedById == userId && 
+                            r.ApprovalStatus == ApprovalStatusEnum.Pending)
+                .ToListAsync();
+
+            return requests.Select(r => new ProjectRequestResponse
+            {
+                RequestId = r.RequestId,
+                RequestType = r.RequestType,
+                ApprovalStatus = r.ApprovalStatus,
+                RequestedAt = r.RequestedAt,
+                RejectionReason = r.RejectionReason,
+                RequestedById = r.RequestedById,
+                RequesterName = r.RequestedBy?.FullName ?? "Unknown",
+                ApprovedById = r.ApprovedById,
+                ApproverName = r.ApprovedBy?.FullName,
+                ApprovedAt = r.ApprovedAt,
+                ProjectId = r.ProjectId,
+                ProjectName = r.Project?.ProjectName ?? "Unknown Project",
+                ProjectDescription = r.Project?.Description ?? "",
+                ProjectStatus = (ProjectStatusEnum)(r.Project?.Status ?? 0),
+                ApprovedBudget = r.Project?.ApprovedBudget,
+                SpentBudget = r.Project?.SpentBudget ?? 0,
+                DepartmentId = r.Project?.DepartmentId,
+                DepartmentName = r.Project?.Department?.DepartmentName ?? "Unknown Department",
+                GroupId = r.Project?.GroupId,
+                GroupName = r.Project?.Group?.GroupName ?? "Unknown Group",
+                StatusName = ((ApprovalStatusEnum?)r.ApprovalStatus)?.ToString() ?? "Unknown",
+                ProjectType = r.Project?.ProjectType,
+                ProjectTypeName = r.Project?.ProjectType.HasValue == true ? 
+                    Enum.GetName(typeof(ProjectTypeEnum), r.Project.ProjectType.Value) : null,
+                FundDisbursementId = r.FundDisbursementId,
+                FundRequestAmount = r.FundDisbursement?.FundRequest
+            }).ToList();
+        }
+        catch (Exception ex)
+        {
+            throw new ServiceException($"Error retrieving user pending project requests: {ex.Message}");
+        }
+    }
+
 }

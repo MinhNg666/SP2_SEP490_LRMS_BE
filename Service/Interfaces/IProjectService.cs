@@ -1,6 +1,7 @@
 ﻿using Domain.DTO.Requests;
 using Domain.DTO.Responses;
 using Microsoft.AspNetCore.Http;
+using Domain.Constants;
 
 namespace Service.Interfaces;
 
@@ -26,4 +27,18 @@ public interface IProjectService
     Task RequestProjectCompletionAsync(int projectId, int userId, RequestProjectCompletionRequest request, IEnumerable<IFormFile>? finalDocuments);
     Task AddCompletionDocumentsAsync(int projectId, IEnumerable<IFormFile> documentFiles, int userId);
     Task<IEnumerable<CompletionRequestResponse>> GetCompletionRequestsAsync();
+    Task<bool> ApproveCompletionRequestAsync(int requestId, int approverId, IEnumerable<IFormFile> documents);
+    Task<bool> RejectCompletionRequestAsync(int requestId, int rejecterId, string rejectionReason, IEnumerable<IFormFile> documents);
+    Task<CompletionRequestDetailResponse> GetCompletionRequestByIdAsync(int requestId);
+    Task<IEnumerable<CompletionRequestResponse>> GetUserCompletionRequestsAsync(int userId);
+    Task<bool> ApproveProjectRequestAsync(int requestId, int secretaryId, IEnumerable<IFormFile> documentFiles);
+    Task<bool> RejectProjectRequestAsync(int requestId, int secretaryId, string rejectionReason, IEnumerable<IFormFile> documentFiles);
+    Task<IEnumerable<ProjectRequestResponse>> GetAllProjectRequestsAsync();
+    Task<IEnumerable<ProjectRequestResponse>> GetDepartmentProjectRequestsAsync(int departmentId);
+    Task<bool> AssignTimelineToRequestAsync(int requestId, int timelineId); // assigned timeline to request
+    Task<int> AssignTimelineToDepartmentRequestsAsync(int departmentId, int timelineId, ProjectRequestTypeEnum? requestType = null);
+    Task<ProjectRequestDetailResponse> GetProjectRequestDetailsAsync(int requestId);
+    Task<IEnumerable<ProjectRequestResponse>> GetPendingDepartmentRequestsAsync(int departmentId);
+    Task<IEnumerable<ProjectRequestResponse>> GetUserProjectRequestsAsync(int userId);
+    Task<IEnumerable<ProjectRequestResponse>> GetUserPendingProjectRequestsAsync(int userId);
 }

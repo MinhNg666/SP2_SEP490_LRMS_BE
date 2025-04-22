@@ -420,4 +420,319 @@ public class ProjectController : ApiBaseController
             return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
         }
     }
+
+    [HttpPost("completion-requests/{requestId}/approve")]
+    [Authorize]
+    public async Task<IActionResult> ApproveCompletionRequest(int requestId, [FromForm] List<IFormFile> documentFiles)
+    {
+        try
+        {
+            var approverId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            var result = await _projectService.ApproveCompletionRequestAsync(requestId, approverId, documentFiles);
+            return Ok(new ApiResponse(StatusCodes.Status200OK, "Completion request approved successfully"));
+        }
+        catch (ServiceException ex)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
+        }
+    }
+
+    [HttpPost("completion-requests/{requestId}/reject")]
+    [Authorize]
+    public async Task<IActionResult> RejectCompletionRequest(int requestId, [FromForm] string rejectionReason, [FromForm] List<IFormFile> documentFiles)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(rejectionReason))
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Rejection reason is required"));
+            
+            var rejecterId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            var result = await _projectService.RejectCompletionRequestAsync(requestId, rejecterId, rejectionReason, documentFiles);
+            return Ok(new ApiResponse(StatusCodes.Status200OK, "Completion request rejected successfully"));
+        }
+        catch (ServiceException ex)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
+        }
+    }
+
+    [HttpGet("completion-requests/{requestId}/details")]
+    [Authorize]
+    public async Task<IActionResult> GetCompletionRequestDetails(int requestId)
+    {
+        try
+        {
+            var requestDetails = await _projectService.GetCompletionRequestByIdAsync(requestId);
+            return Ok(new ApiResponse(StatusCodes.Status200OK, "Completion request details retrieved successfully", requestDetails));
+        }
+        catch (ServiceException ex)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
+        }
+    }
+
+    [HttpGet("completion-requests/user")]
+    [Authorize]
+    public async Task<IActionResult> GetUserCompletionRequests()
+    {
+        try
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            var requests = await _projectService.GetUserCompletionRequestsAsync(userId);
+            return Ok(new ApiResponse(StatusCodes.Status200OK, "User completion requests retrieved successfully", requests));
+        }
+        catch (ServiceException ex)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
+        }
+    }
+
+    [HttpPost("project-requests/{requestId}/approve")]
+    [Authorize]
+    public async Task<IActionResult> ApproveProjectRequest(int requestId, List<IFormFile> documentFiles)
+    {
+        try
+        {
+            // Validate documents are provided
+            if (documentFiles == null || !documentFiles.Any())
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "At least one document file is required"));
+            
+            // Validate file extensions
+            var allowedExtensions = new[] { ".pdf", ".doc", ".docx" };
+            foreach (var file in documentFiles)
+            {
+                var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+                if (!allowedExtensions.Contains(fileExtension))
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, $"Only PDF, DOC, and DOCX files are allowed. Invalid file: {file.FileName}"));
+            }
+            
+            var secretaryId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            var result = await _projectService.ApproveProjectRequestAsync(requestId, secretaryId, documentFiles);
+            return Ok(new ApiResponse(StatusCodes.Status200OK, "Project request approved successfully"));
+        }
+        catch (ServiceException ex)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
+        }
+    }
+
+    [HttpPost("project-requests/{requestId}/reject")]
+    [Authorize]
+    public async Task<IActionResult> RejectProjectRequest(int requestId, [FromForm] string rejectionReason, List<IFormFile> documentFiles)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(rejectionReason))
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Rejection reason is required"));
+            
+            // Validate documents are provided
+            if (documentFiles == null || !documentFiles.Any())
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "At least one document file is required"));
+            
+            // Validate file extensions
+            var allowedExtensions = new[] { ".pdf", ".doc", ".docx" };
+            foreach (var file in documentFiles)
+            {
+                var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+                if (!allowedExtensions.Contains(fileExtension))
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, $"Only PDF, DOC, and DOCX files are allowed. Invalid file: {file.FileName}"));
+            }
+            
+            var secretaryId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            var result = await _projectService.RejectProjectRequestAsync(requestId, secretaryId, rejectionReason, documentFiles);
+            return Ok(new ApiResponse(StatusCodes.Status200OK, "Project request rejected successfully"));
+        }
+        catch (ServiceException ex)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
+        }
+    }
+
+    [HttpGet("project-requests")]
+    [Authorize]
+    public async Task<IActionResult> GetAllProjectRequests()
+    {
+        try
+        {
+            var requests = await _projectService.GetAllProjectRequestsAsync();
+            return Ok(new ApiResponse(StatusCodes.Status200OK, "Project requests retrieved successfully", requests));
+        }
+        catch (ServiceException ex)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
+        }
+    }
+
+    [HttpGet("departments/{departmentId}/project-requests")]
+    [Authorize]
+    public async Task<IActionResult> GetDepartmentProjectRequests(int departmentId)
+    {
+        try
+        {
+            var requests = await _projectService.GetDepartmentProjectRequestsAsync(departmentId);
+            return Ok(new ApiResponse(StatusCodes.Status200OK, "Department project requests retrieved successfully", requests));
+        }
+        catch (ServiceException ex)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
+        }
+    }
+
+    [HttpPost("project-requests/{requestId}/assign-timeline/{timelineId}")]
+    [Authorize]
+    public async Task<IActionResult> AssignTimelineToRequest(int requestId, int timelineId)
+    {
+    try {
+        var result = await _projectService.AssignTimelineToRequestAsync(requestId, timelineId);
+        return Ok(new ApiResponse(StatusCodes.Status200OK, "Timeline assigned to request successfully"));
+    }
+    catch (ServiceException ex) {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
+        }
+    }
+
+    [HttpPost("departments/{departmentId}/assign-timeline/{timelineId}")]
+    [Authorize]
+    public async Task<IActionResult> AssignTimelineToDepartmentRequests(
+        int departmentId, 
+        int timelineId, 
+        [FromQuery] ProjectRequestTypeEnum? requestType = null)
+    {
+        try {
+            var count = await _projectService.AssignTimelineToDepartmentRequestsAsync(departmentId, timelineId, requestType);
+            return Ok(new ApiResponse(
+                StatusCodes.Status200OK, 
+                $"Timeline assigned to {count} project requests in department successfully"));
+        }
+        catch (ServiceException ex) {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
+        }
+    }
+
+    [HttpGet("fund-disbursement-requests")]
+    [Authorize]
+    public async Task<IActionResult> GetFundDisbursementRequests()
+    {
+        try
+        {
+            var requests = await _projectService.GetAllProjectRequestsAsync();
+            var fundRequests = requests.Where(r => r.RequestType == ProjectRequestTypeEnum.Fund_Disbursement);
+            
+            return Ok(new ApiResponse(
+                StatusCodes.Status200OK, 
+                $"Found {fundRequests.Count()} fund disbursement requests", 
+                fundRequests));
+        }
+        catch (ServiceException ex)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
+        }
+    }
+
+    [HttpGet("project-requests/{requestId}/details")]
+    [Authorize]
+    public async Task<IActionResult> GetProjectRequestDetails(int requestId)
+    {
+        try
+        {
+            var requestDetails = await _projectService.GetProjectRequestDetailsAsync(requestId);
+            return Ok(new ApiResponse(StatusCodes.Status200OK, "Project request details retrieved successfully", requestDetails));
+        }
+        catch (ServiceException ex)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
+        }
+    }
+
+    [HttpGet("departments/{departmentId}/project-requests/pending")]
+    [Authorize]
+    public async Task<IActionResult> GetPendingDepartmentRequests(int departmentId)
+    {
+        try
+        {
+            var requests = await _projectService.GetPendingDepartmentRequestsAsync(departmentId);
+            return Ok(new ApiResponse(
+                StatusCodes.Status200OK, 
+                $"Found {requests.Count()} pending project requests for department", 
+                requests));
+        }
+        catch (ServiceException ex)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
+        }
+    }
+
+    [HttpGet("users/me/project-requests")]
+    [Authorize]
+    public async Task<IActionResult> GetMyProjectRequests()
+    {
+        try
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            var requests = await _projectService.GetUserProjectRequestsAsync(userId);
+            return Ok(new ApiResponse(
+                StatusCodes.Status200OK, 
+                $"Found {requests.Count()} project requests", 
+                requests));
+        }
+        catch (ServiceException ex)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
+        }
+    }
+
+    [HttpGet("users/me/project-requests/pending")]
+    [Authorize]
+    public async Task<IActionResult> GetMyPendingProjectRequests()
+    {
+        try
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            var requests = await _projectService.GetUserPendingProjectRequestsAsync(userId);
+            return Ok(new ApiResponse(
+                StatusCodes.Status200OK, 
+                $"Found {requests.Count()} pending project requests", 
+                requests));
+        }
+        catch (ServiceException ex)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
+        }
+    }
+
+    [HttpGet("users/{userId}/project-requests")]
+    [Authorize]
+    public async Task<IActionResult> GetUserProjectRequests(int userId)
+    {
+        try
+        {
+            var requests = await _projectService.GetUserProjectRequestsAsync(userId);
+            return Ok(new ApiResponse(
+                StatusCodes.Status200OK, 
+                $"Found {requests.Count()} project requests for user", 
+                requests));
+        }
+        catch (ServiceException ex)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
+        }
+    }
+
+    [HttpGet("users/{userId}/project-requests/pending")]
+    [Authorize]
+    public async Task<IActionResult> GetUserPendingProjectRequests(int userId)
+    {
+        try
+        {
+            var requests = await _projectService.GetUserPendingProjectRequestsAsync(userId);
+            return Ok(new ApiResponse(
+                StatusCodes.Status200OK, 
+                $"Found {requests.Count()} pending project requests for user", 
+                requests));
+        }
+        catch (ServiceException ex)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
+        }
+    }
 }

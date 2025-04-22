@@ -44,6 +44,10 @@ public partial class ProjectRequest
     [Column("rejection_reason")]
     public string? RejectionReason { get; set; } // Nullable
 
+    // 
+    [Column("fund_disbursement_id")]
+    public int? FundDisbursementId { get; set; } // Nullable Foreign Key
+
     // Navigation Properties
     [ForeignKey("ProjectId")]
     public virtual Project? Project { get; set; }
@@ -65,4 +69,8 @@ public partial class ProjectRequest
 
     // Relationship to CompletionRequestDetails (One-to-one)
     public virtual CompletionRequestDetail? CompletionRequestDetail { get; set; }
+
+    // --- NEW NAVIGATION PROPERTY ---
+    [ForeignKey("FundDisbursementId")]
+    public virtual FundDisbursement? FundDisbursement { get; set; }
 }
