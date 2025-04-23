@@ -735,4 +735,19 @@ public class ProjectController : ApiBaseController
             return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
         }
     }
+
+    [HttpGet("projects/{projectId}/completion-summary")]
+    [Authorize]
+    public async Task<IActionResult> GetProjectCompletionSummary(int projectId)
+    {
+        try
+        {
+            var summary = await _projectService.GetProjectCompletionSummaryAsync(projectId);
+            return Ok(new ApiResponse(StatusCodes.Status200OK, "Project completion summary retrieved successfully", summary));
+        }
+        catch (ServiceException ex)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
+        }
+    }
 }

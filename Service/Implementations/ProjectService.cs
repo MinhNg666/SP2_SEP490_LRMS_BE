@@ -1130,7 +1130,7 @@ public class ProjectService : IProjectService
             //    throw new ServiceException($"Cannot mark project as completed. {incompletePhasesCount} phases are not yet completed.");
 
             // Update project status - Should this be Completion_Approved instead?
-            project.Status = (int)ProjectStatusEnum.Completion_Approved; // Use the new status
+            project.Status = (int)ProjectStatusEnum.Completed; // Use the new status
             project.UpdatedAt = DateTime.UtcNow;
             // Potentially store the user who approved it in the ProjectRequests table
 
@@ -1392,49 +1392,69 @@ public class ProjectService : IProjectService
     {
         try
         {
-            var completionRequests = await _context.ProjectRequests
+            var requests = await _context.ProjectRequests
                 .Include(r => r.Project)
                     .ThenInclude(p => p.Department)
                 .Include(r => r.Project)
                     .ThenInclude(p => p.Group)
                 .Include(r => r.RequestedBy)
                 .Include(r => r.ApprovedBy)
+                .Include(r => r.CompletionRequestDetail) // Add this to include completion details
                 .OrderByDescending(r => r.RequestedAt)
                 .ToListAsync();
 
-            return completionRequests.Select(r => new CompletionRequestResponse
-            {
-                // Request information
-                RequestId = r.RequestId,
-                RequestType = r.RequestType,
-                ApprovalStatus = r.ApprovalStatus,
-                RequestedAt = r.RequestedAt,
-                RejectionReason = r.RejectionReason,
+            return requests.Select(r => {
+                var response = new CompletionRequestResponse
+                {
+                    // Request information
+                    RequestId = r.RequestId,
+                    RequestType = r.RequestType,
+                    ApprovalStatus = r.ApprovalStatus,
+                    RequestedAt = r.RequestedAt,
+                    RejectionReason = r.RejectionReason,
+                    
+                    // Requester information
+                    RequestedById = r.RequestedById,
+                    RequesterName = r.RequestedBy?.FullName ?? "Unknown",
+                    
+                    // Approver information
+                    ApprovedById = r.ApprovedById,
+                    ApproverName = r.ApprovedBy?.FullName,
+                    ApprovedAt = r.ApprovedAt,
+                    
+                    // Project information
+                    ProjectId = r.ProjectId,
+                    ProjectName = r.Project?.ProjectName ?? "Unknown Project",
+                    ProjectDescription = r.Project?.Description ?? "",
+                    ProjectStatus = (ProjectStatusEnum)(r.Project?.Status ?? 0),
+                    ApprovedBudget = r.Project?.ApprovedBudget,
+                    SpentBudget = r.Project?.SpentBudget ?? 0,
+                    
+                    // Department information
+                    DepartmentId = r.Project?.DepartmentId,
+                    DepartmentName = r.Project?.Department?.DepartmentName ?? "Unknown Department",
+                    
+                    // Group information
+                    GroupId = r.Project?.GroupId,
+                    GroupName = r.Project?.Group?.GroupName ?? "Unknown Group",
+                    
+                    // Default completion values
+                    BudgetRemaining = null,
+                    BudgetReconciled = false,
+                    CompletionSummary = null,
+                    BudgetVarianceExplanation = null
+                };
                 
-                // Requester information
-                RequestedById = r.RequestedById,
-                RequesterName = r.RequestedBy?.FullName ?? "Unknown",
+                // Add completion-specific details if available
+                if (r.CompletionRequestDetail != null)
+                {
+                    response.BudgetRemaining = r.CompletionRequestDetail.BudgetRemaining;
+                    response.BudgetReconciled = r.CompletionRequestDetail.BudgetReconciled;
+                    response.CompletionSummary = r.CompletionRequestDetail.CompletionSummary;
+                    response.BudgetVarianceExplanation = r.CompletionRequestDetail.BudgetVarianceExplanation;
+                }
                 
-                // Approver information
-                ApprovedById = r.ApprovedById,
-                ApproverName = r.ApprovedBy?.FullName,
-                ApprovedAt = r.ApprovedAt,
-                
-                // Project information
-                ProjectId = r.ProjectId,
-                ProjectName = r.Project?.ProjectName ?? "Unknown Project",
-                ProjectDescription = r.Project?.Description ?? "",
-                ProjectStatus = (ProjectStatusEnum)(r.Project?.Status ?? 0),
-                ApprovedBudget = r.Project?.ApprovedBudget,
-                SpentBudget = r.Project?.SpentBudget ?? 0,
-                
-                // Department information
-                DepartmentId = r.Project?.DepartmentId,
-                DepartmentName = r.Project?.Department?.DepartmentName ?? "Unknown Department",
-                
-                // Group information
-                GroupId = r.Project?.GroupId,
-                GroupName = r.Project?.Group?.GroupName ?? "Unknown Group"
+                return response;
             }).ToList();
         }
         catch (Exception ex)
@@ -1520,8 +1540,8 @@ public class ProjectService : IProjectService
             request.ApprovedById = approverId;
             request.ApprovedAt = DateTime.UtcNow;
             
-            // 6. Update project status to Completion_Approved
-            project.Status = (int)ProjectStatusEnum.Completion_Approved;
+            // 6. Update project status to Completed instead of Completion_Approved
+            project.Status = (int)ProjectStatusEnum.Completed;
             project.UpdatedAt = DateTime.UtcNow;
             
             _context.ProjectRequests.Update(request);
@@ -1633,8 +1653,10 @@ public class ProjectService : IProjectService
             request.ApprovedAt = DateTime.UtcNow;
             request.RejectionReason = rejectionReason;
             
-            // Update project status back to Approved to allow resubmission
+            // Set status back to Approved
             project.Status = (int)ProjectStatusEnum.Approved;
+            // Record rejection reason
+            project.RejectionReason = rejectionReason;
             project.UpdatedAt = DateTime.UtcNow;
             
             _context.ProjectRequests.Update(request);
@@ -1865,6 +1887,19 @@ public class ProjectService : IProjectService
                 _context.FundDisbursements.Update(fundDisbursement);
             }
             
+            // Add handling for Research_Creation
+            if (request.RequestType == ProjectRequestTypeEnum.Research_Creation)
+            {
+                var project = request.Project;
+                if (project == null)
+                    throw new ServiceException("Project not found");
+                
+                // Update project status to Approved
+                project.Status = (int)ProjectStatusEnum.Approved;
+                project.UpdatedAt = DateTime.Now;
+                _context.Projects.Update(project);
+            }
+            
             // Common request update code
             request.ApprovalStatus = ApprovalStatusEnum.Approved;
             request.ApprovedById = secretaryId;
@@ -1894,7 +1929,8 @@ public class ProjectService : IProjectService
                 .Include(r => r.Project)
                 .FirstOrDefaultAsync(r => r.RequestId == requestId);
             
-            // Existing logic...
+            if (request == null)
+                throw new ServiceException("Project request not found");
             
             // Add this section for Fund_Disbursement request type
             if (request.RequestType == ProjectRequestTypeEnum.Fund_Disbursement)
@@ -1944,6 +1980,20 @@ public class ProjectService : IProjectService
                 _context.FundDisbursements.Update(fundDisbursement);
             }
             
+            // Add handling for Research_Creation
+            if (request.RequestType == ProjectRequestTypeEnum.Research_Creation)
+            {
+                var project = request.Project;
+                if (project == null)
+                    throw new ServiceException("Project not found");
+                
+                // Update project status to Rejected
+                project.Status = (int)ProjectStatusEnum.Rejected;
+                project.UpdatedAt = DateTime.Now;
+                project.RejectionReason = rejectionReason;
+                _context.Projects.Update(project);
+            }
+            
             // Common request update
             request.ApprovalStatus = ApprovalStatusEnum.Rejected;
             request.ApprovedById = secretaryId;
@@ -1953,7 +2003,31 @@ public class ProjectService : IProjectService
             _context.ProjectRequests.Update(request);
             await _context.SaveChangesAsync();
             
-            // Process documents...
+            // Process documents if any
+            if (documentFiles != null && documentFiles.Any())
+            {
+                var urls = await _s3Service.UploadFilesAsync(documentFiles, $"projects/{request.ProjectId}/request-rejection");
+                int index = 0;
+                
+                foreach (var file in documentFiles)
+                {
+                    var document = new Document
+                    {
+                        ProjectId = request.ProjectId,
+                        DocumentUrl = urls[index],
+                        FileName = file.FileName,
+                        DocumentType = (int)DocumentTypeEnum.CouncilDecision,
+                        UploadAt = DateTime.Now,
+                        UploadedBy = secretaryId,
+                        RequestId = requestId
+                    };
+                    
+                    await _context.Documents.AddAsync(document);
+                    index++;
+                }
+                
+                await _context.SaveChangesAsync();
+            }
             
             await transaction.CommitAsync();
             return true;
@@ -1977,37 +2051,57 @@ public class ProjectService : IProjectService
                 .Include(r => r.RequestedBy)
                 .Include(r => r.ApprovedBy)
                 .Include(r => r.FundDisbursement)
+                .Include(r => r.CompletionRequestDetail) // Add this line
                 .ToListAsync();
 
-            return requests.Select(r => new ProjectRequestResponse
-            {
-                RequestId = r.RequestId,
-                ProjectId = r.ProjectId,
-                RequestType = r.RequestType,
-                RequestedById = r.RequestedById,
-                RequesterName = r.RequestedBy?.FullName ?? "Unknown",
-                ApprovalStatus = r.ApprovalStatus,
-                StatusName = r.ApprovalStatus.HasValue ? 
-                    Enum.GetName(typeof(ApprovalStatusEnum), r.ApprovalStatus.Value) : null,
-                RequestedAt = r.RequestedAt,
-                ApprovedById = r.ApprovedById,
-                ApproverName = r.ApprovedBy?.FullName,
-                ApprovedAt = r.ApprovedAt,
-                RejectionReason = r.RejectionReason,
-                ProjectName = r.Project?.ProjectName ?? "Unknown",
-                ProjectDescription = r.Project?.Description ?? "",
-                ProjectStatus = (ProjectStatusEnum)(r.Project?.Status ?? 0),
-                ApprovedBudget = r.Project?.ApprovedBudget,
-                SpentBudget = r.Project?.SpentBudget ?? 0,
-                DepartmentId = r.Project?.DepartmentId,
-                DepartmentName = r.Project?.Department?.DepartmentName ?? "Unknown",
-                GroupId = r.Project?.GroupId,
-                GroupName = r.Project?.Group?.GroupName ?? "Unknown",
-                ProjectType = r.Project?.ProjectType,
-                ProjectTypeName = r.Project?.ProjectType.HasValue == true ? 
-                    Enum.GetName(typeof(ProjectTypeEnum), r.Project.ProjectType.Value) : null,
-                FundDisbursementId = r.FundDisbursementId,
-                FundRequestAmount = r.FundDisbursement?.FundRequest
+            return requests.Select(r => {
+                var response = new ProjectRequestResponse
+                {
+                    RequestId = r.RequestId,
+                    ProjectId = r.ProjectId,
+                    RequestType = r.RequestType,
+                    RequestedById = r.RequestedById,
+                    RequesterName = r.RequestedBy?.FullName ?? "Unknown",
+                    ApprovalStatus = r.ApprovalStatus,
+                    StatusName = r.ApprovalStatus.HasValue ? 
+                        Enum.GetName(typeof(ApprovalStatusEnum), r.ApprovalStatus.Value) : null,
+                    RequestedAt = r.RequestedAt,
+                    ApprovedById = r.ApprovedById,
+                    ApproverName = r.ApprovedBy?.FullName,
+                    ApprovedAt = r.ApprovedAt,
+                    RejectionReason = r.RejectionReason,
+                    ProjectName = r.Project?.ProjectName ?? "Unknown",
+                    ProjectDescription = r.Project?.Description ?? "",
+                    ProjectStatus = (ProjectStatusEnum)(r.Project?.Status ?? 0),
+                    ApprovedBudget = r.Project?.ApprovedBudget,
+                    SpentBudget = r.Project?.SpentBudget ?? 0,
+                    DepartmentId = r.Project?.DepartmentId,
+                    DepartmentName = r.Project?.Department?.DepartmentName ?? "Unknown",
+                    GroupId = r.Project?.GroupId,
+                    GroupName = r.Project?.Group?.GroupName ?? "Unknown",
+                    ProjectType = r.Project?.ProjectType,
+                    ProjectTypeName = r.Project?.ProjectType.HasValue == true ? 
+                        Enum.GetName(typeof(ProjectTypeEnum), r.Project.ProjectType.Value) : null,
+                    FundDisbursementId = r.FundDisbursementId,
+                    FundRequestAmount = r.FundDisbursement?.FundRequest,
+                    
+                    // Set default completion values
+                    BudgetRemaining = null,
+                    BudgetReconciled = null,
+                    CompletionSummary = null,
+                    BudgetVarianceExplanation = null
+                };
+                
+                // Add completion-specific details if available
+                if (r.RequestType == ProjectRequestTypeEnum.Completion && r.CompletionRequestDetail != null)
+                {
+                    response.BudgetRemaining = r.CompletionRequestDetail.BudgetRemaining;
+                    response.BudgetReconciled = r.CompletionRequestDetail.BudgetReconciled;
+                    response.CompletionSummary = r.CompletionRequestDetail.CompletionSummary;
+                    response.BudgetVarianceExplanation = r.CompletionRequestDetail.BudgetVarianceExplanation;
+                }
+                
+                return response;
             }).ToList();
         }
         catch (Exception ex)
@@ -2148,6 +2242,7 @@ public class ProjectService : IProjectService
                 .Include(r => r.RequestedBy)
                 .Include(r => r.ApprovedBy)
                 .Include(r => r.FundDisbursement)
+                .Include(r => r.CompletionRequestDetail) // Add this line
                 .FirstOrDefaultAsync(r => r.RequestId == requestId);
 
             if (request == null)
@@ -2157,7 +2252,7 @@ public class ProjectService : IProjectService
             if (project == null)
                 throw new ServiceException("Project associated with this request not found");
 
-            return new ProjectRequestDetailResponse
+            var detailResponse = new ProjectRequestDetailResponse
             {
                 // Request information
                 RequestId = request.RequestId,
@@ -2230,8 +2325,25 @@ public class ProjectService : IProjectService
                 
                 // Project phases and documents
                 ProjectPhases = _mapper.Map<ICollection<ProjectPhaseResponse>>(project.ProjectPhases),
-                Documents = _mapper.Map<ICollection<DocumentResponse>>(project.Documents)
+                Documents = _mapper.Map<ICollection<DocumentResponse>>(project.Documents),
+                
+                // Completion-specific fields (with default null values)
+                BudgetRemaining = null,
+                BudgetReconciled = null,
+                CompletionSummary = null,
+                BudgetVarianceExplanation = null
             };
+            
+            // Add completion details if this is a completion request
+            if (request.RequestType == ProjectRequestTypeEnum.Completion && request.CompletionRequestDetail != null)
+            {
+                detailResponse.BudgetRemaining = request.CompletionRequestDetail.BudgetRemaining;
+                detailResponse.BudgetReconciled = request.CompletionRequestDetail.BudgetReconciled;
+                detailResponse.CompletionSummary = request.CompletionRequestDetail.CompletionSummary;
+                detailResponse.BudgetVarianceExplanation = request.CompletionRequestDetail.BudgetVarianceExplanation;
+            }
+            
+            return detailResponse;
         }
         catch (Exception ex)
         {
@@ -2251,40 +2363,60 @@ public class ProjectService : IProjectService
                 .Include(r => r.RequestedBy)
                 .Include(r => r.ApprovedBy)
                 .Include(r => r.FundDisbursement)
+                .Include(r => r.CompletionRequestDetail) // Add this line
                 .Where(r => r.Project.DepartmentId == departmentId && 
                             r.ApprovalStatus == ApprovalStatusEnum.Pending &&
                             r.RequestType != ProjectRequestTypeEnum.Fund_Disbursement)
                 .ToListAsync();
 
-            return requests.Select(r => new ProjectRequestResponse
-            {
-                // Map all the properties as before
-                RequestId = r.RequestId,
-                RequestType = r.RequestType,
-                ApprovalStatus = r.ApprovalStatus,
-                RequestedAt = r.RequestedAt,
-                RejectionReason = r.RejectionReason,
-                RequestedById = r.RequestedById,
-                RequesterName = r.RequestedBy?.FullName ?? "Unknown",
-                ApprovedById = r.ApprovedById,
-                ApproverName = r.ApprovedBy?.FullName,
-                ApprovedAt = r.ApprovedAt,
-                ProjectId = r.ProjectId,
-                ProjectName = r.Project?.ProjectName ?? "Unknown Project",
-                ProjectDescription = r.Project?.Description ?? "",
-                ProjectStatus = (ProjectStatusEnum)(r.Project?.Status ?? 0),
-                ApprovedBudget = r.Project?.ApprovedBudget,
-                SpentBudget = r.Project?.SpentBudget ?? 0,
-                DepartmentId = r.Project?.DepartmentId,
-                DepartmentName = r.Project?.Department?.DepartmentName ?? "Unknown Department",
-                GroupId = r.Project?.GroupId,
-                GroupName = r.Project?.Group?.GroupName ?? "Unknown Group",
-                StatusName = ((ApprovalStatusEnum?)r.ApprovalStatus)?.ToString() ?? "Unknown",
-                ProjectType = r.Project?.ProjectType,
-                ProjectTypeName = r.Project?.ProjectType.HasValue == true ? 
-                    Enum.GetName(typeof(ProjectTypeEnum), r.Project.ProjectType.Value) : null,
-                FundDisbursementId = null, // We won't include fund disbursement info
-                FundRequestAmount = null    // We won't include fund disbursement info
+            return requests.Select(r => {
+                var response = new ProjectRequestResponse
+                {
+                    // Map all existing properties
+                    RequestId = r.RequestId,
+                    RequestType = r.RequestType,
+                    ApprovalStatus = r.ApprovalStatus,
+                    RequestedAt = r.RequestedAt,
+                    RejectionReason = r.RejectionReason,
+                    RequestedById = r.RequestedById,
+                    RequesterName = r.RequestedBy?.FullName ?? "Unknown",
+                    ApprovedById = r.ApprovedById,
+                    ApproverName = r.ApprovedBy?.FullName,
+                    ApprovedAt = r.ApprovedAt,
+                    ProjectId = r.ProjectId,
+                    ProjectName = r.Project?.ProjectName ?? "Unknown Project",
+                    ProjectDescription = r.Project?.Description ?? "",
+                    ProjectStatus = (ProjectStatusEnum)(r.Project?.Status ?? 0),
+                    ApprovedBudget = r.Project?.ApprovedBudget,
+                    SpentBudget = r.Project?.SpentBudget ?? 0,
+                    DepartmentId = r.Project?.DepartmentId,
+                    DepartmentName = r.Project?.Department?.DepartmentName ?? "Unknown Department",
+                    GroupId = r.Project?.GroupId,
+                    GroupName = r.Project?.Group?.GroupName ?? "Unknown Group",
+                    StatusName = ((ApprovalStatusEnum?)r.ApprovalStatus)?.ToString() ?? "Unknown",
+                    ProjectType = r.Project?.ProjectType,
+                    ProjectTypeName = r.Project?.ProjectType.HasValue == true ? 
+                        Enum.GetName(typeof(ProjectTypeEnum), r.Project.ProjectType.Value) : null,
+                    FundDisbursementId = null,
+                    FundRequestAmount = null,
+                    
+                    // Set default completion values
+                    BudgetRemaining = null,
+                    BudgetReconciled = null,
+                    CompletionSummary = null,
+                    BudgetVarianceExplanation = null
+                };
+                
+                // Add this section to populate completion data
+                if (r.RequestType == ProjectRequestTypeEnum.Completion && r.CompletionRequestDetail != null)
+                {
+                    response.BudgetRemaining = r.CompletionRequestDetail.BudgetRemaining;
+                    response.BudgetReconciled = r.CompletionRequestDetail.BudgetReconciled;
+                    response.CompletionSummary = r.CompletionRequestDetail.CompletionSummary;
+                    response.BudgetVarianceExplanation = r.CompletionRequestDetail.BudgetVarianceExplanation;
+                }
+                
+                return response;
             }).ToList();
         }
         catch (Exception ex)
@@ -2305,37 +2437,58 @@ public class ProjectService : IProjectService
                 .Include(r => r.RequestedBy)
                 .Include(r => r.ApprovedBy)
                 .Include(r => r.FundDisbursement)
+                .Include(r => r.CompletionRequestDetail) // Add this line
                 .Where(r => r.RequestedById == userId)
                 .ToListAsync();
 
-            return requests.Select(r => new ProjectRequestResponse
-            {
-                RequestId = r.RequestId,
-                RequestType = r.RequestType,
-                ApprovalStatus = r.ApprovalStatus,
-                RequestedAt = r.RequestedAt,
-                RejectionReason = r.RejectionReason,
-                RequestedById = r.RequestedById,
-                RequesterName = r.RequestedBy?.FullName ?? "Unknown",
-                ApprovedById = r.ApprovedById,
-                ApproverName = r.ApprovedBy?.FullName,
-                ApprovedAt = r.ApprovedAt,
-                ProjectId = r.ProjectId,
-                ProjectName = r.Project?.ProjectName ?? "Unknown Project",
-                ProjectDescription = r.Project?.Description ?? "",
-                ProjectStatus = (ProjectStatusEnum)(r.Project?.Status ?? 0),
-                ApprovedBudget = r.Project?.ApprovedBudget,
-                SpentBudget = r.Project?.SpentBudget ?? 0,
-                DepartmentId = r.Project?.DepartmentId,
-                DepartmentName = r.Project?.Department?.DepartmentName ?? "Unknown Department",
-                GroupId = r.Project?.GroupId,
-                GroupName = r.Project?.Group?.GroupName ?? "Unknown Group",
-                StatusName = ((ApprovalStatusEnum?)r.ApprovalStatus)?.ToString() ?? "Unknown",
-                ProjectType = r.Project?.ProjectType,
-                ProjectTypeName = r.Project?.ProjectType.HasValue == true ? 
-                    Enum.GetName(typeof(ProjectTypeEnum), r.Project.ProjectType.Value) : null,
-                FundDisbursementId = r.FundDisbursementId,
-                FundRequestAmount = r.FundDisbursement?.FundRequest
+            return requests.Select(r => {
+                var response = new ProjectRequestResponse
+                {
+                    // Existing properties
+                    RequestId = r.RequestId,
+                    RequestType = r.RequestType,
+                    ApprovalStatus = r.ApprovalStatus,
+                    RequestedAt = r.RequestedAt,
+                    RejectionReason = r.RejectionReason,
+                    RequestedById = r.RequestedById,
+                    RequesterName = r.RequestedBy?.FullName ?? "Unknown",
+                    ApprovedById = r.ApprovedById,
+                    ApproverName = r.ApprovedBy?.FullName,
+                    ApprovedAt = r.ApprovedAt,
+                    ProjectId = r.ProjectId,
+                    ProjectName = r.Project?.ProjectName ?? "Unknown Project",
+                    ProjectDescription = r.Project?.Description ?? "",
+                    ProjectStatus = (ProjectStatusEnum)(r.Project?.Status ?? 0),
+                    ApprovedBudget = r.Project?.ApprovedBudget,
+                    SpentBudget = r.Project?.SpentBudget ?? 0,
+                    DepartmentId = r.Project?.DepartmentId,
+                    DepartmentName = r.Project?.Department?.DepartmentName ?? "Unknown Department",
+                    GroupId = r.Project?.GroupId,
+                    GroupName = r.Project?.Group?.GroupName ?? "Unknown Group",
+                    StatusName = ((ApprovalStatusEnum?)r.ApprovalStatus)?.ToString() ?? "Unknown",
+                    ProjectType = r.Project?.ProjectType,
+                    ProjectTypeName = r.Project?.ProjectType.HasValue == true ? 
+                        Enum.GetName(typeof(ProjectTypeEnum), r.Project.ProjectType.Value) : null,
+                    FundDisbursementId = r.FundDisbursementId,
+                    FundRequestAmount = r.FundDisbursement?.FundRequest,
+                    
+                    // Set default completion values
+                    BudgetRemaining = null,
+                    BudgetReconciled = null,
+                    CompletionSummary = null,
+                    BudgetVarianceExplanation = null
+                };
+                
+                // Add completion-specific details if available
+                if (r.RequestType == ProjectRequestTypeEnum.Completion && r.CompletionRequestDetail != null)
+                {
+                    response.BudgetRemaining = r.CompletionRequestDetail.BudgetRemaining;
+                    response.BudgetReconciled = r.CompletionRequestDetail.BudgetReconciled;
+                    response.CompletionSummary = r.CompletionRequestDetail.CompletionSummary;
+                    response.BudgetVarianceExplanation = r.CompletionRequestDetail.BudgetVarianceExplanation;
+                }
+                
+                return response;
             }).ToList();
         }
         catch (Exception ex)
@@ -2356,43 +2509,131 @@ public class ProjectService : IProjectService
                 .Include(r => r.RequestedBy)
                 .Include(r => r.ApprovedBy)
                 .Include(r => r.FundDisbursement)
+                .Include(r => r.CompletionRequestDetail) // Add this line
                 .Where(r => r.RequestedById == userId && 
                             r.ApprovalStatus == ApprovalStatusEnum.Pending)
                 .ToListAsync();
 
-            return requests.Select(r => new ProjectRequestResponse
-            {
-                RequestId = r.RequestId,
-                RequestType = r.RequestType,
-                ApprovalStatus = r.ApprovalStatus,
-                RequestedAt = r.RequestedAt,
-                RejectionReason = r.RejectionReason,
-                RequestedById = r.RequestedById,
-                RequesterName = r.RequestedBy?.FullName ?? "Unknown",
-                ApprovedById = r.ApprovedById,
-                ApproverName = r.ApprovedBy?.FullName,
-                ApprovedAt = r.ApprovedAt,
-                ProjectId = r.ProjectId,
-                ProjectName = r.Project?.ProjectName ?? "Unknown Project",
-                ProjectDescription = r.Project?.Description ?? "",
-                ProjectStatus = (ProjectStatusEnum)(r.Project?.Status ?? 0),
-                ApprovedBudget = r.Project?.ApprovedBudget,
-                SpentBudget = r.Project?.SpentBudget ?? 0,
-                DepartmentId = r.Project?.DepartmentId,
-                DepartmentName = r.Project?.Department?.DepartmentName ?? "Unknown Department",
-                GroupId = r.Project?.GroupId,
-                GroupName = r.Project?.Group?.GroupName ?? "Unknown Group",
-                StatusName = ((ApprovalStatusEnum?)r.ApprovalStatus)?.ToString() ?? "Unknown",
-                ProjectType = r.Project?.ProjectType,
-                ProjectTypeName = r.Project?.ProjectType.HasValue == true ? 
-                    Enum.GetName(typeof(ProjectTypeEnum), r.Project.ProjectType.Value) : null,
-                FundDisbursementId = r.FundDisbursementId,
-                FundRequestAmount = r.FundDisbursement?.FundRequest
+            return requests.Select(r => {
+                var response = new ProjectRequestResponse
+                {
+                    // Existing properties
+                    RequestId = r.RequestId,
+                    RequestType = r.RequestType,
+                    ApprovalStatus = r.ApprovalStatus,
+                    RequestedAt = r.RequestedAt,
+                    RejectionReason = r.RejectionReason,
+                    RequestedById = r.RequestedById,
+                    RequesterName = r.RequestedBy?.FullName ?? "Unknown",
+                    ApprovedById = r.ApprovedById,
+                    ApproverName = r.ApprovedBy?.FullName,
+                    ApprovedAt = r.ApprovedAt,
+                    ProjectId = r.ProjectId,
+                    ProjectName = r.Project?.ProjectName ?? "Unknown Project",
+                    ProjectDescription = r.Project?.Description ?? "",
+                    ProjectStatus = (ProjectStatusEnum)(r.Project?.Status ?? 0),
+                    ApprovedBudget = r.Project?.ApprovedBudget,
+                    SpentBudget = r.Project?.SpentBudget ?? 0,
+                    DepartmentId = r.Project?.DepartmentId,
+                    DepartmentName = r.Project?.Department?.DepartmentName ?? "Unknown Department",
+                    GroupId = r.Project?.GroupId,
+                    GroupName = r.Project?.Group?.GroupName ?? "Unknown Group",
+                    StatusName = ((ApprovalStatusEnum?)r.ApprovalStatus)?.ToString() ?? "Unknown",
+                    ProjectType = r.Project?.ProjectType,
+                    ProjectTypeName = r.Project?.ProjectType.HasValue == true ? 
+                        Enum.GetName(typeof(ProjectTypeEnum), r.Project.ProjectType.Value) : null,
+                    FundDisbursementId = r.FundDisbursementId,
+                    FundRequestAmount = r.FundDisbursement?.FundRequest,
+                    
+                    // Set default completion values
+                    BudgetRemaining = null,
+                    BudgetReconciled = null,
+                    CompletionSummary = null,
+                    BudgetVarianceExplanation = null
+                };
+                
+                // Add completion-specific details if available
+                if (r.RequestType == ProjectRequestTypeEnum.Completion && r.CompletionRequestDetail != null)
+                {
+                    response.BudgetRemaining = r.CompletionRequestDetail.BudgetRemaining;
+                    response.BudgetReconciled = r.CompletionRequestDetail.BudgetReconciled;
+                    response.CompletionSummary = r.CompletionRequestDetail.CompletionSummary;
+                    response.BudgetVarianceExplanation = r.CompletionRequestDetail.BudgetVarianceExplanation;
+                }
+                
+                return response;
             }).ToList();
         }
         catch (Exception ex)
         {
             throw new ServiceException($"Error retrieving user pending project requests: {ex.Message}");
+        }
+    }
+
+    public async Task<ProjectCompletionSummaryResponse> GetProjectCompletionSummaryAsync(int projectId)
+    {
+        try
+        {
+            var project = await _context.Projects
+                .Include(p => p.ProjectPhases)
+                .Include(p => p.Documents)
+                .Include(p => p.FundDisbursements)
+                .Include(p => p.Group)
+                    .ThenInclude(g => g.GroupMembers)
+                        .ThenInclude(gm => gm.User)
+                .FirstOrDefaultAsync(p => p.ProjectId == projectId);
+
+            if (project == null)
+                throw new ServiceException($"Project with ID {projectId} not found");
+
+            var summary = new ProjectCompletionSummaryResponse
+            {
+                ProjectId = project.ProjectId,
+                ProjectName = project.ProjectName,
+                Description = project.Description,
+                ProjectType = project.ProjectType,
+                ProjectTypeName = project.ProjectType.HasValue ? 
+                    Enum.GetName(typeof(ProjectTypeEnum), project.ProjectType.Value) : null,
+                StartDate = project.StartDate ?? DateTime.MinValue,
+                EndDate = project.EndDate ?? DateTime.MinValue,
+                CreatedAt = project.CreatedAt ?? DateTime.MinValue,
+                
+                ApprovedBudget = project.ApprovedBudget ?? 0,
+                SpentBudget = project.SpentBudget,
+                
+                TotalPhases = project.ProjectPhases.Count,
+                CompletedPhases = project.ProjectPhases.Count(p => p.Status == (int)ProjectPhaseStatusEnum.Completed),
+                Phases = _mapper.Map<ICollection<ProjectPhaseResponse>>(project.ProjectPhases),
+                
+                DocumentCount = project.Documents.Count,
+                Documents = _mapper.Map<ICollection<DocumentResponse>>(project.Documents),
+                
+                TotalDisbursedAmount = project.FundDisbursements
+                    .Where(fd => fd.Status == (int)FundDisbursementStatusEnum.Approved || 
+                                fd.Status == (int)FundDisbursementStatusEnum.Disbursed)
+                    .Sum(fd => fd.FundRequest ?? 0),
+                DisbursementCount = project.FundDisbursements.Count,
+                Disbursements = _mapper.Map<ICollection<FundDisbursementResponse>>(project.FundDisbursements),
+                
+                TeamMembers = project.Group?.GroupMembers
+                    .Where(gm => gm.Status == (int)GroupMemberStatus.Active)
+                    .Select(gm => new GroupMemberResponse
+                    {
+                        GroupMemberId = gm.GroupMemberId,
+                        UserId = gm.UserId ?? 0,
+                        MemberName = gm.User?.FullName ?? "Unknown",
+                        MemberEmail = gm.User?.Email ?? "",
+                        Role = gm.Role ?? 0,
+                        JoinDate = gm.JoinDate ?? DateTime.MinValue,
+                        Status = gm.Status ?? 0
+                    }).ToList() ?? new List<GroupMemberResponse>()
+            };
+
+            return summary;
+        }
+        catch (Exception ex) when (ex is not ServiceException)
+        {
+            throw new ServiceException($"Error retrieving project completion summary: {ex.Message}");
         }
     }
 

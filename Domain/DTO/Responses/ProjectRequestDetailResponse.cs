@@ -45,5 +45,11 @@ namespace Domain.DTO.Responses
         // Project phases & documents
         public ICollection<ProjectPhaseResponse> ProjectPhases { get; set; }
         public ICollection<DocumentResponse> Documents { get; set; }
+        
+        // Add these completion-specific properties
+        public decimal? BudgetRemaining { get; set; }
+        public bool? BudgetReconciled { get; set; }
+        public string? CompletionSummary { get; set; }
+        public string? BudgetVarianceExplanation { get; set; }
     }
 }

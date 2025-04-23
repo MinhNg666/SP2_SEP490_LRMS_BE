@@ -47,5 +47,11 @@ namespace Domain.DTO.Responses
         // Project type information
         public int? ProjectType { get; set; }
         public string? ProjectTypeName { get; set; }
+
+        // Completion request specific fields
+        public decimal? BudgetRemaining { get; set; }
+        public bool? BudgetReconciled { get; set; }
+        public string? CompletionSummary { get; set; }
+        public string? BudgetVarianceExplanation { get; set; }
     }
 }

@@ -41,4 +41,5 @@ public interface IProjectService
     Task<IEnumerable<ProjectRequestResponse>> GetPendingDepartmentRequestsAsync(int departmentId);
     Task<IEnumerable<ProjectRequestResponse>> GetUserProjectRequestsAsync(int userId);
     Task<IEnumerable<ProjectRequestResponse>> GetUserPendingProjectRequestsAsync(int userId);
+    Task<ProjectCompletionSummaryResponse> GetProjectCompletionSummaryAsync(int projectId);
 }
