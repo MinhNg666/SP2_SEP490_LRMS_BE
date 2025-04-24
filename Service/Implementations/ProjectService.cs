@@ -1908,7 +1908,47 @@ public class ProjectService : IProjectService
             _context.ProjectRequests.Update(request);
             await _context.SaveChangesAsync();
             
-            // Process documents...
+            // Process documents if any
+            if (documentFiles != null && documentFiles.Any())
+            {
+                var urls = await _s3Service.UploadFilesAsync(documentFiles, $"projects/{request.ProjectId}/request-approval");
+                int index = 0;
+                
+                foreach (var file in documentFiles)
+                {
+                    // Create a ProjectResource
+                    var projectResource = new ProjectResource
+                    {
+                        ResourceName = file.FileName ?? "Approval Document",
+                        ResourceType = 1, // Document type
+                        Cost = 0,
+                        Quantity = 1,
+                        Acquired = true,
+                        ProjectId = request.ProjectId
+                    };
+                    
+                    _context.ProjectResources.Add(projectResource);
+                    await _context.SaveChangesAsync(); // Save to get the ID
+                    
+                    // Create the Document with the ProjectResourceId
+                    var document = new Document
+                    {
+                        ProjectId = request.ProjectId,
+                        DocumentUrl = urls[index],
+                        FileName = file.FileName,
+                        DocumentType = (int)DocumentTypeEnum.CouncilDecision,
+                        UploadAt = DateTime.Now,
+                        UploadedBy = secretaryId,
+                        RequestId = requestId,
+                        ProjectResourceId = projectResource.ProjectResourceId
+                    };
+                    
+                    await _context.Documents.AddAsync(document);
+                    index++;
+                }
+                
+                await _context.SaveChangesAsync();
+            }
             
             await transaction.CommitAsync();
             return true;
@@ -2011,6 +2051,21 @@ public class ProjectService : IProjectService
                 
                 foreach (var file in documentFiles)
                 {
+                    // Create a ProjectResource
+                    var projectResource = new ProjectResource
+                    {
+                        ResourceName = file.FileName ?? "Rejection Document",
+                        ResourceType = 1, // Document type
+                        Cost = 0,
+                        Quantity = 1,
+                        Acquired = true,
+                        ProjectId = request.ProjectId
+                    };
+                    
+                    _context.ProjectResources.Add(projectResource);
+                    await _context.SaveChangesAsync(); // Save to get the ID
+                    
+                    // Create the Document with the ProjectResourceId
                     var document = new Document
                     {
                         ProjectId = request.ProjectId,
@@ -2019,7 +2074,8 @@ public class ProjectService : IProjectService
                         DocumentType = (int)DocumentTypeEnum.CouncilDecision,
                         UploadAt = DateTime.Now,
                         UploadedBy = secretaryId,
-                        RequestId = requestId
+                        RequestId = requestId,
+                        ProjectResourceId = projectResource.ProjectResourceId 
                     };
                     
                     await _context.Documents.AddAsync(document);
