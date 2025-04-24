@@ -91,7 +91,8 @@ public class ProjectPhaseRepository : GenericRepository<ProjectPhase>, IProjectP
             // Find phases that should be "Pending" (current date before start date)
             var pendingPhases = await _context.ProjectPhases
                 .Where(p => p.StartDate.HasValue && p.StartDate.Value.Date > today && 
-                           p.Status != (int)ProjectPhaseStatusEnum.Pending)
+                           p.Status != (int)ProjectPhaseStatusEnum.Pending &&
+                           p.Status != (int)ProjectPhaseStatusEnum.Completed)
                 .ToListAsync();
             
             Console.WriteLine($"Found {pendingPhases.Count} phases that should be marked as Pending");

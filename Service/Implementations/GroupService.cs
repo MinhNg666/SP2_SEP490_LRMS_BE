@@ -248,7 +248,7 @@ public class GroupService : IGroupService
             GroupName = request.GroupName,
             MaxMember = maxMember,
             CurrentMember = 0,
-            Status = 1,
+            Status = (int)GroupStatusEnum.Pending,
             CreatedAt = DateTime.Now,
             CreatedBy = currentUserId,
             GroupType = (int)GroupTypeEnum.Student
@@ -342,7 +342,7 @@ public class GroupService : IGroupService
             CreatedBy = currentUserId,
             MaxMember = 5,
             CurrentMember = 0,
-            Status = 1,
+            Status = (int)GroupStatusEnum.Pending,
             CreatedAt = DateTime.Now,
             GroupType = 1
         };

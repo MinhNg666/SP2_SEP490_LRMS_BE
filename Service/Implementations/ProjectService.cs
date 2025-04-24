@@ -1870,6 +1870,10 @@ public class ProjectService : IProjectService
                 if (project == null)
                     throw new ServiceException("Project not found for this fund disbursement");
                 
+                // Check if approving this disbursement would violate the budget constraint
+                if (project.SpentBudget + (fundDisbursement.FundRequest ?? 0) > project.ApprovedBudget)
+                    throw new ServiceException($"Approving this disbursement would exceed the project's approved budget. Project approved budget: {project.ApprovedBudget}, current spent: {project.SpentBudget}, requested amount: {fundDisbursement.FundRequest}");
+                
                 project.SpentBudget += fundDisbursement.FundRequest ?? 0;
                 project.UpdatedAt = DateTime.Now;
 
@@ -1898,6 +1902,52 @@ public class ProjectService : IProjectService
                 project.Status = (int)ProjectStatusEnum.Approved;
                 project.UpdatedAt = DateTime.Now;
                 _context.Projects.Update(project);
+                
+                // Create a new quota with the same budget as the project
+                // First check if a quota already exists for this project
+                var existingQuota = await _context.Quotas
+                    .FirstOrDefaultAsync(q => q.ProjectId == project.ProjectId);
+                
+                if (existingQuota == null)
+                {
+                    var quota = new Quota
+                    {
+                        AllocatedBudget = project.ApprovedBudget,
+                        Status = (int)QuotaStatusEnum.Active,
+                        CreatedAt = DateTime.Now,
+                        ProjectId = project.ProjectId,
+                        AllocatedBy = secretaryId
+                    };
+
+                    await _context.Quotas.AddAsync(quota);
+                    await _context.SaveChangesAsync();
+                    
+                    Console.WriteLine($"Created quota {quota.QuotaId} for project {project.ProjectId} with budget {quota.AllocatedBudget}");
+                }
+                else
+                {
+                    Console.WriteLine($"Quota {existingQuota.QuotaId} already exists for project {project.ProjectId}");
+                }
+                
+                // Send notifications to research group members if the group exists
+                if (project.GroupId.HasValue)
+                {
+                    var groupMembers = await _groupRepository.GetMembersByGroupId(project.GroupId.Value);
+                    foreach (var member in groupMembers)
+                    {
+                        if (member.UserId.HasValue)
+                        {
+                            var notificationRequest = new CreateNotificationRequest
+                            {
+                                UserId = member.UserId.Value,
+                                Title = "Project Approved",
+                                Message = $"Project '{project.ProjectName}' has been approved",
+                                ProjectId = project.ProjectId
+                            };
+                            await _notificationService.CreateNotification(notificationRequest);
+                        }
+                    }
+                }
             }
             
             // Common request update code
@@ -2018,6 +2068,22 @@ public class ProjectService : IProjectService
                 fundDisbursement.UpdateAt = DateTime.Now;
                 
                 _context.FundDisbursements.Update(fundDisbursement);
+                
+                // Send notification to the requester that they can submit a new request
+                if (fundDisbursement.UserRequest.HasValue)
+                {
+                    var notificationRequest = new CreateNotificationRequest
+                    {
+                        UserId = fundDisbursement.UserRequest.Value,
+                        Title = "Fund Disbursement Request Rejected",
+                        Message = $"Your fund disbursement request has been rejected. Reason: {rejectionReason}. You can submit a new request if needed.",
+                        ProjectId = request.ProjectId,
+                        Status = 0,
+                        IsRead = false
+                    };
+                    
+                    await _notificationService.CreateNotification(notificationRequest);
+                }
             }
             
             // Add handling for Research_Creation

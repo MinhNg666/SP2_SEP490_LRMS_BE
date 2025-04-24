@@ -129,9 +129,20 @@ public class FundDisbursementService : IFundDisbursementService
             if (availableQuota == null)
                 throw new ServiceException("No active quota available for this project");
                 
+            // Calculate already approved/disbursed amount from this quota
+            decimal alreadyApprovedAmount = await _context.FundDisbursements
+                .Where(fd => fd.QuotaId == availableQuota.QuotaId && 
+                           (fd.Status == (int)FundDisbursementStatusEnum.Approved || 
+                            fd.Status == (int)FundDisbursementStatusEnum.Disbursed ||
+                            fd.Status == (int)FundDisbursementStatusEnum.Pending))
+                .SumAsync(fd => fd.FundRequest ?? 0);
+                
+            // Calculate available budget
+            decimal availableBudget = availableQuota.AllocatedBudget.GetValueOrDefault() - alreadyApprovedAmount;
+                
             // Check if requested amount exceeds available budget
-            if (request.FundRequest > availableQuota.AllocatedBudget)
-                throw new ServiceException($"Requested amount exceeds available budget. Available: {availableQuota.AllocatedBudget}");
+            if (request.FundRequest > availableBudget)
+                throw new ServiceException($"Requested amount exceeds available budget. Available: {availableBudget}, Requested: {request.FundRequest}");
                 
             // Verify the project phase if specified
             if (request.ProjectPhaseId.HasValue)
@@ -146,13 +157,17 @@ public class FundDisbursementService : IFundDisbursementService
                 // Check if the project phase is completed
                 if (projectPhase.Status == (int)ProjectPhaseStatusEnum.Completed)
                 {
-                    // Check if this completed phase already has a fund disbursement
-                    var existingDisbursement = await _context.FundDisbursements
-                        .AnyAsync(f => f.ProjectPhaseId == request.ProjectPhaseId.Value);
+                    // Check if this completed phase already has an active fund disbursement request
+                    // (pending or approved, but not rejected)
+                    var existingActiveDisbursement = await _context.FundDisbursements
+                        .AnyAsync(f => f.ProjectPhaseId == request.ProjectPhaseId.Value && 
+                                  (f.Status == (int)FundDisbursementStatusEnum.Pending || 
+                                   f.Status == (int)FundDisbursementStatusEnum.Approved ||
+                                   f.Status == (int)FundDisbursementStatusEnum.Disbursed));
                         
-                    if (existingDisbursement)
+                    if (existingActiveDisbursement)
                     {
-                        throw new ServiceException("This completed project phase already has a fund disbursement request. Only one request is allowed per completed phase.");
+                        throw new ServiceException("This completed project phase already has an active fund disbursement request. Only one active request is allowed per completed phase. If your previous request was rejected, you can create a new one.");
                     }
                 }
             }
@@ -367,10 +382,21 @@ public class FundDisbursementService : IFundDisbursementService
                 
             if (quota == null)
                 throw new ServiceException("Quota not found for this fund disbursement");
+
+            // Calculate already approved/disbursed amount from this quota
+            decimal alreadyApprovedAmount = await _context.FundDisbursements
+                .Where(fd => fd.QuotaId == quota.QuotaId && 
+                            fd.FundDisbursementId != fundDisbursementId && 
+                            (fd.Status == (int)FundDisbursementStatusEnum.Approved || 
+                             fd.Status == (int)FundDisbursementStatusEnum.Disbursed))
+                .SumAsync(fd => fd.FundRequest ?? 0);
+                
+            // Calculate available budget
+            decimal availableBudget = quota.AllocatedBudget.GetValueOrDefault() - alreadyApprovedAmount;
                 
             // Check if quota has sufficient funds
-            if (quota.AllocatedBudget < fundDisbursement.FundRequest)
-                throw new ServiceException("Insufficient quota budget for this disbursement");
+            if (availableBudget < fundDisbursement.FundRequest)
+                throw new ServiceException($"Insufficient quota budget for this disbursement. Available: {availableBudget}, Requested: {fundDisbursement.FundRequest}");
                 
             // Find or create a group member for the office user
             var groupMember = await _context.GroupMembers
