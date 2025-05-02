@@ -4,6 +4,7 @@ using Amazon.S3.Model;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Service.Interfaces;
+using Domain.DTO.Responses;
 
 namespace Service.Implementations
 {
@@ -75,5 +76,18 @@ namespace Service.Implementations
                 throw new Exception($"Error deleting file from S3: {ex.Message}");
             }
         }
+
+        public async Task<List<string>> UploadFilesAsync(IEnumerable<IFormFile> files, string folderName)
+        {
+            var uploadedUrls = new List<string>();
+            foreach (var file in files)
+            {
+                var fileUrl = await UploadFileAsync(file, folderName);
+                uploadedUrls.Add(fileUrl);
+            }
+            return uploadedUrls;
+        }
+
+       
     }
 }

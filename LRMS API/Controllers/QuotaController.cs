@@ -48,5 +48,20 @@ namespace LRMS_API.Controllers
                 return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
             }
         }
+
+        [HttpGet("quotas/{quotaId}")]
+        [Authorize]
+        public async Task<IActionResult> GetQuotaById(int quotaId)
+        {
+            try
+            {
+                var quotaDetail = await _quotaService.GetQuotaDetailById(quotaId);
+                return Ok(new ApiResponse(StatusCodes.Status200OK, "Quota details retrieved successfully", quotaDetail));
+            }
+            catch (ServiceException ex)
+            {
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
+            }
+        }
     }
 }

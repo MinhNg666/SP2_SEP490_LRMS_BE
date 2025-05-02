@@ -488,4 +488,62 @@ public async Task<int> CreateJournalFromResearch(int projectId, int userId, Crea
             throw new ServiceException($"Error getting journals by project id: {ex.Message}");
         }
     }
+
+    public async Task AddJournalDocuments(int journalId, IEnumerable<IFormFile> documentFiles, int userId)
+    {
+        try
+        {
+            var journal = await _context.Journals
+                .Include(j => j.Project)
+                .FirstOrDefaultAsync(j => j.JournalId == journalId);
+            
+            if (journal == null)
+                throw new ServiceException("Journal not found");
+            
+            int projectId = journal.ProjectId.Value;
+            
+            if (documentFiles != null && documentFiles.Any())
+            {
+                var urls = await _s3Service.UploadFilesAsync(documentFiles, $"projects/{projectId}/journals/{journalId}");
+                int index = 0;
+                
+                foreach (var file in documentFiles)
+                {
+                    // Create ProjectResource for document
+                    var projectResource = new ProjectResource
+                    {
+                        ResourceName = file.FileName,
+                        ResourceType = 1, // Document type
+                        ProjectId = projectId,
+                        Acquired = true,
+                        Quantity = 1
+                    };
+                    
+                    await _context.ProjectResources.AddAsync(projectResource);
+                    await _context.SaveChangesAsync();
+                    
+                    // Create document with the resource
+                    var document = new Document
+                    {
+                        ProjectId = projectId,
+                        DocumentUrl = urls[index],
+                        FileName = file.FileName,
+                        DocumentType = (int)DocumentTypeEnum.JournalPaper,
+                        UploadAt = DateTime.Now,
+                        UploadedBy = userId,
+                        ProjectResourceId = projectResource.ProjectResourceId
+                    };
+
+                    await _context.Documents.AddAsync(document);
+                    index++;
+                }
+                
+                await _context.SaveChangesAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new ServiceException($"Error uploading journal documents: {ex.Message}");
+        }
+    }
 } 

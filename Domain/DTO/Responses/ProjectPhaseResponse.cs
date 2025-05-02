@@ -9,5 +9,6 @@ namespace Domain.DTO.Responses
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public int Status { get; set; }
+        public decimal SpentBudget { get; set; }
     }
 }

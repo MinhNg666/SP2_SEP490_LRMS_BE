@@ -52,6 +52,10 @@ public partial class LRMSDbContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
 
+    public virtual DbSet<ProjectRequest> ProjectRequests { get; set; }
+
+    public virtual DbSet<CompletionRequestDetail> CompletionRequestDetails { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -218,33 +222,33 @@ public partial class LRMSDbContext : DbContext
             entity.ToTable("Fund_Disbursement");
 
             entity.Property(e => e.FundDisbursementId).HasColumnName("fund_disbursement_id");
+            entity.Property(e => e.UserRequest).HasColumnName("user_request");
             entity.Property(e => e.AppovedBy).HasColumnName("appoved_by");
-            entity.Property(e => e.AuthorRequest).HasColumnName("author_request");
+            entity.Property(e => e.DisburseBy).HasColumnName("disburse_by");
+            entity.Property(e => e.ProjectId).HasColumnName("project_id");
+            entity.Property(e => e.QuotaId).HasColumnName("quota_id");
+            entity.Property(e => e.ProjectPhaseId).HasColumnName("project_phase_id");
             entity.Property(e => e.CreatedAt)
                 .HasColumnType("datetime")
                 .HasColumnName("created_at");
             entity.Property(e => e.Description).HasColumnName("description");
-            entity.Property(e => e.DisburseBy).HasColumnName("disburse_by");
             entity.Property(e => e.FundRequest)
                 .HasColumnType("decimal(18, 2)")
                 .HasColumnName("fund_request");
-            entity.Property(e => e.ProjectId).HasColumnName("project_id");
             entity.Property(e => e.Status).HasColumnName("status");
-            entity.Property(e => e.SupervisorRequest).HasColumnName("supervisor_request");
             entity.Property(e => e.UpdateAt)
                 .HasColumnType("datetime")
                 .HasColumnName("update_at");
-            entity.Property(e => e.QuotaId).HasColumnName("quota_id");
-            entity.Property(e => e.ProjectPhaseId).HasColumnName("project_phase_id");
 
-            entity.HasOne(d => d.AppovedByNavigation).WithMany(p => p.FundDisbursementAppovedByNavigations)
+            entity.HasOne(d => d.AppovedByNavigation)
+                .WithMany(p => p.FundDisbursementAppovedByNavigations)
                 .HasForeignKey(d => d.AppovedBy)
                 .HasConstraintName("FK_FundDisbursement_GroupMember_Approved");
 
-            entity.HasOne(d => d.AuthorRequestNavigation).WithMany(p => p.FundDisbursements)
-                .HasForeignKey(d => d.AuthorRequest)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_FundDisbursement_Author");
+            entity.HasOne(d => d.UserRequestNavigation)
+                .WithMany(p => p.FundDisbursementsAsRequester)
+                .HasForeignKey(d => d.UserRequest)
+                .HasConstraintName("FK_FundDisbursement_User_Request");
 
             entity.HasOne(d => d.DisburseByNavigation).WithMany(p => p.FundDisbursements)
                 .HasForeignKey(d => d.DisburseBy)
@@ -253,11 +257,6 @@ public partial class LRMSDbContext : DbContext
             entity.HasOne(d => d.Project).WithMany(p => p.FundDisbursements)
                 .HasForeignKey(d => d.ProjectId)
                 .HasConstraintName("FK_FundDisbursement_Projects");
-
-            entity.HasOne(d => d.SupervisorRequestNavigation).WithMany(p => p.FundDisbursementSupervisorRequestNavigations)
-                .HasForeignKey(d => d.SupervisorRequest)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_FundDisbursement_GroupMember");
 
             entity.HasOne(d => d.Quota)
                 .WithMany(p => p.FundDisbursements)
@@ -268,6 +267,9 @@ public partial class LRMSDbContext : DbContext
                 .WithMany(p => p.FundDisbursements)
                 .HasForeignKey(d => d.ProjectPhaseId)
                 .HasConstraintName("FK_FundDisbursement_ProjectPhase");
+
+            entity.Ignore("AuthorId");
+            entity.Ignore("GroupMemberId");
         });
 
         modelBuilder.Entity<Group>(entity =>
@@ -413,6 +415,10 @@ public partial class LRMSDbContext : DbContext
             entity.Property(e => e.Title)
                 .HasMaxLength(255)
                 .HasColumnName("title");
+            entity.Property(e => e.SpentBudget)
+                .HasColumnType("decimal(18, 2)")
+                .HasColumnName("spent_budget")
+                .HasDefaultValue(0);
 
             entity.HasOne(d => d.AssignByNavigation).WithMany(p => p.ProjectPhaseAssignByNavigations)
                 .HasForeignKey(d => d.AssignBy)

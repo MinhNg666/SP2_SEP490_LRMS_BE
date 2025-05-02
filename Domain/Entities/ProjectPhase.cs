@@ -14,6 +14,7 @@ public partial class ProjectPhase
     public int? AssignTo { get; set; }
     public int? AssignBy { get; set; }
     public int? ProjectId { get; set; }
+    public decimal SpentBudget { get; set; } = 0;
 
     public virtual GroupMember? AssignByNavigation { get; set; }
     public virtual GroupMember? AssignToNavigation { get; set; }

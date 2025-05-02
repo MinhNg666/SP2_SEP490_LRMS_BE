@@ -492,4 +492,62 @@ public class ConferenceService : IConferenceService
             throw new ServiceException($"Error getting conferences by project id: {ex.Message}");
         }
     }
+
+    public async Task AddConferenceDocuments(int conferenceId, IEnumerable<IFormFile> documentFiles, int userId)
+    {
+        try
+        {
+            var conference = await _context.Conferences
+                .Include(c => c.Project)
+                .FirstOrDefaultAsync(c => c.ConferenceId == conferenceId);
+            
+            if (conference == null)
+                throw new ServiceException("Conference not found");
+            
+            int projectId = conference.ProjectId.Value;
+            
+            if (documentFiles != null && documentFiles.Any())
+            {
+                var urls = await _s3Service.UploadFilesAsync(documentFiles, $"projects/{projectId}/conferences/{conferenceId}");
+                int index = 0;
+                
+                foreach (var file in documentFiles)
+                {
+                    // Create ProjectResource for document
+                    var projectResource = new ProjectResource
+                    {
+                        ResourceName = file.FileName,
+                        ResourceType = 1, // Document type
+                        ProjectId = projectId,
+                        Acquired = true,
+                        Quantity = 1
+                    };
+                    
+                    await _context.ProjectResources.AddAsync(projectResource);
+                    await _context.SaveChangesAsync();
+                    
+                    // Create document with the resource
+                    var document = new Document
+                    {
+                        ProjectId = projectId,
+                        DocumentUrl = urls[index],
+                        FileName = file.FileName,
+                        DocumentType = (int)DocumentTypeEnum.ConferenceProposal,
+                        UploadAt = DateTime.Now,
+                        UploadedBy = userId,
+                        ProjectResourceId = projectResource.ProjectResourceId
+                    };
+
+                    await _context.Documents.AddAsync(document);
+                    index++;
+                }
+                
+                await _context.SaveChangesAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new ServiceException($"Error uploading conference documents: {ex.Message}");
+        }
+    }
 } 

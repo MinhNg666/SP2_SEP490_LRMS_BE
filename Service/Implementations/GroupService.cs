@@ -39,9 +39,13 @@ public class GroupService : IGroupService
         _emailService = emailService;
     }
 
-    private async Task ValidateMemberInfo(string email, string fullName)
+    private async Task ValidateMemberInfo(string email, string fullName, int role)
     {
-    // Kiểm tra email hợp lệ
+        // Skip validation for stakeholders
+        if (role == (int)GroupMemberRoleEnum.Stakeholder)
+            return;
+
+        // Existing validation code for non-stakeholders
         if (string.IsNullOrEmpty(email))
         {
             throw new ServiceException("Email cannot be empty.");
@@ -53,20 +57,17 @@ public class GroupService : IGroupService
             throw new ServiceException($"Invalid email format: {email}");
         }
 
-    // Kiểm tra tên hợp lệ
         if (string.IsNullOrEmpty(fullName))
         {
             throw new ServiceException("Full name cannot be empty.");
         }
 
-    // Kiểm tra user tồn tại trong hệ thống
         var user = await _userRepository.GetUserByEmail(email);
         if (user == null)
         {
             throw new ServiceException($"User with email {email} not found in the system.");
         }
 
-    // Kiểm tra tên khớp với email
         if (!user.FullName.Equals(fullName, StringComparison.OrdinalIgnoreCase))
         {
             throw new ServiceException($"Full name '{fullName}' does not match with the registered name for email {email}.");
@@ -185,7 +186,7 @@ public class GroupService : IGroupService
 
         foreach (var member in regularMembers)
         {
-            await ValidateMemberInfo(member.MemberEmail, member.MemberName);
+            await ValidateMemberInfo(member.MemberEmail, member.MemberName, member.Role);
         }
 
         // Validate stakeholder email format
@@ -266,7 +267,7 @@ public class GroupService : IGroupService
             GroupName = request.GroupName,
             MaxMember = maxMember,
             CurrentMember = 0,
-            Status = 1,
+            Status = (int)GroupStatusEnum.Pending,
             CreatedAt = DateTime.Now,
             CreatedBy = currentUserId,
             GroupType = (int)GroupTypeEnum.Student
@@ -313,91 +314,73 @@ public class GroupService : IGroupService
         {
             try
             {
-                // Tạo user mới cho stakeholder
-                var stakeholderUser = new User
+                // First check if this email already exists
+                var existingUser = await _userRepository.GetUserByEmail(stakeholder.MemberEmail);
+                
+                int stakeholderUserId;
+                
+                if (existingUser == null)
                 {
-                    FullName = stakeholder.MemberName,
-                    Email = stakeholder.MemberEmail,
-                    Role = (int)SystemRoleEnum.Stakeholder, // Thêm Stakeholder vào SystemRoleEnum
-                    Status = 1, // Active
-                    CreatedAt = DateTime.Now
-                };
+                    // Only create a new user if one doesn't exist with this email
+                    var stakeholderUser = new User
+                    {
+                        FullName = stakeholder.MemberName,
+                        Email = stakeholder.MemberEmail,
+                        Role = (int)SystemRoleEnum.Stakeholder,
+                        Status = 1, // Active
+                        CreatedAt = DateTime.Now
+                    };
 
-                // Thêm stakeholder vào bảng User
-                await _userRepository.AddAsync(stakeholderUser);
-
-                // Tạo group member cho stakeholder
-                var groupMember = new GroupMember
+                    await _userRepository.AddAsync(stakeholderUser);
+                    stakeholderUserId = stakeholderUser.UserId;
+                }
+                else
                 {
-                    GroupId = group.GroupId,
-                    Role = (int)GroupMemberRoleEnum.Stakeholder,
-                    UserId = stakeholderUser.UserId,
-                    Status = (int)GroupMemberStatus.Active,
-                    JoinDate = DateTime.Now
-                };
-                await _groupRepository.AddMemberAsync(groupMember);
+                    // Use the existing user ID
+                    stakeholderUserId = existingUser.UserId;
+                }
 
-                var notificationRequest = new CreateNotificationRequest
+                // Check if this stakeholder is already a member of this group
+                var existingMember = await _groupRepository.GetGroupMember(group.GroupId, stakeholderUserId);
+                if (existingMember == null)
                 {
-                    UserId = stakeholderUser.UserId,
-                    Title = "Bạn đã được thêm làm Stakeholder",
-                    Message = $"Bạn đã được thêm làm Stakeholder của nhóm nghiên cứu '{group.GroupName}'. Bạn sẽ nhận được các thông báo về tiến độ của dự án qua email.",
-                    ProjectId = null,
-                    Status = 0,
-                    IsRead = false
-                };
-                await _notificationService.CreateNotification(notificationRequest);
+                    // Add as group member if not already a member
+                    var groupMember = new GroupMember
+                    {
+                        GroupId = group.GroupId,
+                        Role = (int)GroupMemberRoleEnum.Stakeholder,
+                        UserId = stakeholderUserId,
+                        Status = (int)GroupMemberStatus.Active,
+                        JoinDate = DateTime.Now
+                    };
+                    await _groupRepository.AddMemberAsync(groupMember);
 
-                await _emailService.SendEmailAsync(
-                    stakeholderUser.Email,
-                    $"Thông báo từ nhóm nghiên cứu {group.GroupName}",
-                    $"Xin chào {stakeholderUser.FullName},\n\n" +
-                    $"Bạn đã được thêm làm Stakeholder của nhóm nghiên cứu '{group.GroupName}'.\n" +
-                    $"Bạn sẽ nhận được các thông báo về tiến độ của dự án qua email này.\n\n" +
-                    $"Trân trọng."
+                    // Notification and email code
+                    var notificationRequest = new CreateNotificationRequest
+                    {
+                        UserId = stakeholderUserId,
+                        Title = "Bạn đã được thêm làm Stakeholder",
+                        Message = $"Bạn đã được thêm làm Stakeholder của nhóm nghiên cứu '{group.GroupName}'. Bạn sẽ nhận được các thông báo về tiến độ của dự án qua email.",
+                        ProjectId = null,
+                        Status = 0,
+                        IsRead = false
+                    };
+                    await _notificationService.CreateNotification(notificationRequest);
+
+                    await _emailService.SendEmailAsync(
+                        stakeholder.MemberEmail,
+                        $"Thông báo từ nhóm nghiên cứu {group.GroupName}",
+                        $"Xin chào {stakeholder.MemberName},\n\n" +
+                        $"Bạn đã được thêm làm Stakeholder của nhóm nghiên cứu '{group.GroupName}'.\n" +
+                        $"Bạn sẽ nhận được các thông báo về tiến độ của dự án qua email này.\n\n" +
+                        $"Trân trọng."
                     );
+                }
             }
             catch (Exception ex)
             {
-                // Nếu email đã tồn tại, kiểm tra xem có phải là stakeholder không
-                var existingUser = await _userRepository.GetUserByEmail(stakeholder.MemberEmail);
-                if (existingUser != null)
-                {
-                    // Kiểm tra xem stakeholder này đã là thành viên của nhóm chưa
-                    var existingMember = await _groupRepository.GetGroupMember(group.GroupId, existingUser.UserId);
-                    if (existingMember == null)
-                    {
-                        // Nếu chưa là thành viên, thêm vào nhóm
-                        var groupMember = new GroupMember
-                        {
-                            GroupId = group.GroupId,
-                            Role = (int)GroupMemberRoleEnum.Stakeholder,
-                            UserId = existingUser.UserId,
-                            Status = (int)GroupMemberStatus.Active,
-                            JoinDate = DateTime.Now
-                        };
-                        await _groupRepository.AddMemberAsync(groupMember);
-                        var notificationRequest = new CreateNotificationRequest
-                        {
-                            UserId = existingUser.UserId,
-                            Title = "Bạn đã được thêm làm Stakeholder",
-                            Message = $"Bạn đã được thêm làm Stakeholder của nhóm nghiên cứu '{group.GroupName}'. Bạn sẽ nhận được các thông báo về tiến độ của dự án qua email.",
-                            ProjectId = null,
-                            Status = 0,
-                            IsRead = false
-                        };
-                        await _notificationService.CreateNotification(notificationRequest);
-
-                        await _emailService.SendEmailAsync(
-                            existingUser.Email,
-                            $"Thông báo từ nhóm nghiên cứu {group.GroupName}",
-                            $"Xin chào {existingUser.FullName},\n\n" +
-                            $"Bạn đã được thêm làm Stakeholder của nhóm nghiên cứu '{group.GroupName}'.\n" +
-                            $"Bạn sẽ nhận được các thông báo về tiến độ của dự án qua email này.\n\n" +
-                            $"Trân trọng."
-                        );
-                    }
-                }
+                // Log the error but continue processing other stakeholders
+                Console.WriteLine($"Error adding stakeholder {stakeholder.MemberEmail}: {ex.Message}");
             }
         }
     }
@@ -414,7 +397,7 @@ public class GroupService : IGroupService
         }
         foreach (var member in request.Members)
         {
-            await ValidateMemberInfo(member.MemberEmail, member.MemberName);
+            await ValidateMemberInfo(member.MemberEmail, member.MemberName, member.Role);
             
             // Validate council members must be lecturer
             var user = await _userRepository.GetUserByEmail(member.MemberEmail);
@@ -451,7 +434,7 @@ public class GroupService : IGroupService
             CreatedBy = currentUserId,
             MaxMember = 5,
             CurrentMember = 0,
-            Status = 1,
+            Status = (int)GroupStatusEnum.Pending,
             CreatedAt = DateTime.Now,
             GroupType = 1
         };
@@ -572,7 +555,7 @@ public class GroupService : IGroupService
             }
 
             // Validate member info
-            await ValidateMemberInfo(request.MemberEmail, request.MemberName);
+            await ValidateMemberInfo(request.MemberEmail, request.MemberName, request.Role);
             var invitedUser = await _userRepository.GetUserByEmail(request.MemberEmail);
 
             // Get all group members and pending invitations
@@ -805,6 +788,28 @@ public class GroupService : IGroupService
         {
             throw new ServiceException(e.Message);
         }
+    }
+
+    private async Task<bool> CheckAndActivateGroupIfAllMembersJoined(int groupId)
+    {
+        var group = await _groupRepository.GetByIdAsync(groupId);
+        if (group == null || group.Status != (int)GroupStatusEnum.Pending)
+            return false;
+        
+        // Get all members excluding stakeholders
+        var groupMembers = await _groupRepository.GetMembersByGroupId(groupId);
+        var relevantMembers = groupMembers.Where(m => m.Role != (int)GroupMemberRoleEnum.Stakeholder).ToList();
+        
+        // Check if all non-stakeholder members have accepted the invitation
+        if (relevantMembers.All(m => m.Status == (int)GroupMemberStatus.Active))
+        {
+            // Update group status to active
+            group.Status = (int)GroupStatusEnum.Active;
+            await _groupRepository.UpdateAsync(group);
+            return true;
+        }
+        
+        return false;
     }
 
 //     public async Task<List<string>> GetStakeholderEmails(int groupId)

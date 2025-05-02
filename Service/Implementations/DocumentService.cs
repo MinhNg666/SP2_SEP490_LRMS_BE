@@ -92,4 +92,22 @@ public class DocumentService : IDocumentService
             throw new ServiceException(e.Message);
         }
     }
+
+    public async Task<List<DocumentResponse>> SubmitDocuments(int projectId, IEnumerable<IFormFile> files, int documentType, int uploadedBy)
+    {
+        try
+        {
+            var responses = new List<DocumentResponse>();
+            foreach (var file in files)
+            {
+                var response = await SubmitDocument(projectId, file, documentType, uploadedBy, null);
+                responses.Add(response);
+            }
+            return responses;
+        }
+        catch (Exception e)
+        {
+            throw new ServiceException(e.Message);
+        }
+    }
 } 

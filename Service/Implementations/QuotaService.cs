@@ -29,10 +29,60 @@ namespace Service.Implementations
             {
                 var quotas = await _context.Quotas
                     .Include(q => q.Project)
+                        .ThenInclude(p => p.Department)
+                    .Include(q => q.Project)
+                        .ThenInclude(p => p.Group)
                     .Include(q => q.AllocatedByNavigation)
+                    .Include(q => q.FundDisbursements)
                     .ToListAsync();
 
-                return _mapper.Map<IEnumerable<QuotaResponse>>(quotas);
+                var responses = new List<QuotaResponse>();
+                
+                foreach (var quota in quotas)
+                {
+                    decimal disbursedAmount = quota.FundDisbursements
+                        .Where(fd => fd.Status == (int)FundDisbursementStatusEnum.Approved || 
+                                    fd.Status == (int)FundDisbursementStatusEnum.Disbursed)
+                        .Sum(fd => fd.FundRequest ?? 0);
+                    
+                    var response = new QuotaResponse
+                    {
+                        QuotaId = quota.QuotaId,
+                        AllocatedBudget = quota.AllocatedBudget,
+                        Status = quota.Status,
+                        CreatedAt = quota.CreatedAt,
+                        UpdateAt = quota.UpdateAt,
+                        ProjectId = quota.ProjectId,
+                        ProjectName = quota.Project?.ProjectName,
+                        
+                        // Additional project information
+                        ProjectApprovedBudget = quota.Project?.ApprovedBudget,
+                        ProjectSpentBudget = quota.Project?.SpentBudget ?? 0,
+                        
+                        // Department information
+                        DepartmentId = quota.Project?.DepartmentId,
+                        DepartmentName = quota.Project?.Department?.DepartmentName,
+                        
+                        // Group information
+                        GroupId = quota.Project?.GroupId,
+                        GroupName = quota.Project?.Group?.GroupName,
+                        
+                        // Allocator information
+                        AllocatedBy = quota.AllocatedBy,
+                        AllocatorName = quota.AllocatedByNavigation?.FullName,
+
+                        ProjectType = quota.Project?.ProjectType,
+                        ProjectTypeName = quota.Project?.ProjectType.HasValue == true
+                            ? Enum.GetName(typeof(ProjectTypeEnum), quota.Project.ProjectType) 
+                            : null,
+                            
+                        DisbursedAmount = disbursedAmount
+                    };
+                    
+                    responses.Add(response);
+                }
+
+                return responses;
             }
             catch (Exception ex)
             {
@@ -69,15 +119,151 @@ namespace Service.Implementations
                 // Get quotas for these projects
                 var quotas = await _context.Quotas
                     .Include(q => q.Project)
+                        .ThenInclude(p => p.Department)
+                    .Include(q => q.Project)
+                        .ThenInclude(p => p.Group)
                     .Include(q => q.AllocatedByNavigation)
+                    .Include(q => q.FundDisbursements)
                     .Where(q => q.ProjectId.HasValue && projectIds.Contains(q.ProjectId.Value))
                     .ToListAsync();
 
-                return _mapper.Map<IEnumerable<QuotaResponse>>(quotas);
+                var responses = new List<QuotaResponse>();
+                
+                foreach (var quota in quotas)
+                {
+                    decimal disbursedAmount = quota.FundDisbursements
+                        .Where(fd => fd.Status == (int)FundDisbursementStatusEnum.Approved || 
+                                    fd.Status == (int)FundDisbursementStatusEnum.Disbursed)
+                        .Sum(fd => fd.FundRequest ?? 0);
+                    
+                    var response = new QuotaResponse
+                    {
+                        QuotaId = quota.QuotaId,
+                        AllocatedBudget = quota.AllocatedBudget,
+                        Status = quota.Status,
+                        CreatedAt = quota.CreatedAt,
+                        UpdateAt = quota.UpdateAt,
+                        ProjectId = quota.ProjectId,
+                        ProjectName = quota.Project?.ProjectName,
+                        
+                        // Additional project information
+                        ProjectApprovedBudget = quota.Project?.ApprovedBudget,
+                        ProjectSpentBudget = quota.Project?.SpentBudget ?? 0,
+                        
+                        // Department information
+                        DepartmentId = quota.Project?.DepartmentId,
+                        DepartmentName = quota.Project?.Department?.DepartmentName,
+                        
+                        // Group information
+                        GroupId = quota.Project?.GroupId,
+                        GroupName = quota.Project?.Group?.GroupName,
+                        
+                        // Allocator information
+                        AllocatedBy = quota.AllocatedBy,
+                        AllocatorName = quota.AllocatedByNavigation?.FullName,
+
+                        ProjectType = quota.Project?.ProjectType,
+                        ProjectTypeName = quota.Project?.ProjectType.HasValue == true
+                            ? Enum.GetName(typeof(ProjectTypeEnum), quota.Project.ProjectType) 
+                            : null,
+                            
+                        DisbursedAmount = disbursedAmount
+                    };
+                    
+                    responses.Add(response);
+                }
+
+                return responses;
             }
             catch (Exception ex)
             {
                 throw new ServiceException($"Error getting quotas by user ID: {ex.Message}");
+            }
+        }
+
+        public async Task<QuotaDetailResponse> GetQuotaDetailById(int quotaId)
+        {
+            try
+            {
+                var quota = await _context.Quotas
+                    .Include(q => q.Project)
+                        .ThenInclude(p => p.Department)
+                    .Include(q => q.Project)
+                        .ThenInclude(p => p.Group)
+                    .Include(q => q.AllocatedByNavigation)
+                    .Include(q => q.FundDisbursements)
+                        .ThenInclude(fd => fd.UserRequestNavigation)
+                    .Include(q => q.FundDisbursements)
+                        .ThenInclude(fd => fd.AppovedByNavigation)
+                            .ThenInclude(gm => gm.User)
+                    .Include(q => q.FundDisbursements)
+                        .ThenInclude(fd => fd.ProjectPhase)
+                    .FirstOrDefaultAsync(q => q.QuotaId == quotaId);
+
+                if (quota == null)
+                    throw new ServiceException("Quota not found");
+
+                decimal disbursedAmount = quota.FundDisbursements
+                    .Where(fd => fd.Status == (int)FundDisbursementStatusEnum.Approved || 
+                                fd.Status == (int)FundDisbursementStatusEnum.Disbursed)
+                    .Sum(fd => fd.FundRequest ?? 0);
+                
+                var response = new QuotaDetailResponse
+                {
+                    // Copy all basic quota properties
+                    QuotaId = quota.QuotaId,
+                    AllocatedBudget = quota.AllocatedBudget,
+                    Status = quota.Status,
+                    CreatedAt = quota.CreatedAt,
+                    UpdateAt = quota.UpdateAt,
+                    ProjectId = quota.ProjectId,
+                    ProjectName = quota.Project?.ProjectName,
+                    
+                    ProjectApprovedBudget = quota.Project?.ApprovedBudget,
+                    ProjectSpentBudget = quota.Project?.SpentBudget ?? 0,
+                    
+                    DepartmentId = quota.Project?.DepartmentId,
+                    DepartmentName = quota.Project?.Department?.DepartmentName,
+                    
+                    GroupId = quota.Project?.GroupId,
+                    GroupName = quota.Project?.Group?.GroupName,
+                    
+                    AllocatedBy = quota.AllocatedBy,
+                    AllocatorName = quota.AllocatedByNavigation?.FullName,
+
+                    ProjectType = quota.Project?.ProjectType,
+                    ProjectTypeName = quota.Project?.ProjectType.HasValue == true
+                        ? Enum.GetName(typeof(ProjectTypeEnum), quota.Project.ProjectType) 
+                        : null,
+                        
+                    DisbursedAmount = disbursedAmount,
+                    
+                    // Add the detailed disbursements
+                    Disbursements = quota.FundDisbursements.Select(fd => new DisbursementInfo
+                    {
+                        FundDisbursementId = fd.FundDisbursementId,
+                        FundRequest = fd.FundRequest ?? 0,
+                        Status = fd.Status ?? 0,
+                        StatusName = Enum.GetName(typeof(FundDisbursementStatusEnum), fd.Status ?? 0),
+                        CreatedAt = fd.CreatedAt,
+                        Description = fd.Description,
+                        
+                        RequesterId = fd.UserRequest ?? 0,
+                        RequesterName = fd.UserRequestNavigation?.FullName,
+                        
+                        ApprovedById = fd.AppovedByNavigation?.UserId,
+                        ApprovedByName = fd.AppovedByNavigation?.User?.FullName,
+                        
+                        ProjectPhaseId = fd.ProjectPhaseId,
+                        ProjectPhaseTitle = fd.ProjectPhase?.Title
+                    }).ToList()
+                };
+                
+                return response;
+            }
+            catch (Exception ex)
+            {
+                throw new ServiceException($"Error getting quota details: {ex.Message}");
             }
         }
     }
