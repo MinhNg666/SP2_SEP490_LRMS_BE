@@ -52,6 +52,10 @@ bld/
 ## Rider
 .idea/
 
+## Configuration Files
+appsettings.json
+appsettings.*.json
+
 ## Visual Studio for Mac
 .vscode/
 .DS_Store
