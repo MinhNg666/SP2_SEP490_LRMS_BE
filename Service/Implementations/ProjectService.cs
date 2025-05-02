@@ -1871,8 +1871,8 @@ public class ProjectService : IProjectService
                     throw new ServiceException("Project not found for this fund disbursement");
                 
                 // Check if approving this disbursement would violate the budget constraint
-                if (project.SpentBudget + (fundDisbursement.FundRequest ?? 0) > project.ApprovedBudget)
-                    throw new ServiceException($"Approving this disbursement would exceed the project's approved budget. Project approved budget: {project.ApprovedBudget}, current spent: {project.SpentBudget}, requested amount: {fundDisbursement.FundRequest}");
+                // if (project.SpentBudget + (fundDisbursement.FundRequest ?? 0) > project.ApprovedBudget)
+                //     throw new ServiceException($"Approving this disbursement would exceed the project's approved budget. Project approved budget: {project.ApprovedBudget}, current spent: {project.SpentBudget}, requested amount: {fundDisbursement.FundRequest}");
                 
                 project.SpentBudget += fundDisbursement.FundRequest ?? 0;
                 project.UpdatedAt = DateTime.Now;

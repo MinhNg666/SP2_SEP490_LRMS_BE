@@ -18,11 +18,13 @@ public class ProjectController : ApiBaseController
 {
     private readonly IProjectService _projectService;
     private readonly LRMSDbContext _context;
+    private readonly IFundDisbursementService _fundDisbursementService;
 
-    public ProjectController(IProjectService projectService, LRMSDbContext context)
+    public ProjectController(IProjectService projectService, LRMSDbContext context, IFundDisbursementService fundDisbursementService)
     {
         _projectService = projectService;
         _context = context;
+        _fundDisbursementService = fundDisbursementService;
     }
     [HttpGet("project/list-all-project")]
     [Authorize(Roles = "Admin,Lecturer,Office")]
@@ -744,6 +746,113 @@ public class ProjectController : ApiBaseController
         {
             var summary = await _projectService.GetProjectCompletionSummaryAsync(projectId);
             return Ok(new ApiResponse(StatusCodes.Status200OK, "Project completion summary retrieved successfully", summary));
+        }
+        catch (ServiceException ex)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
+        }
+    }
+
+    [HttpPost("fund-requests/{requestId}/approve")]
+    [Authorize]
+    public async Task<IActionResult> ApproveFundDisbursementByRequestId(
+        int requestId, 
+        List<IFormFile> documentFiles)
+    {
+        try
+        {
+            if (documentFiles == null || !documentFiles.Any())
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Please attach confirmation documents"));
+            
+            // Validate file extensions
+            var allowedExtensions = new[] { ".pdf", ".doc", ".docx" };
+            foreach (var file in documentFiles)
+            {
+                var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+                if (!allowedExtensions.Contains(fileExtension))
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, $"Only PDF, DOC, and DOCX files are allowed. Invalid file: {file.FileName}"));
+            }
+            
+            // Find the associated fund disbursement ID
+            var projectRequest = await _context.ProjectRequests
+                .FirstOrDefaultAsync(r => r.RequestId == requestId && r.RequestType == ProjectRequestTypeEnum.Fund_Disbursement);
+            
+            if (projectRequest == null)
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Project request not found or is not a fund disbursement request"));
+            
+            if (!projectRequest.FundDisbursementId.HasValue)
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "No fund disbursement associated with this request"));
+            
+            var approverId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+                
+            var result = await _fundDisbursementService.ApproveFundDisbursement(
+                projectRequest.FundDisbursementId.Value,
+                approverId,
+                documentFiles);
+            
+            // Also update the project request status
+            projectRequest.ApprovalStatus = ApprovalStatusEnum.Approved;
+            projectRequest.ApprovedById = approverId;
+            projectRequest.ApprovedAt = DateTime.Now;
+            await _context.SaveChangesAsync();
+            
+            return Ok(new ApiResponse(StatusCodes.Status200OK, "Fund disbursement approved successfully"));
+        }
+        catch (ServiceException ex)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
+        }
+    }
+
+    [HttpPost("fund-requests/{requestId}/reject")]
+    [Authorize]
+    public async Task<IActionResult> RejectFundDisbursementByRequestId(
+        int requestId, 
+        [FromForm] string rejectionReason,
+        List<IFormFile> documentFiles)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(rejectionReason))
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Rejection reason is required"));
+            
+            if (documentFiles == null || !documentFiles.Any())
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Please attach rejection documents"));
+            
+            var allowedExtensions = new[] { ".pdf", ".doc", ".docx" };
+            foreach (var file in documentFiles)
+            {
+                var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+                if (!allowedExtensions.Contains(fileExtension))
+                    return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, $"Only PDF, DOC, and DOCX files are allowed. Invalid file: {file.FileName}"));
+            }
+            
+            // Find the associated fund disbursement ID
+            var projectRequest = await _context.ProjectRequests
+                .FirstOrDefaultAsync(r => r.RequestId == requestId && r.RequestType == ProjectRequestTypeEnum.Fund_Disbursement);
+            
+            if (projectRequest == null)
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "Project request not found or is not a fund disbursement request"));
+            
+            if (!projectRequest.FundDisbursementId.HasValue)
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "No fund disbursement associated with this request"));
+            
+            var rejectorId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+                
+            var result = await _fundDisbursementService.RejectFundDisbursement(
+                projectRequest.FundDisbursementId.Value,
+                rejectionReason,
+                rejectorId,
+                documentFiles);
+            
+            // Also update the project request status
+            projectRequest.ApprovalStatus = ApprovalStatusEnum.Rejected;
+            projectRequest.ApprovedById = rejectorId;
+            projectRequest.ApprovedAt = DateTime.Now;
+            projectRequest.RejectionReason = rejectionReason;
+            await _context.SaveChangesAsync();
+            
+            return Ok(new ApiResponse(StatusCodes.Status200OK, "Fund disbursement rejected successfully"));
         }
         catch (ServiceException ex)
         {

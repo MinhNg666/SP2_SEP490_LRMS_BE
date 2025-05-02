@@ -437,21 +437,6 @@ public class FundDisbursementService : IFundDisbursementService
                 quota.Status = (int)QuotaStatusEnum.Used;
             }
             
-            // Update the project's spent budget
-            project.SpentBudget += fundDisbursement.FundRequest ?? 0;
-            project.UpdatedAt = DateTime.Now;
-
-            // Update the project phase's spent budget
-            if (fundDisbursement.ProjectPhaseId.HasValue)
-            {
-                var projectPhase = await _context.ProjectPhases.FindAsync(fundDisbursement.ProjectPhaseId.Value);
-                if (projectPhase != null)
-                {
-                    projectPhase.SpentBudget += fundDisbursement.FundRequest ?? 0;
-                    _context.ProjectPhases.Update(projectPhase);
-                }
-            }
-            
             // Save all changes
             await _fundDisbursementRepository.UpdateAsync(fundDisbursement);
             await _context.SaveChangesAsync();
@@ -579,8 +564,8 @@ public class FundDisbursementService : IFundDisbursementService
             
             // Update fund disbursement
             fundDisbursement.Status = (int)FundDisbursementStatusEnum.Rejected;
-            fundDisbursement.AppovedBy = groupMember.GroupMemberId; // Used for both approval and rejection
-            fundDisbursement.RejectionReason = rejectionReason; // Save the reason here
+            fundDisbursement.AppovedBy = groupMember.GroupMemberId; 
+            fundDisbursement.RejectionReason = rejectionReason; 
             fundDisbursement.UpdateAt = DateTime.Now;
             
             await _fundDisbursementRepository.UpdateAsync(fundDisbursement);
