@@ -34,7 +34,9 @@ public class ResponseMappingProfile : Profile
         CreateMap<Notification, NotificationResponse>().ReverseMap();
         CreateMap<Invitation, InvitationResponse>().ReverseMap();
         CreateMap<User, StudentProfileResponse>().ReverseMap();
-        CreateMap<GroupMember, UserGroupResponse>().ReverseMap();
+        CreateMap<GroupMember, UserGroupResponse>()
+            .ForMember(dest => dest.Status, opt => 
+                opt.MapFrom(src => src.Group != null ? src.Group.Status : null));
         CreateMap<Notification, NotificationResponse>().ReverseMap();
         CreateMap<User, StudentResponse>().ReverseMap();
         CreateMap<User, LecturerResponse>().ReverseMap();

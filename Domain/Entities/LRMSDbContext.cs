@@ -589,6 +589,7 @@ public partial class LRMSDbContext : DbContext
             entity.Property(e => e.UpdateAt).HasColumnName("update_at").HasColumnType("datetime");
             entity.Property(e => e.TimelineType).HasColumnName("timeline_type");
             entity.Property(e => e.CreatedBy).HasColumnName("created_by");
+            entity.Property(e => e.Status).HasColumnName("status");
 
             entity.HasOne(d => d.Sequence)
                 .WithMany(p => p.Timelines)
@@ -614,6 +615,7 @@ public partial class LRMSDbContext : DbContext
             entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasColumnType("datetime");
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at").HasColumnType("datetime");
             entity.Property(e => e.CreatedBy).HasColumnName("created_by");
+            entity.Property(e => e.Status).HasColumnName("status");
 
             entity.HasOne(d => d.CreatedByNavigation)
                 .WithMany()

@@ -13,5 +13,5 @@ public enum GroupMemberRoleEnum
     Council_Chairman =3,
     Secretary = 4,
     Council_Member = 5,
-    Project_Manager = 6
+    Stakeholder = 6
 }
