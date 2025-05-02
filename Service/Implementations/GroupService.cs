@@ -203,6 +203,22 @@ public class GroupService : IGroupService
         var students = request.Members.Where(m => m.Role != (int)GroupMemberRoleEnum.Supervisor).ToList();
         var leaders = request.Members.Where(m => m.Role == (int)GroupMemberRoleEnum.Leader).ToList();
         
+        // Verify supervisors are lecturers (for student-created groups)
+        if (isStudentCreated)
+        {
+            foreach (var supervisorMember in supervisors)
+            {
+                var supervisor = await _userRepository.GetUserByEmail(supervisorMember.MemberEmail);
+                if (supervisor.Role != (int)SystemRoleEnum.Lecturer)
+                {
+                    throw new ServiceException($"Supervisor {supervisorMember.MemberName} must be a lecturer.");
+                }
+            }
+        }
+
+        // Determine Group Type based on creator
+        int groupTypeToSet = isStudentCreated ? (int)GroupTypeEnum.Student : (int)GroupTypeEnum.Research;
+
         // Apply business rules based on creator type
         int maxMember;
         if (isStudentCreated)
@@ -249,18 +265,6 @@ public class GroupService : IGroupService
             throw new ServiceException("Research group must have exactly one leader.");
         }
 
-        // Verify supervisors are lecturers (for student-created groups)
-        if (isStudentCreated)
-        {
-            foreach (var supervisorMember in supervisors)
-            {
-                var supervisor = await _userRepository.GetUserByEmail(supervisorMember.MemberEmail);
-                if (supervisor.Role != (int)SystemRoleEnum.Lecturer)
-                {
-                    throw new ServiceException($"Supervisor {supervisorMember.MemberName} must be a lecturer.");
-                }
-            }
-        }
         // Create the group
         var group = new LRMS_API.Group
         {
@@ -270,55 +274,68 @@ public class GroupService : IGroupService
             Status = (int)GroupStatusEnum.Pending,
             CreatedAt = DateTime.Now,
             CreatedBy = currentUserId,
-            GroupType = (int)GroupTypeEnum.Student
+            // Assign the determined group type
+            GroupType = groupTypeToSet 
         };
         
         await _groupRepository.AddAsync(group);
         
-        // Process members and send invitations
-        foreach (var member in request.Members)
+        // Process ONLY regular members and send invitations
+        foreach (var member in regularMembers)
         {
             var user = await _userRepository.GetUserByEmail(member.MemberEmail);
             if (user != null)
             {
-                // Create GroupMember with status based on if it's the creator
-                var isCreator = user.UserId == currentUserId;
-                var groupMember = new GroupMember
+                // Check if member already exists in this group to avoid duplicates/errors
+                var existingMember = await _groupRepository.GetGroupMember(group.GroupId, user.UserId);
+                if (existingMember == null)
                 {
-                    GroupId = group.GroupId,
-                    Role = member.Role,
-                    UserId = user.UserId,
-                    Status = isCreator ? (int?)GroupMemberStatus.Active : (int?)GroupMemberStatus.Pending,
-                    JoinDate = isCreator ? DateTime.Now : null
-                };
-                await _groupRepository.AddMemberAsync(groupMember);
-                
-                // Only send invitations to non-creators
-                if (!isCreator)
-                {
-                    var invitationRequest = new SendInvitationRequest
+                    // Create GroupMember with status based on if it's the creator
+                    var isCreator = user.UserId == currentUserId;
+                    var groupMember = new GroupMember
                     {
-                        Content = $"You have been invited to join the research group '{group.GroupName}'.",
-                        InvitedUserId = user.UserId,
-                        InvitedBy = currentUserId,
                         GroupId = group.GroupId,
-                        InvitedRole = member.Role,
-                        ProjectId = null
+                        Role = member.Role,
+                        UserId = user.UserId,
+                        Status = isCreator ? (int?)GroupMemberStatus.Active : (int?)GroupMemberStatus.Pending,
+                        JoinDate = isCreator ? DateTime.Now : null
                     };
+                    await _groupRepository.AddMemberAsync(groupMember);
 
-                    await _invitationService.SendInvitation(invitationRequest);
+                    // Only send invitations to non-creators who were just added
+                    if (!isCreator)
+                    {
+                        var invitationRequest = new SendInvitationRequest
+                        {
+                            Content = $"You have been invited to join the research group '{group.GroupName}'.",
+                            InvitedUserId = user.UserId,
+                            InvitedBy = currentUserId,
+                            GroupId = group.GroupId,
+                            InvitedRole = member.Role,
+                            ProjectId = null
+                        };
+                        await _invitationService.SendInvitation(invitationRequest);
+                    }
+                }
+                else
+                {
+                    // Handle case where regular member already exists (e.g., log, skip, or update based on status)
+                    // For now, simply skipping avoids errors if they were somehow added twice in the request.
+                    Console.WriteLine($"User {user.Email} already exists in group {group.GroupId}. Skipping duplicate add.");
                 }
             }
         }
+
+        // Process Stakeholders - This loop correctly sets Status to Active
         foreach (var stakeholder in stakeholders)
         {
             try
             {
                 // First check if this email already exists
                 var existingUser = await _userRepository.GetUserByEmail(stakeholder.MemberEmail);
-                
+
                 int stakeholderUserId;
-                
+
                 if (existingUser == null)
                 {
                     // Only create a new user if one doesn't exist with this email
@@ -355,7 +372,7 @@ public class GroupService : IGroupService
                     };
                     await _groupRepository.AddMemberAsync(groupMember);
 
-                    // Notification and email code
+                    // Notification and email code for stakeholder
                     var notificationRequest = new CreateNotificationRequest
                     {
                         UserId = stakeholderUserId,
@@ -383,6 +400,9 @@ public class GroupService : IGroupService
                 Console.WriteLine($"Error adding stakeholder {stakeholder.MemberEmail}: {ex.Message}");
             }
         }
+
+        
+        await CheckAndActivateGroupIfAllMembersJoined(group.GroupId);
     }
     public async Task CreateCouncilGroup(CreateCouncilGroupRequest request, int currentUserId)
     {
@@ -793,22 +813,30 @@ public class GroupService : IGroupService
     private async Task<bool> CheckAndActivateGroupIfAllMembersJoined(int groupId)
     {
         var group = await _groupRepository.GetByIdAsync(groupId);
-        if (group == null || group.Status != (int)GroupStatusEnum.Pending)
+        // Ensure group exists and is actually pending before trying to activate
+        if (group == null || group.Status != (int)GroupStatusEnum.Pending) 
             return false;
-        
+
         // Get all members excluding stakeholders
         var groupMembers = await _groupRepository.GetMembersByGroupId(groupId);
         var relevantMembers = groupMembers.Where(m => m.Role != (int)GroupMemberRoleEnum.Stakeholder).ToList();
-        
-        // Check if all non-stakeholder members have accepted the invitation
-        if (relevantMembers.All(m => m.Status == (int)GroupMemberStatus.Active))
+
+        // If there are no relevant members (e.g., only stakeholders), the group shouldn't activate based on members joining.
+        // However, the initial creation might dictate it should be active? Let's assume for now it requires at least one non-stakeholder active member.
+        // If relevantMembers is empty, .All() returns true, so we need to check if it's empty OR if all are active.
+        // Or more simply: If there are relevant members, check if they are all active.
+        if (relevantMembers.Any() && relevantMembers.All(m => m.Status == (int)GroupMemberStatus.Active))
         {
             // Update group status to active
             group.Status = (int)GroupStatusEnum.Active;
             await _groupRepository.UpdateAsync(group);
+            
+            // Update the CurrentMember count based on active members AFTER activation
+            await UpdateGroupMemberCount(groupId); 
+
             return true;
         }
-        
+
         return false;
     }
 
