@@ -832,7 +832,13 @@ public class ProjectService : IProjectService
     {
         try
         {
-            var project = await _projectRepository.GetByIdAsync(projectId);
+            // Get project with proper includes
+            var project = await _context.Projects
+                .Include(p => p.Group)
+                    .ThenInclude(g => g.GroupMembers)
+                        .ThenInclude(gm => gm.User)
+                .FirstOrDefaultAsync(p => p.ProjectId == projectId);
+            
             if (project == null)
                 throw new ServiceException("Project not found");
             
@@ -881,58 +887,62 @@ public class ProjectService : IProjectService
                 // Lấy thông tin người upload
                 var uploader = await _userRepository.GetByIdAsync(userId);
 
-                // Gửi thông báo cho các thành viên trong nhóm
-                var groupMembers = project.Group.GroupMembers
-                    .Where(m => m.Status == (int)GroupMemberStatus.Active &&
-                               m.Role != (int)GroupMemberRoleEnum.Stakeholder);
-
-                foreach (var member in groupMembers)
+                // Only process group member notifications if the project has a group
+                if (project.Group != null)
                 {
-                    if (member.UserId.HasValue)
+                    // Gửi thông báo cho các thành viên trong nhóm
+                    var groupMembers = project.Group.GroupMembers
+                        .Where(m => m.Status == (int)GroupMemberStatus.Active &&
+                                   m.Role != (int)GroupMemberRoleEnum.Stakeholder);
+
+                    foreach (var member in groupMembers)
                     {
-                        string title = member.UserId.Value == userId
-                            ? "Bạn đã tải lên tài liệu mới"
-                            : "Có tài liệu mới trong project";
-
-                        string message = member.UserId.Value == userId
-                            ? $"Bạn đã tải lên tài liệu mới cho project '{project.ProjectName}'"
-                            : $"Thành viên {uploader?.FullName} đã tải lên tài liệu mới cho project '{project.ProjectName}'";
-
-                        var notificationRequest = new CreateNotificationRequest
+                        if (member.UserId.HasValue)
                         {
-                            UserId = member.UserId.Value,
-                            Title = title,
-                            Message = $"{message}\n\nTên tài liệu: {firstFileName}\nXem tại: {firstFileUrl}",
-                            ProjectId = projectId,
-                            Status = 0,
-                            IsRead = false
-                        };
-                        await _notificationService.CreateNotification(notificationRequest);
+                            string title = member.UserId.Value == userId
+                                ? "Bạn đã tải lên tài liệu mới"
+                                : "Có tài liệu mới trong project";
+
+                            string message = member.UserId.Value == userId
+                                ? $"Bạn đã tải lên tài liệu mới cho project '{project.ProjectName}'"
+                                : $"Thành viên {uploader?.FullName} đã tải lên tài liệu mới cho project '{project.ProjectName}'";
+
+                            var notificationRequest = new CreateNotificationRequest
+                            {
+                                UserId = member.UserId.Value,
+                                Title = title,
+                                Message = $"{message}\n\nTên tài liệu: {firstFileName}\nXem tại: {firstFileUrl}",
+                                ProjectId = projectId,
+                                Status = 0,
+                                IsRead = false
+                            };
+                            await _notificationService.CreateNotification(notificationRequest);
+                        }
                     }
-                }
 
-                // Gửi email cho stakeholder
-                var stakeholders = project.Group.GroupMembers
-                    .Where(m => m.Status == (int)GroupMemberStatus.Active &&
-                               m.Role == (int)GroupMemberRoleEnum.Stakeholder &&
-                               m.User != null);
+                    // Gửi email cho stakeholder
+                    var stakeholders = project.Group.GroupMembers
+                        .Where(m => m.Status == (int)GroupMemberStatus.Active &&
+                                   m.Role == (int)GroupMemberRoleEnum.Stakeholder &&
+                                   m.User != null);
 
-                var emailSubject = $"Tài liệu mới trong project: {project.ProjectName}";
-                var emailMessage = $"Xin chào,\n\n" +
-                                  $"Một tài liệu mới đã được tải lên trong project '{project.ProjectName}':\n\n" +
-                                  $"- Tên tài liệu: {firstFileName}\n" +
-                                  $"- Người tải lên: {uploader?.FullName}\n" +
-                                  $"- Thời gian: {DateTime.Now:dd/MM/yyyy HH:mm}\n" +
-                                  $"- Xem tại: {firstFileUrl}\n\n" +
-                                  $"Trân trọng.";
+                    var emailSubject = $"Tài liệu mới trong project: {project.ProjectName}";
+                    var emailMessage = $"Xin chào,\n\n" +
+                                      $"Một tài liệu mới đã được tải lên trong project '{project.ProjectName}':\n\n" +
+                                      $"- Tên tài liệu: {firstFileName}\n" +
+                                      $"- Người tải lên: {uploader?.FullName}\n" +
+                                      $"- Thời gian: {DateTime.Now:dd/MM/yyyy HH:mm}\n" +
+                                      $"- Xem tại: {firstFileUrl}\n\n" +
+                                      $"Trân trọng.";
 
-                foreach (var stakeholder in stakeholders)
-                {
-                    await _emailService.SendEmailAsync(
-                        stakeholder.User.Email,
-                        emailSubject,
-                        emailMessage
-                    );
+                    foreach (var stakeholder in stakeholders)
+                    {
+                        await _emailService.SendEmailAsync(
+                            stakeholder.User.Email,
+                            emailSubject,
+                            emailMessage
+                        );
+                    }
                 }
             }
         }
@@ -2052,12 +2062,47 @@ public class ProjectService : IProjectService
         {
             var request = await _context.ProjectRequests
                 .Include(r => r.Project)
+                    .ThenInclude(p => p.Department)
                 .FirstOrDefaultAsync(r => r.RequestId == requestId);
             
             if (request == null)
                 throw new ServiceException("Project request not found");
-            
-            // Check existing logic for approving different request types...
+                
+            // Verify the request is in pending status
+            if (request.ApprovalStatus != ApprovalStatusEnum.Pending)
+                throw new ServiceException("This request has already been processed");
+                
+            // Get the approver's council memberships
+            var userCouncilGroups = await _context.GroupMembers
+                .Include(gm => gm.Group)
+                .Where(gm => gm.UserId == secretaryId &&
+                           gm.Status == (int)GroupMemberStatus.Active &&
+                           gm.Group.GroupType == (int)GroupTypeEnum.Council &&
+                           (gm.Role == (int)GroupMemberRoleEnum.Secretary || 
+                            gm.Role == (int)GroupMemberRoleEnum.Council_Chairman))
+                .ToListAsync();
+                
+            if (!userCouncilGroups.Any())
+                throw new ServiceException("You must be a secretary or chairman of a council group to approve project requests");
+                
+            // Verify department match for Research_Creation requests
+            if (request.RequestType == ProjectRequestTypeEnum.Research_Creation && request.Project?.DepartmentId.HasValue == true)
+            {
+                bool hasMatchingDepartment = false;
+                int projectDepartmentId = request.Project.DepartmentId.Value;
+                
+                foreach (var membership in userCouncilGroups)
+                {
+                    if (membership.Group.GroupDepartment == projectDepartmentId)
+                    {
+                        hasMatchingDepartment = true;
+                        break;
+                    }
+                }
+                
+                if (!hasMatchingDepartment)
+                    throw new ServiceException("You can only approve project requests from your council's department");
+            }
             
             // Add this new section for Fund_Disbursement request type
             if (request.RequestType == ProjectRequestTypeEnum.Fund_Disbursement)
@@ -2273,10 +2318,47 @@ public class ProjectService : IProjectService
         {
             var request = await _context.ProjectRequests
                 .Include(r => r.Project)
+                    .ThenInclude(p => p.Department)
                 .FirstOrDefaultAsync(r => r.RequestId == requestId);
             
             if (request == null)
                 throw new ServiceException("Project request not found");
+                
+            // Verify the request is in pending status
+            if (request.ApprovalStatus != ApprovalStatusEnum.Pending)
+                throw new ServiceException("This request has already been processed");
+                
+            // Get the rejector's council memberships
+            var userCouncilGroups = await _context.GroupMembers
+                .Include(gm => gm.Group)
+                .Where(gm => gm.UserId == secretaryId &&
+                           gm.Status == (int)GroupMemberStatus.Active &&
+                           gm.Group.GroupType == (int)GroupTypeEnum.Council &&
+                           (gm.Role == (int)GroupMemberRoleEnum.Secretary || 
+                            gm.Role == (int)GroupMemberRoleEnum.Council_Chairman))
+                .ToListAsync();
+                
+            if (!userCouncilGroups.Any())
+                throw new ServiceException("You must be a secretary or chairman of a council group to reject project requests");
+                
+            // Verify department match for Research_Creation requests
+            if (request.RequestType == ProjectRequestTypeEnum.Research_Creation && request.Project?.DepartmentId.HasValue == true)
+            {
+                bool hasMatchingDepartment = false;
+                int projectDepartmentId = request.Project.DepartmentId.Value;
+                
+                foreach (var membership in userCouncilGroups)
+                {
+                    if (membership.Group.GroupDepartment == projectDepartmentId)
+                    {
+                        hasMatchingDepartment = true;
+                        break;
+                    }
+                }
+                
+                if (!hasMatchingDepartment)
+                    throw new ServiceException("You can only reject project requests from your council's department");
+            }
             
             // Add this section for Fund_Disbursement request type
             if (request.RequestType == ProjectRequestTypeEnum.Fund_Disbursement)
@@ -2285,6 +2367,8 @@ public class ProjectService : IProjectService
                     throw new ServiceException("Fund disbursement request is missing a reference to the fund disbursement");
                 
                 var fundDisbursement = await _context.FundDisbursements
+                    .Include(fd => fd.Project)
+                    .Include(fd => fd.Quota)
                     .FirstOrDefaultAsync(fd => fd.FundDisbursementId == request.FundDisbursementId.Value);
                 
                 if (fundDisbursement == null)

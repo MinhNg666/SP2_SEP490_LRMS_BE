@@ -37,6 +37,7 @@ public class FundDisbursementResponse
     public decimal ProjectDisbursedAmount { get; set; } = 0;
     public ICollection<ProjectPhaseInfo>? ProjectPhases { get; set; }
     public string? RejectionReason { get; set; }
+    public int? RequestId { get; set; }
 }
 
 public class ProjectPhaseInfo
