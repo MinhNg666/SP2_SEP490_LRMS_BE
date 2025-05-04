@@ -81,18 +81,44 @@ public class FundDisbursementService : IFundDisbursementService
                 if (userGroupMember == null)
                     throw new ServiceException("You are not a member of this project's research group");
                 
-                // Find the supervisor for the project (just for permission check)
-                var supervisor = await _context.GroupMembers
-                    .FirstOrDefaultAsync(gm => gm.GroupId == project.GroupId && 
-                                         (gm.Role == (int)GroupMemberRoleEnum.Supervisor) &&
-                                         gm.Status == (int)GroupMemberStatus.Active);
+                // Get the group details to check its type
+                var group = await _context.Groups
+                    .FirstOrDefaultAsync(g => g.GroupId == project.GroupId);
+                    
+                if (group == null)
+                    throw new ServiceException("Group not found");
+                    
+                // Different validation based on group type
+                if (group.GroupType == (int)GroupTypeEnum.Student)
+                {
+                    // For Student groups - supervisor check
+                    var supervisor = await _context.GroupMembers
+                        .FirstOrDefaultAsync(gm => gm.GroupId == project.GroupId && 
+                                           (gm.Role == (int)GroupMemberRoleEnum.Supervisor) &&
+                                           gm.Status == (int)GroupMemberStatus.Active);
                                         
-                if (supervisor == null)
-                    throw new ServiceException("Research project must have a supervisor");
-                
-                // Only allow lecturers or the supervisor to create disbursement requests
-                if (!isLecturer && userGroupMember.GroupMemberId != supervisor.GroupMemberId)
-                    throw new ServiceException("Only supervisors or lecturers can create fund disbursement requests");
+                    if (supervisor == null)
+                        throw new ServiceException("Student research projects must have a supervisor");
+                    
+                    // Only allow lecturers or the supervisor to create disbursement requests
+                    if (!isLecturer && userGroupMember.GroupMemberId != supervisor.GroupMemberId)
+                        throw new ServiceException("Only supervisors or lecturers can create fund disbursement requests for student projects");
+                }
+                else if (group.GroupType == (int)GroupTypeEnum.Research)
+                {
+                    // For Research groups - allow leaders to create disbursement requests
+                    var isLeader = userGroupMember.Role == (int)GroupMemberRoleEnum.Leader;
+                    
+                    // Allow either lecturers or the group leader
+                    if (!isLecturer && !isLeader)
+                        throw new ServiceException("Only group leader can create fund disbursement requests for research group");
+                }
+                else
+                {
+                    // For other group types
+                    if (!isLecturer)
+                        throw new ServiceException("Only lecturers can create fund disbursement requests for this type of group");
+                }
             }
             else if (project.ProjectType == (int)ProjectTypeEnum.Conference || 
                      project.ProjectType == (int)ProjectTypeEnum.Journal)
@@ -120,6 +146,43 @@ public class FundDisbursementService : IFundDisbursementService
                 throw new ServiceException("Unsupported project type for fund disbursement");
             }
             
+            // Verify the project phase if specified
+            if (request.ProjectPhaseId.HasValue)
+            {
+                var projectPhase = await _context.ProjectPhases
+                    .FirstOrDefaultAsync(p => p.ProjectPhaseId == request.ProjectPhaseId.Value && 
+                                         p.ProjectId == request.ProjectId);
+                                         
+                if (projectPhase == null)
+                    throw new ServiceException("Specified project phase does not belong to this project");
+                
+                // Check if this phase already has an active fund disbursement request
+                var existingActiveDisbursement = await _context.FundDisbursements
+                    .FirstOrDefaultAsync(f => f.ProjectPhaseId == request.ProjectPhaseId.Value && 
+                                       (f.Status == (int)FundDisbursementStatusEnum.Pending || 
+                                        f.Status == (int)FundDisbursementStatusEnum.Approved ||
+                                        f.Status == (int)FundDisbursementStatusEnum.Disbursed));
+                    
+                if (existingActiveDisbursement != null)
+                {
+                    if (existingActiveDisbursement.Status == (int)FundDisbursementStatusEnum.Approved)
+                    {
+                        throw new ServiceException($"This project phase already has an approved fund disbursement (ID: {existingActiveDisbursement.FundDisbursementId}). " +
+                            $"Each project phase can have only one approved fund disbursement.");
+                    }
+                    else if (existingActiveDisbursement.Status == (int)FundDisbursementStatusEnum.Disbursed)
+                    {
+                        throw new ServiceException($"This project phase already has a disbursed fund request (ID: {existingActiveDisbursement.FundDisbursementId}). " +
+                            $"Funds have already been released for this phase and no additional requests can be created.");
+                    }
+                    else // Pending
+                    {
+                        throw new ServiceException($"This project phase already has a pending fund disbursement request (ID: {existingActiveDisbursement.FundDisbursementId}). " +
+                            $"Please wait for the existing request to be processed before creating a new one.");
+                    }
+                }
+            }
+            
             // Continue with the rest of the validation...
             // Check active quotas for this project
             var availableQuota = await _context.Quotas
@@ -143,46 +206,7 @@ public class FundDisbursementService : IFundDisbursementService
             // Check if requested amount exceeds available budget
             if (request.FundRequest > availableBudget)
                 throw new ServiceException($"Requested amount exceeds available budget. Available: {availableBudget}, Requested: {request.FundRequest}");
-                
-            // Verify the project phase if specified
-            if (request.ProjectPhaseId.HasValue)
-            {
-                var projectPhase = await _context.ProjectPhases
-                    .FirstOrDefaultAsync(p => p.ProjectPhaseId == request.ProjectPhaseId.Value && 
-                                         p.ProjectId == request.ProjectId);
-                                         
-                if (projectPhase == null)
-                    throw new ServiceException("Specified project phase does not belong to this project");
-                
-                // Check if the project phase is completed
-                if (projectPhase.Status == (int)ProjectPhaseStatusEnum.Completed)
-                {
-                    // Check if this completed phase already has an active fund disbursement request
-                    // (pending or approved, but not rejected)
-                    var existingActiveDisbursement = await _context.FundDisbursements
-                        .AnyAsync(f => f.ProjectPhaseId == request.ProjectPhaseId.Value && 
-                                  (f.Status == (int)FundDisbursementStatusEnum.Pending || 
-                                   f.Status == (int)FundDisbursementStatusEnum.Approved ||
-                                   f.Status == (int)FundDisbursementStatusEnum.Disbursed));
-                        
-                    if (existingActiveDisbursement)
-                    {
-                        throw new ServiceException("This completed project phase already has an active fund disbursement request. Only one active request is allowed per completed phase. If your previous request was rejected, you can create a new one.");
-                    }
-                }
-            }
             
-            // Check if there is an active fund request timeline
-            var currentDate = DateTime.Now;
-            var activeFundRequestTimeline = await _context.Timelines
-                .Where(t => t.TimelineType == (int)TimelineTypeEnum.FundRequest &&
-                       t.StartDate <= currentDate &&
-                       t.EndDate >= currentDate)
-                .FirstOrDefaultAsync();
-                
-            if (activeFundRequestTimeline == null)
-                throw new ServiceException("Fund requests are not currently open. Please check the funding schedule.");
-                
             // Create the fund disbursement request
             var fundDisbursement = new FundDisbursement
             {
@@ -700,6 +724,12 @@ public class FundDisbursementService : IFundDisbursementService
                 .Sum(fd => fd.FundRequest ?? 0);
         }
 
+        // Get the associated project request
+        var requestId = _context.ProjectRequests
+            .Where(pr => pr.FundDisbursementId == disbursement.FundDisbursementId)
+            .Select(pr => pr.RequestId)
+            .FirstOrDefault();
+
         var response = new FundDisbursementResponse
         {
             FundDisbursementId = disbursement.FundDisbursementId,
@@ -760,7 +790,10 @@ public class FundDisbursementService : IFundDisbursementService
             }).ToList(),
 
             // Map the RejectionReason
-            RejectionReason = disbursement.RejectionReason
+            RejectionReason = disbursement.RejectionReason,
+
+            // Add the new property
+            RequestId = requestId > 0 ? requestId : null,
         };
         
         return response;
