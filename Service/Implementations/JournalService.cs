@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Repository.Interfaces;
 using Service.Exceptions;
 using Service.Interfaces;
+using Service.Settings;
 using System.Text;
 
 namespace Service.Implementations;
@@ -129,52 +130,40 @@ public async Task<int> CreateJournalFromResearch(int projectId, int userId, Crea
         await _context.Journals.AddAsync(journal);
         await _context.SaveChangesAsync();
 
-        // Gửi thông báo cho các thành viên
-        var groupMembers = await _groupRepository.GetMembersByGroupId(project.GroupId.Value);
-        var activeMembers = groupMembers.Where(m => m.Status == (int)GroupMemberStatus.Active);
+        // Lấy thông tin cần thiết
+        var creator = await _context.Users.FindAsync(userId);
+        var group = project.Group;
+        var activeMembers = group.GroupMembers.Where(m => m.Status == (int)GroupMemberStatus.Active);
 
-        // Tạo thông tin chi tiết về journal
-        var journalInfo = new StringBuilder();
-        journalInfo.AppendLine($"Thông tin chi tiết về Journal:");
-        journalInfo.AppendLine($"- Tên Journal: {journal.JournalName}");
-        journalInfo.AppendLine($"- Nhà xuất bản: {journal.PublisherName}");
-        journalInfo.AppendLine($"- DOI: {journal.DoiNumber}");
-        journalInfo.AppendLine($"- Ngày nộp: {journal.SubmissionDate:dd/MM/yyyy}");
-
-        // Gửi thông báo cho thành viên thường
-        foreach (var member in activeMembers.Where(m => m.Role != (int)GroupMemberRoleEnum.Stakeholder))
+        // Gửi email và notification cho từng thành viên
+        foreach (var member in activeMembers)
         {
-            if (member.UserId.HasValue)
+            if (member.UserId.HasValue && member.User != null)
             {
-                var notificationRequest = new CreateNotificationRequest
+                // Gửi email
+                var emailSubject = $"[LRMS] Thông báo: Dự án chuyển đổi thành Journal - {project.ProjectName}";
+                var emailContent = member.Role == (int)GroupMemberRoleEnum.Stakeholder
+                    ? JournalEmailTemplates.GetStakeholderJournalCreationEmail(member.User, project, journal, group, creator)
+                    : JournalEmailTemplates.GetMemberJournalCreationEmail(member.User, project, journal, group, creator);
+
+                await _emailService.SendEmailAsync(member.User.Email, emailSubject, emailContent);
+
+                // Gửi notification cho thành viên thường
+                if (member.Role != (int)GroupMemberRoleEnum.Stakeholder)
                 {
-                    UserId = member.UserId.Value,
-                    Title = "Đăng ký xuất bản Journal mới",
-                    Message = $"Project đã được chuyển thành Journal và đang chờ phê duyệt.\n\n{journalInfo}",
-                    ProjectId = projectId,
-                    Status = 0,
-                    IsRead = false
-                };
-                await _notificationService.CreateNotification(notificationRequest);
+                    var notificationRequest = new CreateNotificationRequest
+                    {
+                        UserId = member.UserId.Value,
+                        Title = "Đăng ký xuất bản Journal mới",
+                        Message = $"Dự án '{project.ProjectName}' đã được chuyển thành Journal '{journal.JournalName}' và đang chờ phê duyệt",
+                        ProjectId = projectId,
+                        Status = 0,
+                        IsRead = false
+                    };
+                    await _notificationService.CreateNotification(notificationRequest);
+                }
             }
-        }
-        // Gửi email cho stakeholder
-        var stakeholders = activeMembers.Where(m =>
-        m.Role == (int)GroupMemberRoleEnum.Stakeholder &&
-        m.User != null);
-
-        foreach (var stakeholder in stakeholders)
-        {
-            await _emailService.SendEmailAsync(
-            stakeholder.User.Email,
-            $"Thông báo đăng ký Journal mới",
-            $"Xin chào {stakeholder.User.FullName},\n\n" +
-            $"Dự án nghiên cứu đã được đăng ký xuất bản Journal.\n\n" +
-            $"{journalInfo}\n\n" +
-            $"Trân trọng."
-            );
-        }
-
+        }        
         return projectId;
     }
     catch (Exception ex)
@@ -238,40 +227,39 @@ public async Task<int> CreateJournalFromResearch(int projectId, int userId, Crea
             journal.PublisherStatus = (int)PublisherStatusEnum.Approved;
             await _context.SaveChangesAsync();
 
-            // Gửi thông báo cho các thành viên
-            var groupMembers = await _groupRepository.GetMembersByGroupId(journal.Project.GroupId.Value);
-            foreach (var member in groupMembers.Where(m =>
-                m.Status == (int)GroupMemberStatus.Active &&
-                m.Role != (int)GroupMemberRoleEnum.Stakeholder))
-            {
-                if (member.UserId.HasValue)
-                {
-                    await _notificationService.CreateNotification(new CreateNotificationRequest
-                    {
-                        UserId = member.UserId.Value,
-                        Title = "Journal đã được phê duyệt",
-                        Message = $"Journal '{journal.JournalName}' đã được hội đồng phê duyệt",
-                        ProjectId = journal.ProjectId.Value,
-                        Status = 0,
-                        IsRead = false
-                    });
-                }
-            }
-            // Gửi email cho stakeholder
-            var stakeholders = groupMembers.Where(m =>
-                m.Status == (int)GroupMemberStatus.Active &&
-                m.Role == (int)GroupMemberRoleEnum.Stakeholder &&
-                m.User != null);
+            // Lấy thông tin approver
+            var approver = await _context.Users.FindAsync(secretaryId);
+            var group = journal.Project.Group;
+            var activeMembers = group.GroupMembers.Where(m => m.Status == (int)GroupMemberStatus.Active);
 
-            foreach (var stakeholder in stakeholders)
+            // Gửi email và notification cho từng thành viên
+            foreach (var member in activeMembers)
             {
-                await _emailService.SendEmailAsync(
-                    stakeholder.User.Email,
-                    $"Journal đã được phê duyệt",
-                    $"Xin chào {stakeholder.User.FullName},\n\n" +
-                    $"Journal '{journal.JournalName}' đã được hội đồng phê duyệt.\n\n" +
-                    $"Trân trọng."
-                );
+                if (member.UserId.HasValue && member.User != null)
+                {
+                    // Gửi email
+                    var emailSubject = $"[LRMS] Thông báo: Journal đã được phê duyệt - {journal.JournalName}";
+                    var emailContent = member.Role == (int)GroupMemberRoleEnum.Stakeholder
+                        ? JournalEmailTemplates.GetStakeholderJournalApprovalEmail(member.User, journal.Project, journal, group, approver, documentUrl)
+                        : JournalEmailTemplates.GetMemberJournalApprovalEmail(member.User, journal.Project, journal, group, approver, documentUrl);
+
+                    await _emailService.SendEmailAsync(member.User.Email, emailSubject, emailContent);
+
+                    // Gửi notification cho thành viên thường
+                    if (member.Role != (int)GroupMemberRoleEnum.Stakeholder)
+                    {
+                        var notificationRequest = new CreateNotificationRequest
+                        {
+                            UserId = member.UserId.Value,
+                            Title = "Journal đã được phê duyệt",
+                            Message = $"Journal '{journal.JournalName}' đã được hội đồng phê duyệt",
+                            ProjectId = journal.ProjectId.Value,
+                            Status = 0,
+                            IsRead = false
+                        };
+                        await _notificationService.CreateNotification(notificationRequest);
+                    }
+                }
             }
 
             return true;
@@ -338,41 +326,38 @@ public async Task<int> CreateJournalFromResearch(int projectId, int userId, Crea
             journal.PublisherStatus = (int)PublisherStatusEnum.Rejected;
             await _context.SaveChangesAsync();
 
-            // Gửi thông báo cho các thành viên
-            var groupMembers = await _groupRepository.GetMembersByGroupId(journal.Project.GroupId.Value);
-            foreach (var member in groupMembers.Where(m =>
-                m.Status == (int)GroupMemberStatus.Active &&
-                m.Role != (int)GroupMemberRoleEnum.Stakeholder))
-            {
-                if (member.UserId.HasValue)
-                {
-                    await _notificationService.CreateNotification(new CreateNotificationRequest
-                    {
-                        UserId = member.UserId.Value,
-                        Title = "Journal đã bị từ chối",
-                        Message = $"Journal '{journal.JournalName}' đã bị hội đồng từ chối. Vui lòng xem biên bản tại: {documentUrl}",
-                        ProjectId = journal.ProjectId.Value,
-                        Status = 0,
-                        IsRead = false
-                    });
-                }
-            }
-            // Gửi email cho stakeholder
-            var stakeholders = groupMembers.Where(m =>
-            m.Status == (int)GroupMemberStatus.Active &&
-            m.Role == (int)GroupMemberRoleEnum.Stakeholder &&
-            m.User != null);
+            // Lấy thông tin
+            var group = journal.Project.Group;
+            var activeMembers = group.GroupMembers.Where(m => m.Status == (int)GroupMemberStatus.Active);
 
-            foreach (var stakeholder in stakeholders)
+            // Gửi email và notification cho từng thành viên
+            foreach (var member in activeMembers)
             {
-                await _emailService.SendEmailAsync(
-                stakeholder.User.Email,
-                $"Journal đã bị từ chối",
-                $"Xin chào {stakeholder.User.FullName},\n\n" +
-                $"Journal '{journal.JournalName}' đã bị hội đồng từ chối.\n" +
-                $"Vui lòng xem biên bản tại: {documentUrl}\n\n" +
-                $"Trân trọng."
-                );
+                if (member.UserId.HasValue && member.User != null)
+                {
+                    // Gửi email
+                    var emailSubject = $"[LRMS] Thông báo: Journal đã bị từ chối - {journal.JournalName}";
+                    var emailContent = member.Role == (int)GroupMemberRoleEnum.Stakeholder
+                        ? JournalEmailTemplates.GetStakeholderJournalRejectionEmail(member.User, journal.Project, journal, group, documentUrl)
+                        : JournalEmailTemplates.GetMemberJournalRejectionEmail(member.User, journal.Project, journal, group, documentUrl);
+
+                    await _emailService.SendEmailAsync(member.User.Email, emailSubject, emailContent);
+
+                    // Gửi notification cho thành viên thường
+                    if (member.Role != (int)GroupMemberRoleEnum.Stakeholder)
+                    {
+                        var notificationRequest = new CreateNotificationRequest
+                        {
+                            UserId = member.UserId.Value,
+                            Title = "Journal đã bị từ chối",
+                            Message = $"Journal '{journal.JournalName}' đã bị hội đồng từ chối. Vui lòng xem biên bản tại: {documentUrl}",
+                            ProjectId = journal.ProjectId.Value,
+                            Status = 0,
+                            IsRead = false
+                        };
+                        await _notificationService.CreateNotification(notificationRequest);
+                    }
+                }
             }
 
             return true;
@@ -424,6 +409,45 @@ public async Task<int> CreateJournalFromResearch(int projectId, int userId, Crea
 
             await _context.Documents.AddAsync(document);
             await _context.SaveChangesAsync();
+
+            // Lấy thông tin cần thiết
+            var uploader = await _context.Users.FindAsync(userId);
+            var group = journal.Project.Group;
+            var activeMembers = group.GroupMembers.Where(m => m.Status == (int)GroupMemberStatus.Active);
+
+            // Gửi email và notification cho từng thành viên
+            foreach (var member in activeMembers)
+            {
+                if (member.UserId.HasValue && member.User != null)
+                {
+                    // Gửi email
+                    var emailSubject = $"[LRMS] Thông báo: Tài liệu mới cho Journal - {journal.JournalName}";
+                    var emailContent = member.Role == (int)GroupMemberRoleEnum.Stakeholder
+                        ? JournalEmailTemplates.GetStakeholderJournalDocumentEmail(member.User, journal.Project, journal, uploader, documentFile.FileName, documentUrl)
+                        : JournalEmailTemplates.GetMemberJournalDocumentEmail(member.User, journal.Project, journal, uploader, documentFile.FileName, documentUrl);
+
+                    await _emailService.SendEmailAsync(member.User.Email, emailSubject, emailContent);
+
+                    // Gửi notification cho thành viên thường
+                    if (member.Role != (int)GroupMemberRoleEnum.Stakeholder)
+                    {
+                        string title = member.UserId.Value == userId
+                            ? "Bạn đã tải lên tài liệu mới"
+                            : "Có tài liệu mới trong Journal";
+
+                        var notificationRequest = new CreateNotificationRequest
+                        {
+                            UserId = member.UserId.Value,
+                            Title = title,
+                            Message = $"Journal: {journal.JournalName}\nTài liệu: {documentFile.FileName}\nNgười tải lên: {uploader?.FullName}",
+                            ProjectId = journal.ProjectId.Value,
+                            Status = 0,
+                            IsRead = false
+                        };
+                        await _notificationService.CreateNotification(notificationRequest);
+                    }
+                }
+            }
 
             return true;
         }

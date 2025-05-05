@@ -1,15 +1,15 @@
 ﻿USE master;
 
 -- Drop the database if it exists
-DROP DATABASE IF EXISTS LRMSDB;
+DROP DATABASE IF EXISTS LRMSDB2;
 GO
 
 -- Create the database
-CREATE DATABASE LRMSDB;
+CREATE DATABASE LRMSDB2;
 GO
 
 -- Use the created database
-USE LRMSDB;
+USE LRMSDB2;
 GO
 
 CREATE TABLE [Users] (

@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Repository.Interfaces;
 using Service.Exceptions;
 using Service.Interfaces;
+using Service.Settings;
 using System.Text;
 
 namespace Service.Implementations;
@@ -165,48 +166,39 @@ public class ConferenceService : IConferenceService
             await _context.SaveChangesAsync();
 
             var groupMembers = await _groupRepository.GetMembersByGroupId(project.GroupId.Value);
-            // Tạo thông tin chi tiết về conference
-            var conferenceInfo = new StringBuilder();
-            conferenceInfo.AppendLine($"Thông tin chi tiết về Conference:");
-            conferenceInfo.AppendLine($"- Tên Conference: {conference.ConferenceName}");
-            conferenceInfo.AppendLine($"- Địa điểm: {conference.Location}");
-            conferenceInfo.AppendLine($"- Xếp hạng: {conference.ConferenceRanking}");
-            conferenceInfo.AppendLine($"- Ngày thuyết trình: {conference.PresentationDate:dd/MM/yyyy}");
-            conferenceInfo.AppendLine($"- Hình thức: {conference.PresentationType}");
+            // Lấy thông tin cần thiết
+            var creator = await _context.Users.FindAsync(leaderId);
+            var group = project.Group;
+            var activeMembers = group.GroupMembers.Where(m => m.Status == (int)GroupMemberStatus.Active);
 
-            foreach (var member in groupMembers.Where(m =>
-            m.Status == (int)GroupMemberStatus.Active &&
-            m.Role != (int)GroupMemberRoleEnum.Stakeholder))
+            // Gửi email và notification cho từng thành viên
+            foreach (var member in activeMembers)
             {
-                if (member.UserId.HasValue)
+                if (member.UserId.HasValue && member.User != null)
                 {
-                    await _notificationService.CreateNotification(new CreateNotificationRequest
-                    {
-                        UserId = member.UserId.Value,
-                        Title = "Đăng ký tham gia Conference mới",
-                        Message = $"Project đã được chuyển thành Conference và đang chờ phê duyệt: {request.ConferenceName}",
-                        ProjectId = projectId,
-                        Status = 0,
-                        IsRead = false
-                    });
-                }
-            }
-            // Gửi email cho stakeholder
-            var stakeholders = groupMembers.Where(m =>
-            m.Status == (int)GroupMemberStatus.Active &&
-            m.Role == (int)GroupMemberRoleEnum.Stakeholder &&
-            m.User != null);
+                    // Gửi email
+                    var emailSubject = $"[LRMS] Thông báo: Dự án chuyển đổi thành Conference - {project.ProjectName}";
+                    var emailContent = member.Role == (int)GroupMemberRoleEnum.Stakeholder
+                        ? ConferenceEmailTemplates.GetStakeholderConferenceCreationEmail(member.User, project, conference, group, creator)
+                        : ConferenceEmailTemplates.GetMemberConferenceCreationEmail(member.User, project, conference, group, creator);
 
-            foreach (var stakeholder in stakeholders)
-            {
-                await _emailService.SendEmailAsync(
-                stakeholder.User.Email,
-                $"Thông báo đăng ký Conference mới",
-                $"Xin chào {stakeholder.User.FullName},\n\n" +
-                $"Dự án nghiên cứu đã được đăng ký tham gia Conference.\n\n" +
-                $"{conferenceInfo}\n\n" +
-                $"Trân trọng."
-                );
+                    await _emailService.SendEmailAsync(member.User.Email, emailSubject, emailContent);
+
+                    // Gửi notification cho thành viên thường
+                    if (member.Role != (int)GroupMemberRoleEnum.Stakeholder)
+                    {
+                        var notificationRequest = new CreateNotificationRequest
+                        {
+                            UserId = member.UserId.Value,
+                            Title = "Đăng ký tham gia Conference mới",
+                            Message = $"Dự án '{project.ProjectName}' đã được chuyển thành Conference '{conference.ConferenceName}' và đang chờ phê duyệt",
+                            ProjectId = projectId,
+                            Status = 0,
+                            IsRead = false
+                        };
+                        await _notificationService.CreateNotification(notificationRequest);
+                    }
+                }
             }
             return projectId;
         }
@@ -265,39 +257,39 @@ public class ConferenceService : IConferenceService
             conference.Project.Status = (int)ProjectStatusEnum.Approved;
             await _context.SaveChangesAsync();
 
-            var groupMembers = await _groupRepository.GetMembersByGroupId(conference.Project.GroupId.Value);
-            foreach (var member in groupMembers.Where(m =>
-            m.Status == (int)GroupMemberStatus.Active &&
-            m.Role != (int)GroupMemberRoleEnum.Stakeholder))
-            {
-                if (member.UserId.HasValue)
-                {
-                    await _notificationService.CreateNotification(new CreateNotificationRequest
-                    {
-                        UserId = member.UserId.Value,
-                        Title = "Conference đã được phê duyệt",
-                        Message = $"Conference '{conference.ConferenceName}' đã được hội đồng phê duyệt",
-                        ProjectId = conference.ProjectId.Value,
-                        Status = 0,
-                        IsRead = false
-                    });
-                }
-            }
-            // Gửi email cho stakeholder
-            var stakeholders = groupMembers.Where(m =>
-            m.Status == (int)GroupMemberStatus.Active &&
-            m.Role == (int)GroupMemberRoleEnum.Stakeholder &&
-            m.User != null);
+            // Lấy thông tin approver
+            var approver = await _context.Users.FindAsync(secretaryId);
+            var group = conference.Project.Group;
+            var activeMembers = group.GroupMembers.Where(m => m.Status == (int)GroupMemberStatus.Active);
 
-            foreach (var stakeholder in stakeholders)
+            // Gửi email và notification cho từng thành viên
+            foreach (var member in activeMembers)
             {
-                await _emailService.SendEmailAsync(
-                stakeholder.User.Email,
-                $"Conference đã được phê duyệt",
-                $"Xin chào {stakeholder.User.FullName},\n\n" +
-                $"Conference '{conference.ConferenceName}' đã được hội đồng phê duyệt.\n\n" +
-                $"Trân trọng."
-                );
+                if (member.UserId.HasValue && member.User != null)
+                {
+                    // Gửi email
+                    var emailSubject = $"[LRMS] Thông báo: Conference đã được phê duyệt - {conference.ConferenceName}";
+                    var emailContent = member.Role == (int)GroupMemberRoleEnum.Stakeholder
+                        ? ConferenceEmailTemplates.GetStakeholderConferenceApprovalEmail(member.User, conference.Project, conference, group, approver, documentUrl)
+                        : ConferenceEmailTemplates.GetMemberConferenceApprovalEmail(member.User, conference.Project, conference, group, approver, documentUrl);
+
+                    await _emailService.SendEmailAsync(member.User.Email, emailSubject, emailContent);
+
+                    // Gửi notification cho thành viên thường
+                    if (member.Role != (int)GroupMemberRoleEnum.Stakeholder)
+                    {
+                        var notificationRequest = new CreateNotificationRequest
+                        {
+                            UserId = member.UserId.Value,
+                            Title = "Conference đã được phê duyệt",
+                            Message = $"Conference '{conference.ConferenceName}' đã được hội đồng phê duyệt",
+                            ProjectId = conference.ProjectId.Value,
+                            Status = 0,
+                            IsRead = false
+                        };
+                        await _notificationService.CreateNotification(notificationRequest);
+                    }
+                }
             }
 
             return true;
@@ -357,40 +349,38 @@ public class ConferenceService : IConferenceService
             conference.Project.Status = (int)ProjectStatusEnum.Rejected;
             await _context.SaveChangesAsync();
 
-            var groupMembers = await _groupRepository.GetMembersByGroupId(conference.Project.GroupId.Value);
-            foreach (var member in groupMembers.Where(m =>
-            m.Status == (int)GroupMemberStatus.Active &&
-            m.Role != (int)GroupMemberRoleEnum.Stakeholder))
-            {
-                if (member.UserId.HasValue)
-                {
-                    await _notificationService.CreateNotification(new CreateNotificationRequest
-                    {
-                        UserId = member.UserId.Value,
-                        Title = "Conference đã bị từ chối",
-                        Message = $"Conference '{conference.ConferenceName}' đã bị hội đồng từ chối. Vui lòng xem biên bản tại: {documentUrl}",
-                        ProjectId = conference.ProjectId.Value,
-                        Status = 0,
-                        IsRead = false
-                    });
-                }
-            }
-            // Gửi email cho stakeholder
-            var stakeholders = groupMembers.Where(m =>
-            m.Status == (int)GroupMemberStatus.Active &&
-            m.Role == (int)GroupMemberRoleEnum.Stakeholder &&
-            m.User != null);
+            // Lấy thông tin
+            var group = conference.Project.Group;
+            var activeMembers = group.GroupMembers.Where(m => m.Status == (int)GroupMemberStatus.Active);
 
-            foreach (var stakeholder in stakeholders)
+            // Gửi email và notification cho từng thành viên
+            foreach (var member in activeMembers)
             {
-                await _emailService.SendEmailAsync(
-                stakeholder.User.Email,
-                $"Conference đã bị từ chối",
-                $"Xin chào {stakeholder.User.FullName},\n\n" +
-                $"Conference '{conference.ConferenceName}' đã bị hội đồng từ chối.\n" +
-                $"Vui lòng xem biên bản tại: {documentUrl}\n\n" +
-                $"Trân trọng."
-                );
+                if (member.UserId.HasValue && member.User != null)
+                {
+                    // Gửi email
+                    var emailSubject = $"[LRMS] Thông báo: Conference đã bị từ chối - {conference.ConferenceName}";
+                    var emailContent = member.Role == (int)GroupMemberRoleEnum.Stakeholder
+                        ? ConferenceEmailTemplates.GetStakeholderConferenceRejectionEmail(member.User, conference.Project, conference, group, documentUrl)
+                        : ConferenceEmailTemplates.GetMemberConferenceRejectionEmail(member.User, conference.Project, conference, group, documentUrl);
+
+                    await _emailService.SendEmailAsync(member.User.Email, emailSubject, emailContent);
+
+                    // Gửi notification cho thành viên thường
+                    if (member.Role != (int)GroupMemberRoleEnum.Stakeholder)
+                    {
+                        var notificationRequest = new CreateNotificationRequest
+                        {
+                            UserId = member.UserId.Value,
+                            Title = "Conference đã bị từ chối",
+                            Message = $"Conference '{conference.ConferenceName}' đã bị hội đồng từ chối. Vui lòng xem biên bản tại: {documentUrl}",
+                            ProjectId = conference.ProjectId.Value,
+                            Status = 0,
+                            IsRead = false
+                        };
+                        await _notificationService.CreateNotification(notificationRequest);
+                    }
+                }
             }
             return true;
         }
@@ -441,6 +431,45 @@ public class ConferenceService : IConferenceService
 
             await _context.Documents.AddAsync(document);
             await _context.SaveChangesAsync();
+
+            // Lấy thông tin cần thiết
+            var uploader = await _context.Users.FindAsync(userId);
+            var group = conference.Project.Group;
+            var activeMembers = group.GroupMembers.Where(m => m.Status == (int)GroupMemberStatus.Active);
+
+            // Gửi email và notification cho từng thành viên
+            foreach (var member in activeMembers)
+            {
+                if (member.UserId.HasValue && member.User != null)
+                {
+                    // Gửi email
+                    var emailSubject = $"[LRMS] Thông báo: Tài liệu mới cho Conference - {conference.ConferenceName}";
+                    var emailContent = member.Role == (int)GroupMemberRoleEnum.Stakeholder
+                        ? ConferenceEmailTemplates.GetStakeholderConferenceDocumentEmail(member.User, conference.Project, conference, uploader, documentFile.FileName, documentUrl)
+                        : ConferenceEmailTemplates.GetMemberConferenceDocumentEmail(member.User, conference.Project, conference, uploader, documentFile.FileName, documentUrl);
+
+                    await _emailService.SendEmailAsync(member.User.Email, emailSubject, emailContent);
+
+                    // Gửi notification cho thành viên thường
+                    if (member.Role != (int)GroupMemberRoleEnum.Stakeholder)
+                    {
+                        string title = member.UserId.Value == userId
+                            ? "Bạn đã tải lên tài liệu mới"
+                            : "Có tài liệu mới trong Conference";
+
+                        var notificationRequest = new CreateNotificationRequest
+                        {
+                            UserId = member.UserId.Value,
+                            Title = title,
+                            Message = $"Conference: {conference.ConferenceName}\nTài liệu: {documentFile.FileName}\nNgười tải lên: {uploader?.FullName}",
+                            ProjectId = conference.ProjectId.Value,
+                            Status = 0,
+                            IsRead = false
+                        };
+                        await _notificationService.CreateNotification(notificationRequest);
+                    }
+                }
+            }
 
             return true;
         }

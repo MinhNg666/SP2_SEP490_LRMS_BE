@@ -10,6 +10,10 @@ using Domain.DTO.Responses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.SqlClient;
 using System.Text;
+using Service.Settings;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Azure.Core;
+using Repository.Implementations;
 
 namespace Service.Implementations;
 public class ProjectService : IProjectService
@@ -334,81 +338,43 @@ public class ProjectService : IProjectService
 
                 await _context.Documents.AddAsync(document);
                 await _context.SaveChangesAsync();
+            }
+            var groupMembers = await _groupRepository.GetMembersByGroupId(request.GroupId);
+            var activeMembers = groupMembers.Where(m => m.Status == (int)GroupMemberStatus.Active);
+            var creator = await _userRepository.GetByIdAsync(project.CreatedBy.Value);
+            var group = await _groupRepository.GetByIdAsync(project.GroupId.Value);
+            var department = await _departmentRepository.GetByIdAsync(project.DepartmentId.Value);
 
-                // Lấy thông tin chi tiết để gửi thông báo
-                var department = await _departmentRepository.GetByIdAsync(request.DepartmentId);
-                var group = await _groupRepository.GetByIdAsync(request.GroupId);
-                var creator = await _userRepository.GetByIdAsync(createdBy);
-                // Tạo thông tin chi tiết về project
-                var projectInfo = new StringBuilder();
-                projectInfo.AppendLine($"Thông tin chi tiết về project mới:");
-                projectInfo.AppendLine($"- Tên project: {project.ProjectName}");
-                projectInfo.AppendLine($"- Loại project: {GetProjectTypeName(project.ProjectType)}");
-                projectInfo.AppendLine($"- Mô tả: {project.Description}");
-                projectInfo.AppendLine($"- Phương pháp: {project.Methodlogy}");
-                projectInfo.AppendLine($"- Khoa/Phòng ban: {department?.DepartmentName}");
-                projectInfo.AppendLine($"- Nhóm nghiên cứu: {group?.GroupName}");
-                projectInfo.AppendLine($"- Người tạo: {creator?.FullName}");
-                projectInfo.AppendLine($"- Ngày bắt đầu: {project.StartDate:dd/MM/yyyy}");
-                projectInfo.AppendLine($"- Ngày kết thúc: {project.EndDate:dd/MM/yyyy}");
-
-                // Thêm thông tin về milestones nếu có
-                if (request.ProjectPhases != null && request.ProjectPhases.Any())
+            foreach (var member in activeMembers)
+            {
+                if (member.UserId.HasValue && member.User != null)
                 {
-                    projectInfo.AppendLine("\nCác mốc thời gian (Milestones):");
-                    foreach (var milestone in request.ProjectPhases)
+                    // Tạo và gửi thông báo
+                    var notificationTitle = member.Role == (int)GroupMemberRoleEnum.Stakeholder
+                        ? "Giám sát dự án mới"
+                        : "Dự án nghiên cứu mới";
+
+                    var notificationRequest = new CreateNotificationRequest
                     {
-                        projectInfo.AppendLine($"- {milestone.Title}:");
-                        projectInfo.AppendLine($"  Bắt đầu: {milestone.StartDate:dd/MM/yyyy}");
-                        projectInfo.AppendLine($"  Kết thúc: {milestone.EndDate:dd/MM/yyyy}");
-                    }
-                }
-                // Gửi thông báo cho tất cả thành viên trong nhóm
-                var groupMembers = await _groupRepository.GetMembersByGroupId(request.GroupId);
-                var activeMembers = groupMembers.Where(m => m.Status == (int)GroupMemberStatus.Active);
+                        UserId = member.UserId.Value,
+                        Title = notificationTitle,
+                        Message = $"Dự án '{project.ProjectName}' đã được tạo.",
+                        ProjectId = project.ProjectId,
+                        Status = 0,
+                        IsRead = false
+                    };
+                    await _notificationService.CreateNotification(notificationRequest);
 
-                foreach (var member in activeMembers)
-                {
-                    if (member.UserId.HasValue)
-                    {
-                        // Tạo nội dung thông báo khác nhau cho người tạo và các thành viên khác
-                        string title = member.UserId.Value == createdBy
-                        ? "Bạn đã đăng ký project mới thành công"
-                        : "Nhóm của bạn có project nghiên cứu mới";
+                    // Tạo và gửi email
+                    var emailSubject = $"[LRMS] Thông báo: {notificationTitle} - {project.ProjectName}";
+                    var emailContent = member.Role == (int)GroupMemberRoleEnum.Stakeholder
+                        ? ProjectEmailTemplates.GetStakeholderProjectCreationEmail(member.User, project, creator, group, department)
+                        : ProjectEmailTemplates.GetMemberProjectCreationEmail(member.User, project, creator, group, department);
 
-                        string introMessage = member.UserId.Value == createdBy
-                        ? "Bạn đã đăng ký thành công project mới. Project đang chờ phê duyệt từ hội đồng."
-                        : $"Thành viên {creator?.FullName} đã đăng ký project mới cho nhóm. Project đang chờ phê duyệt từ hội đồng.";
-
-                        var notificationRequest = new CreateNotificationRequest
-                        {
-                            UserId = member.UserId.Value,
-                            Title = title,
-                            Message = $"{introMessage}\n\n{projectInfo}",
-                            ProjectId = project.ProjectId,
-                            Status = 0,
-                            IsRead = false
-                        };
-                        await _notificationService.CreateNotification(notificationRequest);
-                    }
-                }
-                // Gửi email cho stakeholder
-                var stakeholders = groupMembers.Where(m =>
-                m.Status == (int)GroupMemberStatus.Active &&
-                m.Role == (int)GroupMemberRoleEnum.Stakeholder);
-
-                var emailSubject = $"Dự án nghiên cứu mới: {project.ProjectName}";
-                var emailMessage = $"Một dự án nghiên cứu mới đã được đăng ký:\n\n{projectInfo}";
-
-                foreach (var stakeholder in stakeholders)
-                {
-                    if (stakeholder.User != null)
-                    {
-                        await _emailService.SendEmailAsync(stakeholder.User.Email, emailSubject, emailMessage);
-                    }
+                    await _emailService.SendEmailAsync(member.User.Email, emailSubject, emailContent);
                 }
             }
-        return project.ProjectId;
+            return project.ProjectId;
         }
         catch (Exception ex)
         {
@@ -530,61 +496,43 @@ public class ProjectService : IProjectService
             project.ApprovedBy = approver.GroupMemberId; // Store the approver
             await _projectRepository.UpdateAsync(project);
 
-            // Get approver role name for notification
-            string approverRoleName = approver.Role == (int)GroupMemberRoleEnum.Secretary ?
-                "council secretary" : "council chairman";
-
-            var department = await _departmentRepository.GetByIdAsync(project.DepartmentId.Value);
+            var approverUser = await _userRepository.GetByIdAsync(secretaryId);
             var group = await _groupRepository.GetByIdAsync(project.GroupId.Value);
-            var creator = await _userRepository.GetByIdAsync(project.CreatedBy.Value);
+            var department = await _departmentRepository.GetByIdAsync(project.DepartmentId.Value);
 
-            // Tạo thông tin chi tiết về project
-            var projectInfo = new StringBuilder();
-            projectInfo.AppendLine($"Thông tin chi tiết về project:");
-            projectInfo.AppendLine($"- Tên project: {project.ProjectName}");
-            projectInfo.AppendLine($"- Loại project: {GetProjectTypeName(project.ProjectType)}");
-            projectInfo.AppendLine($"- Mô tả: {project.Description}");
-            projectInfo.AppendLine($"- Phương pháp: {project.Methodlogy}");
-            projectInfo.AppendLine($"- Khoa/Phòng ban: {department?.DepartmentName}");
-            projectInfo.AppendLine($"- Nhóm nghiên cứu: {group?.GroupName}");
-            projectInfo.AppendLine($"- Người tạo: {creator?.FullName}");
-            projectInfo.AppendLine($"- Ngày bắt đầu: {project.StartDate:dd/MM/yyyy}");
-            projectInfo.AppendLine($"- Ngày kết thúc: {project.EndDate:dd/MM/yyyy}");
-            if (project.ApprovedBudget.HasValue)
+            if (approverUser == null || group == null || department == null)
             {
-                projectInfo.AppendLine($"- Kinh phí được duyệt: {project.ApprovedBudget:N0} VNĐ");
+                throw new ServiceException("Cannot find approver, group or department information");
             }
-            projectInfo.AppendLine($"\nBiên bản họp hội đồng: {documentUrl}");
 
-
-            // Send notifications to research group members
+            // Gửi thông báo và email
             var groupMembers = await _groupRepository.GetMembersByGroupId(project.GroupId.Value);
-            foreach (var member in groupMembers)
+            var activeMembers = groupMembers.Where(m => m.Status == (int)GroupMemberStatus.Active);
+
+            foreach (var member in activeMembers)
             {
-                var notificationRequest = new CreateNotificationRequest
+                if (member.UserId.HasValue && member.User != null)
                 {
-                    UserId = member.UserId.Value,
-                    Title = "Project Approved",
-                    Message = $"Project '{project.ProjectName}' has been approved by the {approverRoleName}. Please see the council documents at : {documentUrl}",
-                    ProjectId = project.ProjectId,
-                    Status = 0,
-                    IsRead = false
-                };
-                await _notificationService.CreateNotification(notificationRequest);
-            }
+                    // Tạo và gửi thông báo
+                    var notificationRequest = new CreateNotificationRequest
+                    {
+                        UserId = member.UserId.Value,
+                        Title = "Dự án đã được phê duyệt",
+                        Message = $"Dự án '{project.ProjectName}' đã được hội đồng phê duyệt",
+                        ProjectId = project.ProjectId,
+                        Status = 0,
+                        IsRead = false
+                    };
+                    await _notificationService.CreateNotification(notificationRequest);
 
-            // Gửi email cho stakeholder - lấy từ group members
-            var stakeholders = groupMembers.Where(m => 
-            m.Status == (int)GroupMemberStatus.Active && 
-            m.Role == (int)GroupMemberRoleEnum.Stakeholder &&
-            m.User != null);
+                    // Tạo và gửi email
+                    var emailSubject = $"[LRMS] Thông báo phê duyệt dự án: {project.ProjectName}";
+                    var emailContent = member.Role == (int)GroupMemberRoleEnum.Stakeholder
+                        ? ProjectEmailTemplates.GetStakeholderProjectApprovalEmail(member.User, project, approverUser, group, department, documentUrl)
+                        : ProjectEmailTemplates.GetMemberProjectApprovalEmail(member.User, project, approverUser, group, department, documentUrl);
 
-            var emailSubject = $"Dự án đã được phê duyệt: {project.ProjectName}";
-            var emailMessage = $"Dự án nghiên cứu đã được hội đồng phê duyệt:\n\n{projectInfo}";
-
-            foreach (var stakeholder in stakeholders)
-            {
-            await _emailService.SendEmailAsync(stakeholder.User.Email, emailSubject, emailMessage);
+                    await _emailService.SendEmailAsync(member.User.Email, emailSubject, emailContent);
+                }
             }
 
             // Create a new quota with the same budget as the project
@@ -694,61 +642,52 @@ public class ProjectService : IProjectService
             project.ApprovedBy = approver.GroupMemberId; // Store the approver
             await _projectRepository.UpdateAsync(project);
 
-            // Get approver role name for notification
-            string approverRoleName = approver.Role == (int)GroupMemberRoleEnum.Secretary ? 
-                "council secretary" : "council chairman";
-
-            // Lấy thêm thông tin chi tiết
-            var department = await _departmentRepository.GetByIdAsync(project.DepartmentId.Value);
+            // Lấy thông tin cần thiết cho email
+            var approverUser = await _userRepository.GetByIdAsync(secretaryId);
             var group = await _groupRepository.GetByIdAsync(project.GroupId.Value);
-            var creator = await _userRepository.GetByIdAsync(project.CreatedBy.Value);
-
-            // Tạo thông tin chi tiết về project
-            var projectInfo = new StringBuilder();
-            projectInfo.AppendLine($"Thông tin chi tiết về project:");
-            projectInfo.AppendLine($"- Tên project: {project.ProjectName}");
-            projectInfo.AppendLine($"- Loại project: {GetProjectTypeName(project.ProjectType)}");
-            projectInfo.AppendLine($"- Mô tả: {project.Description}");
-            projectInfo.AppendLine($"- Phương pháp: {project.Methodlogy}");
-            projectInfo.AppendLine($"- Khoa/Phòng ban: {department?.DepartmentName}");
-            projectInfo.AppendLine($"- Nhóm nghiên cứu: {group?.GroupName}");
-            projectInfo.AppendLine($"- Người tạo: {creator?.FullName}");
-            projectInfo.AppendLine($"- Ngày bắt đầu: {project.StartDate:dd/MM/yyyy}");
-            projectInfo.AppendLine($"- Ngày kết thúc: {project.EndDate:dd/MM/yyyy}");
-            if (project.ApprovedBudget.HasValue)
-            {
-                projectInfo.AppendLine($"- Kinh phí được duyệt: {project.ApprovedBudget:N0} VNĐ");
-            }
-            projectInfo.AppendLine($"\nBiên bản họp hội đồng: {documentUrl}");
-
-            // Send notifications to research group members
+            var department = await _departmentRepository.GetByIdAsync(project.DepartmentId.Value);
             var groupMembers = await _groupRepository.GetMembersByGroupId(project.GroupId.Value);
-            foreach (var member in groupMembers)
+            var activeMembers = groupMembers.Where(m => m.Status == (int)GroupMemberStatus.Active);
+
+            // Gửi email và notification cho từng thành viên
+            foreach (var member in activeMembers)
             {
-                var notificationRequest = new CreateNotificationRequest
+                if (member.UserId.HasValue && member.User != null)
                 {
-                    UserId = member.UserId.Value,
-                    Title = "Project Rejected",
-                    Message = $"Project '{project.ProjectName}' has been rejected by the {approverRoleName}. Please see the council documents at : {documentUrl}",
-                    ProjectId = project.ProjectId,
-                    Status = 0,
-                    IsRead = false
-                };
-                await _notificationService.CreateNotification(notificationRequest);
-            }
-            // Gửi email cho stakeholder - lấy từ group members
-            var stakeholders = groupMembers.Where(m => 
-            m.Status == (int)GroupMemberStatus.Active && 
-            m.Role == (int)GroupMemberRoleEnum.Stakeholder &&
-            m.User != null);
+                    // Gửi email
+                    if (member.Role == (int)GroupMemberRoleEnum.Stakeholder)
+                    {
+                        var emailContent = ProjectEmailTemplates.GetStakeholderProjectRejectionEmail(
+                            member.User, project, group, documentUrl);
+                        await _emailService.SendEmailAsync(
+                            member.User.Email,
+                            $"[LRMS] Thông báo từ chối dự án: {project.ProjectName}",
+                            emailContent);
+                    }
+                    else
+                    {
+                        var emailContent = ProjectEmailTemplates.GetMemberProjectRejectionEmail(
+                            member.User, project, group, documentUrl);
+                        await _emailService.SendEmailAsync(
+                            member.User.Email,
+                            $"[LRMS] Thông báo từ chối dự án: {project.ProjectName}",
+                            emailContent);
+                    }
 
-            var emailSubject = $"Dự án đã bị từ chối: {project.ProjectName}";
-            var emailMessage = $"Dự án nghiên cứu đã bị hội đồng từ chối:\n\n{projectInfo}";
-
-            foreach (var stakeholder in stakeholders)
-            {
-            await _emailService.SendEmailAsync(stakeholder.User.Email, emailSubject, emailMessage);
+                    // Tạo notification
+                    var notificationRequest = new CreateNotificationRequest
+                    {
+                        UserId = member.UserId.Value,
+                        Title = "Dự án bị từ chối",
+                        Message = $"Dự án '{project.ProjectName}' đã bị từ chối. Vui lòng xem biên bản họp hội đồng để biết thêm chi tiết.",
+                        ProjectId = project.ProjectId,
+                        Status = 0,
+                        IsRead = false
+                    };
+                    await _notificationService.CreateNotification(notificationRequest);
+                }
             }
+
             return true;
         }
         catch (Exception ex)
@@ -797,61 +736,39 @@ public class ProjectService : IProjectService
                 await _context.Documents.AddAsync(document);
                 await _context.SaveChangesAsync();
 
-                // Lấy thông tin người upload
                 var uploader = await _userRepository.GetByIdAsync(userId);
+                var group = await _groupRepository.GetByIdAsync(project.GroupId.Value);
+                var groupMembers = await _groupRepository.GetMembersByGroupId(project.GroupId.Value);
+                var activeMembers = groupMembers.Where(m => m.Status == (int)GroupMemberStatus.Active);
 
-                // Gửi thông báo cho các thành viên trong nhóm
-                var groupMembers = project.Group.GroupMembers
-                    .Where(m => m.Status == (int)GroupMemberStatus.Active &&
-                               m.Role != (int)GroupMemberRoleEnum.Stakeholder);
-
-                foreach (var member in groupMembers)
+                foreach (var member in activeMembers)
                 {
-                    if (member.UserId.HasValue)
+                    if (member.UserId.HasValue && member.User != null)
                     {
+                        // Gửi email
+                        var emailSubject = $"[LRMS] Tài liệu mới trong dự án: {project.ProjectName}";
+                        var emailContent = member.Role == (int)GroupMemberRoleEnum.Stakeholder
+                            ? ProjectEmailTemplates.GetStakeholderDocumentUploadEmail(member.User, project, uploader, group, documentFile.FileName, documentUrl)
+                            : ProjectEmailTemplates.GetMemberDocumentUploadEmail(member.User, project, uploader, group, documentFile.FileName, documentUrl);
+
+                        await _emailService.SendEmailAsync(member.User.Email, emailSubject, emailContent);
+
+                        // Tạo notification
                         string title = member.UserId.Value == userId
                             ? "Bạn đã tải lên tài liệu mới"
-                            : "Có tài liệu mới trong project";
-
-                        string message = member.UserId.Value == userId
-                            ? $"Bạn đã tải lên tài liệu mới cho project '{project.ProjectName}'"
-                            : $"Thành viên {uploader?.FullName} đã tải lên tài liệu mới cho project '{project.ProjectName}'";
+                            : "Có tài liệu mới trong dự án";
 
                         var notificationRequest = new CreateNotificationRequest
                         {
                             UserId = member.UserId.Value,
                             Title = title,
-                            Message = $"{message}\n\nTên tài liệu: {documentFile.FileName}\nXem tại: {documentUrl}",
+                            Message = $"Dự án: {project.ProjectName}\nTài liệu: {documentFile.FileName}\nNgười tải lên: {uploader?.FullName}",
                             ProjectId = projectId,
                             Status = 0,
                             IsRead = false
                         };
                         await _notificationService.CreateNotification(notificationRequest);
                     }
-                }
-
-                // Gửi email cho stakeholder
-                var stakeholders = project.Group.GroupMembers
-                    .Where(m => m.Status == (int)GroupMemberStatus.Active &&
-                               m.Role == (int)GroupMemberRoleEnum.Stakeholder &&
-                               m.User != null);
-
-                var emailSubject = $"Tài liệu mới trong project: {project.ProjectName}";
-                var emailMessage = $"Xin chào,\n\n" +
-                                  $"Một tài liệu mới đã được tải lên trong project '{project.ProjectName}':\n\n" +
-                                  $"- Tên tài liệu: {documentFile.FileName}\n" +
-                                  $"- Người tải lên: {uploader?.FullName}\n" +
-                                  $"- Thời gian: {DateTime.Now:dd/MM/yyyy HH:mm}\n" +
-                                  $"- Xem tại: {documentUrl}\n\n" +
-                                  $"Trân trọng.";
-
-                foreach (var stakeholder in stakeholders)
-                {
-                    await _emailService.SendEmailAsync(
-                        stakeholder.User.Email,
-                        emailSubject,
-                        emailMessage
-                    );
                 }
             }
         }

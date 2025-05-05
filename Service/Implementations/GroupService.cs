@@ -14,6 +14,7 @@ using Repository.Interfaces;
 using Service.Exceptions;
 using Service.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Service.Settings;
 
 namespace Service.Implementations;
 public class GroupService : IGroupService
@@ -273,14 +274,33 @@ public class GroupService : IGroupService
         };
         
         await _groupRepository.AddAsync(group);
-        
-        // Process members and send invitations
-        foreach (var member in request.Members)
+
+        // Gửi email cho người tạo
+        await _emailService.SendEmailAsync(
+            creator.Email,
+            $"[LRMS] Thông báo: Tạo nhóm nghiên cứu thành công - {group.GroupName}",
+            GroupEmailTemplates.GetCreatorGroupCreationEmail(creator, group)
+        );
+
+        // Tạo thông báo cho người tạo
+        var creatorNotification = new CreateNotificationRequest
+        {
+            UserId = currentUserId,
+            Title = "Tạo nhóm nghiên cứu thành công",
+            Message = $"Bạn đã tạo thành công nhóm nghiên cứu '{group.GroupName}'",
+            ProjectId = null,
+            Status = 0,
+            IsRead = false
+        };
+        await _notificationService.CreateNotification(creatorNotification);
+
+        // Process members và gửi lời mời
+        foreach (var member in request.Members.Where(m => m.Role != (int)GroupMemberRoleEnum.Stakeholder))
         {
             var user = await _userRepository.GetUserByEmail(member.MemberEmail);
             if (user != null)
             {
-                // Create GroupMember with status based on if it's the creator
+                // Tạo GroupMember với status dựa trên người tạo
                 var isCreator = user.UserId == currentUserId;
                 var groupMember = new GroupMember
                 {
@@ -291,25 +311,46 @@ public class GroupService : IGroupService
                     JoinDate = isCreator ? DateTime.Now : null
                 };
                 await _groupRepository.AddMemberAsync(groupMember);
-                
-                // Only send invitations to non-creators
+
+                // Chỉ gửi lời mời cho người không phải người tạo
                 if (!isCreator)
                 {
+                    // Tạo lời mời
                     var invitationRequest = new SendInvitationRequest
                     {
-                        Content = $"You have been invited to join the research group '{group.GroupName}'.",
+                        Content = $"Bạn đã được mời tham gia nhóm nghiên cứu '{group.GroupName}'.",
                         InvitedUserId = user.UserId,
                         InvitedBy = currentUserId,
                         GroupId = group.GroupId,
                         InvitedRole = member.Role,
                         ProjectId = null
                     };
-
                     await _invitationService.SendInvitation(invitationRequest);
+
+                    // Gửi email thông báo
+                    await _emailService.SendEmailAsync(
+                        user.Email,
+                        $"[LRMS] Thông báo: Lời mời tham gia nhóm nghiên cứu - {group.GroupName}",
+                        GroupEmailTemplates.GetMemberInvitationEmail(user, group, creator, member.Role)
+                    );
+
+                    // Tạo thông báo trong hệ thống
+                    var memberNotification = new CreateNotificationRequest
+                    {
+                        UserId = user.UserId,
+                        Title = "Lời mời tham gia nhóm nghiên cứu",
+                        Message = $"Bạn đã được {creator.FullName} mời tham gia nhóm nghiên cứu '{group.GroupName}' với vai trò {GroupEmailTemplates.GetRoleName(member.Role)}",
+                        ProjectId = null,
+                        Status = 0,
+                        IsRead = false
+                    };
+                    await _notificationService.CreateNotification(memberNotification);
                 }
             }
         }
-        foreach (var stakeholder in stakeholders)
+
+        // Xử lý stakeholders
+        foreach (var stakeholder in request.Members.Where(m => m.Role == (int)GroupMemberRoleEnum.Stakeholder))
         {
             try
             {
@@ -318,7 +359,7 @@ public class GroupService : IGroupService
                 {
                     FullName = stakeholder.MemberName,
                     Email = stakeholder.MemberEmail,
-                    Role = (int)SystemRoleEnum.Stakeholder, // Thêm Stakeholder vào SystemRoleEnum
+                    Role = (int)SystemRoleEnum.Stakeholder,
                     Status = 1, // Active
                     CreatedAt = DateTime.Now
                 };
@@ -337,6 +378,7 @@ public class GroupService : IGroupService
                 };
                 await _groupRepository.AddMemberAsync(groupMember);
 
+                // Tạo notification
                 var notificationRequest = new CreateNotificationRequest
                 {
                     UserId = stakeholderUser.UserId,
@@ -348,26 +390,24 @@ public class GroupService : IGroupService
                 };
                 await _notificationService.CreateNotification(notificationRequest);
 
+                // Gửi email cho stakeholder
                 await _emailService.SendEmailAsync(
                     stakeholderUser.Email,
-                    $"Thông báo từ nhóm nghiên cứu {group.GroupName}",
-                    $"Xin chào {stakeholderUser.FullName},\n\n" +
-                    $"Bạn đã được thêm làm Stakeholder của nhóm nghiên cứu '{group.GroupName}'.\n" +
-                    $"Bạn sẽ nhận được các thông báo về tiến độ của dự án qua email này.\n\n" +
-                    $"Trân trọng."
-                    );
+                    $"[LRMS] Thông báo: Bạn đã được thêm làm Stakeholder - {group.GroupName}",
+                    GroupEmailTemplates.GetStakeholderAddedEmail(stakeholderUser, group, creator)
+                );
             }
             catch (Exception ex)
             {
-                // Nếu email đã tồn tại, kiểm tra xem có phải là stakeholder không
+                // Xử lý khi stakeholder đã tồn tại
                 var existingUser = await _userRepository.GetUserByEmail(stakeholder.MemberEmail);
                 if (existingUser != null)
                 {
-                    // Kiểm tra xem stakeholder này đã là thành viên của nhóm chưa
+                    // Kiểm tra xem stakeholder đã là thành viên chưa
                     var existingMember = await _groupRepository.GetGroupMember(group.GroupId, existingUser.UserId);
                     if (existingMember == null)
                     {
-                        // Nếu chưa là thành viên, thêm vào nhóm
+                        // Thêm vào nhóm nếu chưa là thành viên
                         var groupMember = new GroupMember
                         {
                             GroupId = group.GroupId,
@@ -377,6 +417,8 @@ public class GroupService : IGroupService
                             JoinDate = DateTime.Now
                         };
                         await _groupRepository.AddMemberAsync(groupMember);
+
+                        // Tạo notification
                         var notificationRequest = new CreateNotificationRequest
                         {
                             UserId = existingUser.UserId,
@@ -388,13 +430,11 @@ public class GroupService : IGroupService
                         };
                         await _notificationService.CreateNotification(notificationRequest);
 
+                        // Gửi email cho stakeholder
                         await _emailService.SendEmailAsync(
                             existingUser.Email,
-                            $"Thông báo từ nhóm nghiên cứu {group.GroupName}",
-                            $"Xin chào {existingUser.FullName},\n\n" +
-                            $"Bạn đã được thêm làm Stakeholder của nhóm nghiên cứu '{group.GroupName}'.\n" +
-                            $"Bạn sẽ nhận được các thông báo về tiến độ của dự án qua email này.\n\n" +
-                            $"Trân trọng."
+                            $"[LRMS] Thông báo: Bạn đã được thêm làm Stakeholder - {group.GroupName}",
+                            GroupEmailTemplates.GetStakeholderAddedEmail(existingUser, group, creator)
                         );
                     }
                 }
@@ -458,13 +498,35 @@ public class GroupService : IGroupService
 
         await _groupRepository.AddAsync(group);
 
+        // Lấy thông tin người tạo
+        var creator = await _userRepository.GetByIdAsync(currentUserId);
+
+        // Gửi email cho người tạo
+        await _emailService.SendEmailAsync(
+            creator.Email,
+            $"[LRMS] Thông báo: Tạo hội đồng thành công - {group.GroupName}",
+            GroupEmailTemplates.GetCreatorGroupCreationEmail(creator, group)
+        );
+
+        // Tạo thông báo cho người tạo
+        var creatorNotification = new CreateNotificationRequest
+        {
+            UserId = currentUserId,
+            Title = "Tạo hội đồng thành công",
+            Message = $"Bạn đã tạo thành công hội đồng '{group.GroupName}'",
+            ProjectId = null,
+            Status = 0,
+            IsRead = false
+        };
+        await _notificationService.CreateNotification(creatorNotification);
+
         // Gửi lời mời cho các thành viên
         foreach (var member in request.Members)
         {
             var user = await _userRepository.GetUserByEmail(member.MemberEmail);
             if (user != null)
             {
-                // Create GroupMember with status based on if it's the creator
+                // Tạo GroupMember với status dựa trên người tạo
                 var isCreator = user.UserId == currentUserId;
                 var groupMember = new GroupMember
                 {
@@ -477,20 +539,40 @@ public class GroupService : IGroupService
 
                 await _groupRepository.AddMemberAsync(groupMember);
 
-                // Only send invitations to non-creators
+                // Chỉ gửi lời mời cho người không phải người tạo
                 if (!isCreator)
                 {
+                    // Tạo lời mời
                     var invitationRequest = new SendInvitationRequest
                     {
-                        Content = $"You have been invited to join the council group '{group.GroupName}'.",
+                        Content = $"Bạn đã được mời tham gia hội đồng '{group.GroupName}'.",
                         InvitedUserId = user.UserId,
                         InvitedBy = currentUserId,
                         InvitedRole = member.Role,
                         GroupId = group.GroupId,
-                        ProjectId = null 
+                        ProjectId = null
                     };
 
                     await _invitationService.SendInvitation(invitationRequest);
+
+                    // Gửi email thông báo
+                    await _emailService.SendEmailAsync(
+                        user.Email,
+                        $"[LRMS] Thông báo: Lời mời tham gia hội đồng - {group.GroupName}",
+                        GroupEmailTemplates.GetMemberInvitationEmail(user, group, creator, member.Role)
+                    );
+
+                    // Tạo thông báo trong hệ thống
+                    var memberNotification = new CreateNotificationRequest
+                    {
+                        UserId = user.UserId,
+                        Title = "Lời mời tham gia hội đồng",
+                        Message = $"Bạn đã được {creator.FullName} mời tham gia hội đồng '{group.GroupName}' với vai trò {GroupEmailTemplates.GetRoleName(member.Role)}",
+                        ProjectId = null,
+                        Status = 0,
+                        IsRead = false
+                    };
+                    await _notificationService.CreateNotification(memberNotification);
                 }
             }
         }
@@ -800,6 +882,28 @@ public class GroupService : IGroupService
             };
 
             await _invitationService.SendInvitation(invitationRequest);
+
+            // Lấy thông tin người mời
+            var inviter = await _userRepository.GetByIdAsync(currentUserId);
+
+            // Gửi email thông báo
+            await _emailService.SendEmailAsync(
+                invitedUser.Email,
+                $"[LRMS] Thông báo: Lời mời tham gia nhóm - {group.GroupName}",
+                GroupEmailTemplates.GetMemberInvitationEmail(invitedUser, group, inviter, request.Role)
+            );
+
+            // Tạo thông báo trong hệ thống
+            var memberNotification = new CreateNotificationRequest
+            {
+                UserId = invitedUser.UserId,
+                Title = "Lời mời tham gia nhóm",
+                Message = $"Bạn đã được {inviter.FullName} mời tham gia nhóm '{group.GroupName}' với vai trò {GroupEmailTemplates.GetRoleName(request.Role)}",
+                ProjectId = null,
+                Status = 0,
+                IsRead = false
+            };
+            await _notificationService.CreateNotification(memberNotification);
         }
         catch (Exception e)
         {
