@@ -40,9 +40,13 @@ public class GroupService : IGroupService
         _emailService = emailService;
     }
 
-    private async Task ValidateMemberInfo(string email, string fullName)
+    private async Task ValidateMemberInfo(string email, string fullName, int role)
     {
-    // Kiểm tra email hợp lệ
+        // Skip validation for stakeholders
+        if (role == (int)GroupMemberRoleEnum.Stakeholder)
+            return;
+
+        // Existing validation code for non-stakeholders
         if (string.IsNullOrEmpty(email))
         {
             throw new ServiceException("Email cannot be empty.");
@@ -54,20 +58,17 @@ public class GroupService : IGroupService
             throw new ServiceException($"Invalid email format: {email}");
         }
 
-    // Kiểm tra tên hợp lệ
         if (string.IsNullOrEmpty(fullName))
         {
             throw new ServiceException("Full name cannot be empty.");
         }
 
-    // Kiểm tra user tồn tại trong hệ thống
         var user = await _userRepository.GetUserByEmail(email);
         if (user == null)
         {
             throw new ServiceException($"User with email {email} not found in the system.");
         }
 
-    // Kiểm tra tên khớp với email
         if (!user.FullName.Equals(fullName, StringComparison.OrdinalIgnoreCase))
         {
             throw new ServiceException($"Full name '{fullName}' does not match with the registered name for email {email}.");
@@ -186,7 +187,7 @@ public class GroupService : IGroupService
 
         foreach (var member in regularMembers)
         {
-            await ValidateMemberInfo(member.MemberEmail, member.MemberName);
+            await ValidateMemberInfo(member.MemberEmail, member.MemberName, member.Role);
         }
 
         // Validate stakeholder email format
@@ -203,6 +204,22 @@ public class GroupService : IGroupService
         var students = request.Members.Where(m => m.Role != (int)GroupMemberRoleEnum.Supervisor).ToList();
         var leaders = request.Members.Where(m => m.Role == (int)GroupMemberRoleEnum.Leader).ToList();
         
+        // Verify supervisors are lecturers (for student-created groups)
+        if (isStudentCreated)
+        {
+            foreach (var supervisorMember in supervisors)
+            {
+                var supervisor = await _userRepository.GetUserByEmail(supervisorMember.MemberEmail);
+                if (supervisor.Role != (int)SystemRoleEnum.Lecturer)
+                {
+                    throw new ServiceException($"Supervisor {supervisorMember.MemberName} must be a lecturer.");
+                }
+            }
+        }
+
+        // Determine Group Type based on creator
+        int groupTypeToSet = isStudentCreated ? (int)GroupTypeEnum.Student : (int)GroupTypeEnum.Research;
+
         // Apply business rules based on creator type
         int maxMember;
         if (isStudentCreated)
@@ -249,28 +266,17 @@ public class GroupService : IGroupService
             throw new ServiceException("Research group must have exactly one leader.");
         }
 
-        // Verify supervisors are lecturers (for student-created groups)
-        if (isStudentCreated)
-        {
-            foreach (var supervisorMember in supervisors)
-            {
-                var supervisor = await _userRepository.GetUserByEmail(supervisorMember.MemberEmail);
-                if (supervisor.Role != (int)SystemRoleEnum.Lecturer)
-                {
-                    throw new ServiceException($"Supervisor {supervisorMember.MemberName} must be a lecturer.");
-                }
-            }
-        }
         // Create the group
         var group = new LRMS_API.Group
         {
             GroupName = request.GroupName,
             MaxMember = maxMember,
             CurrentMember = 0,
-            Status = 1,
+            Status = (int)GroupStatusEnum.Pending,
             CreatedAt = DateTime.Now,
             CreatedBy = currentUserId,
-            GroupType = (int)GroupTypeEnum.Student
+            // Assign the determined group type
+            GroupType = groupTypeToSet 
         };
         
         await _groupRepository.AddAsync(group);
@@ -300,146 +306,125 @@ public class GroupService : IGroupService
             var user = await _userRepository.GetUserByEmail(member.MemberEmail);
             if (user != null)
             {
-                // Tạo GroupMember với status dựa trên người tạo
-                var isCreator = user.UserId == currentUserId;
-                var groupMember = new GroupMember
+                // Check if member already exists in this group to avoid duplicates/errors
+                var existingMember = await _groupRepository.GetGroupMember(group.GroupId, user.UserId);
+                if (existingMember == null)
                 {
-                    GroupId = group.GroupId,
-                    Role = member.Role,
-                    UserId = user.UserId,
-                    Status = isCreator ? (int?)GroupMemberStatus.Active : (int?)GroupMemberStatus.Pending,
-                    JoinDate = isCreator ? DateTime.Now : null
-                };
-                await _groupRepository.AddMemberAsync(groupMember);
-
-                // Chỉ gửi lời mời cho người không phải người tạo
-                if (!isCreator)
-                {
-                    // Tạo lời mời
-                    var invitationRequest = new SendInvitationRequest
+                    // Create GroupMember with status based on if it's the creator
+                    var isCreator = user.UserId == currentUserId;
+                    var groupMember = new GroupMember
                     {
-                        Content = $"Bạn đã được mời tham gia nhóm nghiên cứu '{group.GroupName}'.",
-                        InvitedUserId = user.UserId,
-                        InvitedBy = currentUserId,
                         GroupId = group.GroupId,
-                        InvitedRole = member.Role,
-                        ProjectId = null
+                        Role = member.Role,
+                        UserId = user.UserId,
+                        Status = isCreator ? (int?)GroupMemberStatus.Active : (int?)GroupMemberStatus.Pending,
+                        JoinDate = isCreator ? DateTime.Now : null
                     };
-                    await _invitationService.SendInvitation(invitationRequest);
+                    await _groupRepository.AddMemberAsync(groupMember);
 
-                    // Gửi email thông báo
-                    await _emailService.SendEmailAsync(
+                    // Only send invitations to non-creators who were just added
+                    if (!isCreator)
+                    {
+                        var invitationRequest = new SendInvitationRequest
+                        {
+                            Content = $"You have been invited to join the research group '{group.GroupName}'.",
+                            InvitedUserId = user.UserId,
+                            InvitedBy = currentUserId,
+                            GroupId = group.GroupId,
+                            InvitedRole = member.Role,
+                            ProjectId = null
+                        };
+                        await _invitationService.SendInvitation(invitationRequest);
+
+                        await _emailService.SendEmailAsync(
                         user.Email,
                         $"[LRMS] Thông báo: Lời mời tham gia nhóm nghiên cứu - {group.GroupName}",
                         GroupEmailTemplates.GetMemberInvitationEmail(user, group, creator, member.Role)
-                    );
+                    }
+                }
+                else
+                {
+                    // Handle case where regular member already exists (e.g., log, skip, or update based on status)
+                    // For now, simply skipping avoids errors if they were somehow added twice in the request.
+                    Console.WriteLine($"User {user.Email} already exists in group {group.GroupId}. Skipping duplicate add.");
+                }
+            }
+        }
 
-                    // Tạo thông báo trong hệ thống
-                    var memberNotification = new CreateNotificationRequest
+        // Process Stakeholders - This loop correctly sets Status to Active
+        foreach (var stakeholder in stakeholders)
+        {
+            try
+            {
+                // First check if this email already exists
+                var existingUser = await _userRepository.GetUserByEmail(stakeholder.MemberEmail);
+
+                int stakeholderUserId;
+
+                if (existingUser == null)
+                {
+                    // Only create a new user if one doesn't exist with this email
+                    var stakeholderUser = new User
                     {
-                        UserId = user.UserId,
-                        Title = "Lời mời tham gia nhóm nghiên cứu",
-                        Message = $"Bạn đã được {creator.FullName} mời tham gia nhóm nghiên cứu '{group.GroupName}' với vai trò {GroupEmailTemplates.GetRoleName(member.Role)}",
+                        FullName = stakeholder.MemberName,
+                        Email = stakeholder.MemberEmail,
+                        Role = (int)SystemRoleEnum.Stakeholder,
+                        Status = 1, // Active
+                        CreatedAt = DateTime.Now
+                    };
+
+                    await _userRepository.AddAsync(stakeholderUser);
+                    stakeholderUserId = stakeholderUser.UserId;
+                }
+                else
+                {
+                    // Use the existing user ID
+                    stakeholderUserId = existingUser.UserId;
+                }
+
+                // Check if this stakeholder is already a member of this group
+                var existingMember = await _groupRepository.GetGroupMember(group.GroupId, stakeholderUserId);
+                if (existingMember == null)
+                {
+                    // Add as group member if not already a member
+                    var groupMember = new GroupMember
+                    {
+                        GroupId = group.GroupId,
+                        Role = (int)GroupMemberRoleEnum.Stakeholder,
+                        UserId = stakeholderUserId,
+                        Status = (int)GroupMemberStatus.Active,
+                        JoinDate = DateTime.Now
+                    };
+                    await _groupRepository.AddMemberAsync(groupMember);
+
+                    // Notification and email code for stakeholder
+                    var notificationRequest = new CreateNotificationRequest
+                    {
+                        UserId = stakeholderUserId,
+                        Title = "Bạn đã được thêm làm Stakeholder",
+                        Message = $"Bạn đã được thêm làm Stakeholder của nhóm nghiên cứu '{group.GroupName}'. Bạn sẽ nhận được các thông báo về tiến độ của dự án qua email.",
                         ProjectId = null,
                         Status = 0,
                         IsRead = false
                     };
-                    await _notificationService.CreateNotification(memberNotification);
-                }
-            }
-        }
+                    await _notificationService.CreateNotification(notificationRequest);
 
-        // Xử lý stakeholders
-        foreach (var stakeholder in request.Members.Where(m => m.Role == (int)GroupMemberRoleEnum.Stakeholder))
-        {
-            try
-            {
-                // Tạo user mới cho stakeholder
-                var stakeholderUser = new User
-                {
-                    FullName = stakeholder.MemberName,
-                    Email = stakeholder.MemberEmail,
-                    Role = (int)SystemRoleEnum.Stakeholder,
-                    Status = 1, // Active
-                    CreatedAt = DateTime.Now
-                };
-
-                // Thêm stakeholder vào bảng User
-                await _userRepository.AddAsync(stakeholderUser);
-
-                // Tạo group member cho stakeholder
-                var groupMember = new GroupMember
-                {
-                    GroupId = group.GroupId,
-                    Role = (int)GroupMemberRoleEnum.Stakeholder,
-                    UserId = stakeholderUser.UserId,
-                    Status = (int)GroupMemberStatus.Active,
-                    JoinDate = DateTime.Now
-                };
-                await _groupRepository.AddMemberAsync(groupMember);
-
-                // Tạo notification
-                var notificationRequest = new CreateNotificationRequest
-                {
-                    UserId = stakeholderUser.UserId,
-                    Title = "Bạn đã được thêm làm Stakeholder",
-                    Message = $"Bạn đã được thêm làm Stakeholder của nhóm nghiên cứu '{group.GroupName}'. Bạn sẽ nhận được các thông báo về tiến độ của dự án qua email.",
-                    ProjectId = null,
-                    Status = 0,
-                    IsRead = false
-                };
-                await _notificationService.CreateNotification(notificationRequest);
-
-                // Gửi email cho stakeholder
-                await _emailService.SendEmailAsync(
-                    stakeholderUser.Email,
-                    $"[LRMS] Thông báo: Bạn đã được thêm làm Stakeholder - {group.GroupName}",
-                    GroupEmailTemplates.GetStakeholderAddedEmail(stakeholderUser, group, creator)
-                );
-            }
-            catch (Exception ex)
-            {
-                // Xử lý khi stakeholder đã tồn tại
-                var existingUser = await _userRepository.GetUserByEmail(stakeholder.MemberEmail);
-                if (existingUser != null)
-                {
-                    // Kiểm tra xem stakeholder đã là thành viên chưa
-                    var existingMember = await _groupRepository.GetGroupMember(group.GroupId, existingUser.UserId);
-                    if (existingMember == null)
-                    {
-                        // Thêm vào nhóm nếu chưa là thành viên
-                        var groupMember = new GroupMember
-                        {
-                            GroupId = group.GroupId,
-                            Role = (int)GroupMemberRoleEnum.Stakeholder,
-                            UserId = existingUser.UserId,
-                            Status = (int)GroupMemberStatus.Active,
-                            JoinDate = DateTime.Now
-                        };
-                        await _groupRepository.AddMemberAsync(groupMember);
-
-                        // Tạo notification
-                        var notificationRequest = new CreateNotificationRequest
-                        {
-                            UserId = existingUser.UserId,
-                            Title = "Bạn đã được thêm làm Stakeholder",
-                            Message = $"Bạn đã được thêm làm Stakeholder của nhóm nghiên cứu '{group.GroupName}'. Bạn sẽ nhận được các thông báo về tiến độ của dự án qua email.",
-                            ProjectId = null,
-                            Status = 0,
-                            IsRead = false
-                        };
-                        await _notificationService.CreateNotification(notificationRequest);
-
-                        // Gửi email cho stakeholder
-                        await _emailService.SendEmailAsync(
+                    await _emailService.SendEmailAsync(
                             existingUser.Email,
                             $"[LRMS] Thông báo: Bạn đã được thêm làm Stakeholder - {group.GroupName}",
                             GroupEmailTemplates.GetStakeholderAddedEmail(existingUser, group, creator)
                         );
-                    }
                 }
             }
+            catch (Exception ex)
+            {
+                // Log the error but continue processing other stakeholders
+                Console.WriteLine($"Error adding stakeholder {stakeholder.MemberEmail}: {ex.Message}");
+            }
         }
+
+        
+        await CheckAndActivateGroupIfAllMembersJoined(group.GroupId);
     }
     public async Task CreateCouncilGroup(CreateCouncilGroupRequest request, int currentUserId)
     {
@@ -454,7 +439,7 @@ public class GroupService : IGroupService
         }
         foreach (var member in request.Members)
         {
-            await ValidateMemberInfo(member.MemberEmail, member.MemberName);
+            await ValidateMemberInfo(member.MemberEmail, member.MemberName, member.Role);
             
             // Validate council members must be lecturer
             var user = await _userRepository.GetUserByEmail(member.MemberEmail);
@@ -491,7 +476,7 @@ public class GroupService : IGroupService
             CreatedBy = currentUserId,
             MaxMember = 5,
             CurrentMember = 0,
-            Status = 1,
+            Status = (int)GroupStatusEnum.Pending,
             CreatedAt = DateTime.Now,
             GroupType = 1
         };
@@ -654,7 +639,7 @@ public class GroupService : IGroupService
             }
 
             // Validate member info
-            await ValidateMemberInfo(request.MemberEmail, request.MemberName);
+            await ValidateMemberInfo(request.MemberEmail, request.MemberName, request.Role);
             var invitedUser = await _userRepository.GetUserByEmail(request.MemberEmail);
 
             // Get all group members and pending invitations
@@ -911,12 +896,76 @@ public class GroupService : IGroupService
         }
     }
 
-//     public async Task<List<string>> GetStakeholderEmails(int groupId)
-// {
-//     var stakeholders = await _context.GroupStakeholders
-//         .Where(s => s.GroupId == groupId)
-//         .Select(s => s.Email)
-//         .ToListAsync();
-//     return stakeholders;
-// }
+    private async Task<bool> CheckAndActivateGroupIfAllMembersJoined(int groupId)
+    {
+        var group = await _groupRepository.GetByIdAsync(groupId);
+        // Ensure group exists and is actually pending before trying to activate
+        if (group == null || group.Status != (int)GroupStatusEnum.Pending) 
+            return false;
+
+        // Get all members excluding stakeholders
+        var groupMembers = await _groupRepository.GetMembersByGroupId(groupId);
+        var relevantMembers = groupMembers.Where(m => m.Role != (int)GroupMemberRoleEnum.Stakeholder).ToList();
+
+        // If there are no relevant members (e.g., only stakeholders), the group shouldn't activate based on members joining.
+        // However, the initial creation might dictate it should be active? Let's assume for now it requires at least one non-stakeholder active member.
+        // If relevantMembers is empty, .All() returns true, so we need to check if it's empty OR if all are active.
+        // Or more simply: If there are relevant members, check if they are all active.
+        if (relevantMembers.Any() && relevantMembers.All(m => m.Status == (int)GroupMemberStatus.Active))
+        {
+            // Update group status to active
+            group.Status = (int)GroupStatusEnum.Active;
+            await _groupRepository.UpdateAsync(group);
+            
+            // Update the CurrentMember count based on active members AFTER activation
+            await UpdateGroupMemberCount(groupId); 
+
+            return true;
+        }
+
+        return false;
+    }
+
+    public async Task<IEnumerable<UserGroupResponse>> GetUserGroupsBasicInfo(int userId)
+    {
+        try
+        {
+            // Get groups the user belongs to
+            var groups = await _groupRepository.GetGroupsByUserId(userId);
+            if (!groups.Any())
+            {
+                return new List<UserGroupResponse>();
+            }
+
+            var result = new List<UserGroupResponse>();
+            
+            foreach (var group in groups)
+            {
+                // Find this user's membership in the group to get their role
+                var membership = group.GroupMembers.FirstOrDefault(gm => 
+                    gm.UserId == userId && 
+                    (gm.Status == (int)GroupMemberStatus.Active || gm.Status == (int)GroupMemberStatus.Pending));
+                    
+                if (membership == null)
+                    continue;
+                    
+                result.Add(new UserGroupResponse
+                {
+                    GroupId = group.GroupId,
+                    GroupName = group.GroupName,
+                    Role = membership.Role,
+                    GroupType = group.GroupType,
+                    DepartmentId = group.GroupDepartment,
+                    DepartmentName = group.GroupDepartmentNavigation?.DepartmentName,
+                    Status = group.Status
+                });
+            }
+            
+            return result;
+        }
+        catch (Exception ex)
+        {
+            throw new ServiceException($"Error getting user's groups: {ex.Message}");
+        }
+    }
 }

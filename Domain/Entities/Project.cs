@@ -43,6 +43,8 @@ public partial class Project
     [ForeignKey("Sequence")]
     public int? SequenceId { get; set; }
 
+    public string? RejectionReason { get; set; }
+
     public virtual GroupMember? ApprovedByNavigation { get; set; }
 
     public virtual ICollection<Author> Authors { get; set; } = new List<Author>();

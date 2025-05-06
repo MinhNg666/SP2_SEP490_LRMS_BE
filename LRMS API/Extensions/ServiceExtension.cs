@@ -56,6 +56,9 @@ public static class ServiceExtension
         services.AddScoped<ITimelineSequenceRepository, TimelineSequenceRepository>();
         services.AddScoped<IJournalRepository, JournalRepository>();
         services.AddScoped<IConferenceRepository, ConferenceRepository>();
+        services.AddScoped<IQuotaService, QuotaService>();
+        services.AddScoped<IFundDisbursementRepository, FundDisbursementRepository>();
+        services.AddScoped<IFundDisbursementService, FundDisbursementService>();
         services.AddScoped<IJournalRepository, JournalRepository>();
         services.AddScoped<IConferenceRepository, ConferenceRepository>();
 

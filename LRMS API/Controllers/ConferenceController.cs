@@ -8,6 +8,7 @@ using Service.Exceptions;
 using Service.Interfaces;
 using Domain.DTO.Common;
 using Microsoft.AspNetCore.Authorization;
+using System.ComponentModel.DataAnnotations;
 
 namespace LRMS_API.Controllers;
 
@@ -40,29 +41,29 @@ public async Task<IActionResult> CreateConference([FromBody] CreateConferenceReq
 }
 [HttpPost("create-conference-from-research/{projectId}")]
 [Authorize]
-public async Task<IActionResult> CreateFromResearch(int projectId, [FromForm] CreateConferenceFromProjectRequest request, IFormFile documentFile)
+public async Task<IActionResult> CreateFromResearch(int projectId, [FromBody] CreateConferenceFromProjectRequest request)
 {
     try
     {
         var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-        var conferenceId = await _conferenceService.CreateConferenceFromResearch(projectId, userId, request, documentFile);
-        return Ok(new { success = true, conferenceId = conferenceId, message = "Đã tạo Conference thành công" });
+        var conferenceId = await _conferenceService.CreateConferenceFromResearch(projectId, userId, request);
+        return Ok(new { success = true, conferenceId = conferenceId, message = "Conference registration submitted successfully" });
     }
     catch (ServiceException ex)
     {
         return BadRequest(new { success = false, message = ex.Message });
     }
 }
-    
-[HttpPost("add-document/{conferenceId}")]
+
+[HttpPost("conferences/{conferenceId}/upload-documents")]
 [Authorize]
-public async Task<IActionResult> AddConferenceDocument(int conferenceId, IFormFile documentFile)
+public async Task<IActionResult> UploadConferenceDocuments(int conferenceId, [FromForm] List<IFormFile> documentFiles)
 {
     try
     {
         var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-        await _conferenceService.AddConferenceDocument(conferenceId, userId, documentFile);
-        return Ok(new { success = true, message = "Đã thêm tài liệu thành công" });
+        await _conferenceService.AddConferenceDocuments(conferenceId, documentFiles, userId);
+        return Ok(new { success = true, message = "Documents uploaded successfully" });
     }
     catch (ServiceException ex)
     {
@@ -150,4 +151,143 @@ public async Task<IActionResult> GetConferencesByProjectId(int projectId)
         return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
     }
 }
+
+[HttpPut("conferences/{conferenceId}/update-submission")]
+[Authorize]
+public async Task<IActionResult> UpdateConferenceSubmission(int conferenceId, [FromBody] UpdateConferenceSubmissionRequest request)
+{
+    try
+    {
+        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+        await _conferenceService.UpdateConferenceSubmission(conferenceId, userId, request);
+        return Ok(new { success = true, message = "Conference submission updated successfully" });
+    }
+    catch (ServiceException ex)
+    {
+        return BadRequest(new { success = false, message = ex.Message });
+    }
+}
+
+[HttpPut("conferences/{conferenceId}/update-status")]
+[Authorize]
+public async Task<IActionResult> UpdateConferenceStatus(int conferenceId, [FromBody] int status)
+{
+    try
+    {
+        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+        await _conferenceService.UpdateConferenceStatus(conferenceId, userId, status);
+        return Ok(new { success = true, message = "Conference status updated successfully" });
+    }
+    catch (ServiceException ex)
+    {
+        return BadRequest(new { success = false, message = ex.Message });
+    }
+}
+[HttpGet("my-conferences")]
+[Authorize]
+public async Task<IActionResult> GetMyConferences()
+{
+    try
+    {
+        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+        var conferences = await _conferenceService.GetUserConferences(userId);
+        return Ok(new ApiResponse(StatusCodes.Status200OK, "User conferences retrieved successfully", conferences));
+    }
+    catch (ServiceException ex)
+    {
+        return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
+    }
+}
+
+[HttpGet("conferences/{conferenceId}/details")]
+[Authorize]
+public async Task<IActionResult> GetConferenceDetails(int conferenceId)
+{
+    try
+    {
+        var details = await _conferenceService.GetConferenceDetails(conferenceId);
+        return Ok(new ApiResponse(StatusCodes.Status200OK, "Conference details retrieved successfully", details));
+    }
+    catch (ServiceException ex)
+    {
+        return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
+    }
+}
+
+[HttpPut("conferences/{conferenceId}/submission-status")]
+[Authorize]
+public async Task<IActionResult> UpdateSubmissionStatus(int conferenceId, [FromBody] UpdateSubmissionStatusRequest request)
+{
+    try
+    {
+        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+        await _conferenceService.UpdateSubmissionStatus(conferenceId, userId, request.SubmissionStatus, request.ReviewerComment);
+        return Ok(new { success = true, message = "Conference submission status updated successfully" });
+    }
+    catch (ServiceException ex)
+    {
+        return BadRequest(new { success = false, message = ex.Message });
+    }
+}
+
+[HttpPut("conferences/{conferenceId}/approved-details")]
+[Authorize]
+public async Task<IActionResult> UpdateApprovedConferenceDetails(int conferenceId, [FromBody] UpdateApprovedConferenceRequest request)
+{
+    try
+    {
+        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+        await _conferenceService.UpdateApprovedConferenceDetails(conferenceId, userId, request);
+        return Ok(new { success = true, message = "Approved conference details updated successfully" });
+    }
+    catch (ServiceException ex)
+    {
+        return BadRequest(new { success = false, message = ex.Message });
+    }
+}
+
+[HttpPost("projects/{projectId}/conferences/{rejectedConferenceId}/new-submission")]
+[Authorize]
+public async Task<IActionResult> CreateNewSubmissionAfterRejection(
+    int projectId, 
+    int rejectedConferenceId, 
+    [FromBody] CreateNewSubmissionRequest request)
+{
+    try
+    {
+        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+        var newConferenceId = await _conferenceService.CreateNewSubmissionAfterRejection(
+            projectId, userId, rejectedConferenceId, request);
+        return Ok(new { 
+            success = true, 
+            message = "New conference submission created successfully", 
+            conferenceId = newConferenceId 
+        });
+    }
+    catch (ServiceException ex)
+    {
+        return BadRequest(new { success = false, message = ex.Message });
+    }
+}
+
+[HttpPost("conferences/{conferenceId}/request-expense")]
+[Authorize]
+public async Task<IActionResult> RequestConferenceExpense([FromBody] RequestConferenceExpenseRequest request)
+{
+    try
+    {
+        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+        var requestId = await _conferenceService.RequestConferenceExpenseAsync(userId, request);
+        return Ok(new { 
+            success = true, 
+            message = "Conference expense request submitted successfully", 
+            requestId = requestId 
+        });
+    }
+    catch (ServiceException ex)
+    {
+        return BadRequest(new { success = false, message = ex.Message });
+    }
+}
+
 } 

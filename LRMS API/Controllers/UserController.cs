@@ -21,7 +21,7 @@ public class UserController : ApiBaseController
         _groupService = groupService;
     }
     [HttpGet("users")]
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     public async Task<IActionResult> GetAllUsers() 
     {
         try 

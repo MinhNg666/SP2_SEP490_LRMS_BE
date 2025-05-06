@@ -8,5 +8,6 @@ namespace Service.Interfaces
     {
         Task<IEnumerable<QuotaResponse>> GetAllQuotas();
         Task<IEnumerable<QuotaResponse>> GetQuotasByUserId(int userId);
+        Task<QuotaDetailResponse> GetQuotaDetailById(int quotaId);
     }
 }

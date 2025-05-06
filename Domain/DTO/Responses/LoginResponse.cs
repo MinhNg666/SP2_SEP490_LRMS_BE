@@ -14,7 +14,7 @@ namespace Domain.DTO.Responses
         public int Status { get; set; }
         public int Role { get; set; }
         public int? Level { get; set; }
-        public DepartmentResponse Department { get; set; }
+        public DepartmentResponse? Department { get; set; }
         public string? ProfileImageUrl { get; set; }
         public List<UserGroupResponse> Groups { get; set; }
         public string AccessToken { get; set; }

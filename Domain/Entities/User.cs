@@ -56,4 +56,6 @@ public partial class User
     public virtual ICollection<Quota> Quota { get; set; } = new List<Quota>();
 
     public virtual ICollection<Timeline> Timelines { get; set; } = new List<Timeline>();
+
+    public virtual ICollection<FundDisbursement> FundDisbursementsAsRequester { get; set; } = new List<FundDisbursement>();
 }

@@ -10,7 +10,9 @@ using Microsoft.EntityFrameworkCore;
 using LRMS_API;
 using Amazon.S3;
 using Amazon;
-
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using LRMS_API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -106,6 +108,8 @@ builder.Services.AddSingleton<IAmazonS3>(sp =>
         options
     );
 });
+
+builder.Services.AddHostedService<ProjectStatusUpdateService>();
 
 var app = builder.Build();
 

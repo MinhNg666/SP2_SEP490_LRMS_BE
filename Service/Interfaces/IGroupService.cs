@@ -1,4 +1,4 @@
-﻿ using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,4 +17,5 @@ public interface IGroupService
     Task CreateCouncilGroup(CreateCouncilGroupRequest request, int currentUserId);
     Task<IEnumerable<GroupResponse>> GetAllCouncilGroups();
     Task ReInviteMember(ReInviteMemberRequest request, int currentUserId);
+    Task<IEnumerable<UserGroupResponse>> GetUserGroupsBasicInfo(int userId);
 }

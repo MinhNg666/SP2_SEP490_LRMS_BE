@@ -260,4 +260,33 @@ public class TimelineService : ITimelineService
             throw new ServiceException(e.Message);
         }
     }
+
+    public async Task<bool> DeleteTimeline(int id)
+    {
+        try
+        {
+            var timeline = await _context.Timelines.FindAsync(id);
+            if (timeline == null)
+            {
+                throw new ServiceException("Timeline not found");
+            }
+
+            // Check if the timeline is being used by any project requests
+            var isBeingUsed = await _context.ProjectRequests
+                .AnyAsync(pr => pr.TimelineId == id);
+                
+            if (isBeingUsed)
+            {
+                throw new ServiceException("Cannot delete this timeline as it is being used by one or more project requests");
+            }
+
+            _context.Timelines.Remove(timeline);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+        catch (Exception e)
+        {
+            throw new ServiceException(e.Message);
+        }
+    }
 } 

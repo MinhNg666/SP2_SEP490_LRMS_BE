@@ -1,6 +1,7 @@
 ﻿using Domain.DTO.Requests;
 using Domain.DTO.Responses;
 using Microsoft.AspNetCore.Http;
+using Domain.Constants;
 
 namespace Service.Interfaces;
 
@@ -12,10 +13,33 @@ public interface IProjectService
     Task<ProjectResponse> GetProjectById(int projectId);
     Task<IEnumerable<ProjectResponse>> GetProjectsByDepartmentId(int departmentId);
     Task<IEnumerable<ProjectResponse>> GetProjectsByUserId(int userId);
-    Task<bool> ApproveProjectBySecretary(int projectId, int secretaryId, IFormFile documentFile);
-    Task<bool> RejectProjectBySecretary(int projectId, int secretaryId, IFormFile documentFile);
+    Task<bool> ApproveProjectBySecretary(int projectId, int secretaryId, IEnumerable<IFormFile> documentFiles);
+    Task<bool> RejectProjectBySecretary(int projectId, int secretaryId, string rejectionReason, IEnumerable<IFormFile> documentFiles);
     Task AddProjectDocument(int projectId, IFormFile documentFile, int userId);
     Task<ProjectDetailResponse> GetProjectDetails(int projectId);
     Task<IEnumerable<ProjectListResponse>> GetUserPendingProjectsList(int userId);
     Task<IEnumerable<ProjectListResponse>> GetUserApprovedProjectsList(int userId);
+    Task<bool> UpdateProjectPhaseStatus(int projectPhaseId, int status, int userId);
+    Task UpdateProjectPhaseStatusesBasedOnDates();
+    Task<bool> UpdateProjectPhase(int projectPhaseId, int status, decimal spentBudget, DateTime? startDate, DateTime? endDate, string title, int userId);
+    Task AddProjectDocuments(int projectId, IEnumerable<IFormFile> documentFiles, int userId);
+    Task<bool> MarkProjectAsCompleted(int projectId, int userId);
+    Task RequestProjectCompletionAsync(int projectId, int userId, RequestProjectCompletionRequest request, IEnumerable<IFormFile>? finalDocuments);
+    Task AddCompletionDocumentsAsync(int projectId, IEnumerable<IFormFile> documentFiles, int userId);
+    Task<IEnumerable<CompletionRequestResponse>> GetCompletionRequestsAsync();
+    Task<bool> ApproveCompletionRequestAsync(int requestId, int approverId, IEnumerable<IFormFile> documents);
+    Task<bool> RejectCompletionRequestAsync(int requestId, int rejecterId, string rejectionReason, IEnumerable<IFormFile> documents);
+    Task<CompletionRequestDetailResponse> GetCompletionRequestByIdAsync(int requestId);
+    Task<IEnumerable<CompletionRequestResponse>> GetUserCompletionRequestsAsync(int userId);
+    Task<bool> ApproveProjectRequestAsync(int requestId, int secretaryId, IEnumerable<IFormFile> documentFiles);
+    Task<bool> RejectProjectRequestAsync(int requestId, int secretaryId, string rejectionReason, IEnumerable<IFormFile> documentFiles);
+    Task<IEnumerable<ProjectRequestResponse>> GetAllProjectRequestsAsync();
+    Task<IEnumerable<ProjectRequestResponse>> GetDepartmentProjectRequestsAsync(int departmentId);
+    Task<bool> AssignTimelineToRequestAsync(int requestId, int timelineId); // assigned timeline to request
+    Task<int> AssignTimelineToDepartmentRequestsAsync(int departmentId, int timelineId, ProjectRequestTypeEnum? requestType = null);
+    Task<ProjectRequestDetailResponse> GetProjectRequestDetailsAsync(int requestId);
+    Task<IEnumerable<ProjectRequestResponse>> GetPendingDepartmentRequestsAsync(int departmentId);
+    Task<IEnumerable<ProjectRequestResponse>> GetUserProjectRequestsAsync(int userId);
+    Task<IEnumerable<ProjectRequestResponse>> GetUserPendingProjectRequestsAsync(int userId);
+    Task<ProjectCompletionSummaryResponse> GetProjectCompletionSummaryAsync(int projectId);
 }

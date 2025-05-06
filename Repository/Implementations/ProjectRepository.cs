@@ -71,6 +71,7 @@ public class ProjectRepository: GenericRepository<Project>, IProjectRepository
         return await _context.Projects
             .Include(p => p.Documents)
             .Include(p => p.Group)
+            .ThenInclude(g => g.GroupMembers)
             .Include(p => p.Department)
             .Include(p => p.ProjectPhases)
             .FirstOrDefaultAsync(p => p.ProjectId == projectId);

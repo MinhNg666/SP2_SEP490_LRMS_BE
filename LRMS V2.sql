@@ -1209,6 +1209,125 @@ ADD CONSTRAINT [FK_FundDisbursement_ProjectPhase]
 FOREIGN KEY ([project_phase_id]) 
 REFERENCES [dbo].[ProjectPhase] ([project_phase_id]);
 
+-- Add SpentBudget column to ProjectPhase table
+ALTER TABLE ProjectPhase
+ADD spent_budget DECIMAL(18, 2) NOT NULL DEFAULT 0;
+
+
+-- Step 1: Add the new column
+ALTER TABLE [dbo].[Fund_Disbursement]
+ADD [user_request] INT NULL;
+
+-- Step 2: Drop the CHECK constraint
+ALTER TABLE [dbo].[Fund_Disbursement]
+DROP CONSTRAINT [CHK_Fund_Disbursement_Requests];
+
+-- Step 3: Add a new constraint to ensure user_request is not null
+ALTER TABLE [dbo].[Fund_Disbursement]
+ADD CONSTRAINT [CHK_Fund_Disbursement_User_Request]
+CHECK ([user_request] IS NOT NULL);
+
+-- Step 4: Add a foreign key constraint if needed
+ALTER TABLE [dbo].[Fund_Disbursement]
+ADD CONSTRAINT [FK_Fund_Disbursement_User]
+FOREIGN KEY ([user_request]) REFERENCES [Users]([user_id]);
+
+-- Step 5: Drop the old columns after migrating data if needed
+ALTER TABLE [dbo].[Fund_Disbursement]
+DROP COLUMN [supervisor_request], [author_request];
+
+
+-- Step 1: Add the new column
+ALTER TABLE [dbo].[Fund_Disbursement]
+ADD [user_request] INT NULL;
+
+-- Step 2: Update existing rows to populate user_request with data from author_request or supervisor_request
+UPDATE [dbo].[Fund_Disbursement]
+SET [user_request] = COALESCE(
+    (SELECT [user_id] FROM [dbo].[Authors] WHERE [author_id] = [author_request]),
+    (SELECT [user_id] FROM [dbo].[Group_Member] WHERE [group_member_id] = [supervisor_request])
+);
+
+-- Step 3: Add a new constraint to ensure user_request is not null
+ALTER TABLE [dbo].[Fund_Disbursement]
+ADD CONSTRAINT [CHK_Fund_Disbursement_User_Request]
+CHECK ([user_request] IS NOT NULL);
+
+-- Step 4: Add a foreign key constraint if needed
+ALTER TABLE [dbo].[Fund_Disbursement]
+ADD CONSTRAINT [FK_Fund_Disbursement_User]
+FOREIGN KEY ([user_request]) REFERENCES [Users]([user_id]);
+
+-- Step 5: Drop the old columns
+-- Drop the foreign key constraint on supervisor_request
+ALTER TABLE [dbo].[Fund_Disbursement]
+DROP CONSTRAINT [FK_FundDisbursement_GroupMember];
+
+-- Drop the foreign key constraint on author_request (if it exists)
+-- The name might be different, you can check with:
+-- SELECT name FROM sys.foreign_keys WHERE parent_object_id = OBJECT_ID('Fund_Disbursement')
+ALTER TABLE [dbo].[Fund_Disbursement] 
+DROP CONSTRAINT [FK_FundDisbursement_Author];
+
+-- Drop the check constraint
+ALTER TABLE [dbo].[Fund_Disbursement]
+DROP CONSTRAINT [CHK_Fund_Disbursement_Requests];
+
+ALTER TABLE [dbo].[Fund_Disbursement]
+DROP COLUMN [supervisor_request], [author_request];
+
+USE LRMSDB
+-- Drop author_id and group_member_id from Fund_Disbursement table
+ALTER TABLE [Fund_Disbursement] DROP COLUMN IF EXISTS [AuthorId];
+ALTER TABLE [Fund_Disbursement] DROP COLUMN IF EXISTS [GroupMemberId];
+
+-- add reject_reason for fund_disbursement
+    ALTER TABLE Fund_Disbursement
+    ADD RejectionReason NVARCHAR(500) NULL; 
+
+
+    --ADD NEW TABLE FOR PROJECT REQUEST
+    CREATE TABLE ProjectRequests (
+    request_id INT PRIMARY KEY IDENTITY(1,1),
+    project_id INT NOT NULL,
+    phase_id INT NULL, -- Nullable, only used for phase update requests
+    timeline_id INT NULL, -- Nullable, link to the review timeline if applicable
+    request_type INT NOT NULL, -- 1=Creation, 2=Phase Update, 3=Completion
+    requested_by INT NOT NULL,
+    requested_at DATETIME NOT NULL DEFAULT GETDATE(),
+    assigned_council INT NULL, -- Council group assigned to review
+    approval_status INT NULL, -- e.g., 0=Pending, 1=Approved, 2=Rejected
+    approved_by INT NULL, -- User who approved/rejected
+    approved_at DATETIME NULL,
+    rejection_reason NVARCHAR(MAX) NULL, -- Store rejection reason here if needed
+
+    -- Foreign Key Constraints
+    CONSTRAINT FK_ProjectRequests_Projects FOREIGN KEY (project_id) REFERENCES Projects(project_id),
+    CONSTRAINT FK_ProjectRequests_ProjectPhase FOREIGN KEY (phase_id) REFERENCES ProjectPhase(project_phase_id),
+    CONSTRAINT FK_ProjectRequests_Timeline FOREIGN KEY (timeline_id) REFERENCES Timeline(timeline_id),
+    CONSTRAINT FK_ProjectRequests_Users_RequestedBy FOREIGN KEY (requested_by) REFERENCES Users(user_id),
+    CONSTRAINT FK_ProjectRequests_Groups_AssignedCouncil FOREIGN KEY (assigned_council) REFERENCES Groups(group_id),
+    CONSTRAINT FK_ProjectRequests_Users_ApprovedBy FOREIGN KEY (approved_by) REFERENCES Users(user_id)
+);
+GO
+
+
+    --ADD PROJECT COMPLETION REQUEST TABLE
+CREATE TABLE CompletionRequestDetails (
+    completion_detail_id INT PRIMARY KEY IDENTITY(1,1),
+    request_id INT NOT NULL, -- Link back to the main request record
+    budget_remaining DECIMAL(18,2) NULL, -- Calculated or confirmed remaining budget
+    budget_reconciled BIT NOT NULL DEFAULT 0, -- Confirmation checkbox
+    completion_summary NVARCHAR(MAX) NULL, -- User's summary report
+    budget_variance_explanation NVARCHAR(MAX) NULL, -- Explanation if budget differs significantly
+
+    -- Foreign Key Constraint
+    CONSTRAINT FK_CompletionRequestDetails_ProjectRequests FOREIGN KEY (request_id) REFERENCES ProjectRequests(request_id) ON DELETE CASCADE -- Cascade delete if the main request is deleted
+);
+GO
+
+
+
 
 
 

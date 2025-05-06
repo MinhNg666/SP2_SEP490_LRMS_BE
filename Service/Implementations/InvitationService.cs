@@ -152,11 +152,52 @@ public class InvitationService : IInvitationService
                     InvitationId = invitationId
                 };
                 await _notificationService.CreateNotification(notificationRequest);
+                
+                // Check if all members have accepted their invitations
+                await CheckAndUpdateGroupStatus(invitation.GroupId.Value);
             }
         }
         else
         {
             throw new ServiceException("Group ID is missing from invitation.");
+        }
+    }
+
+    // New method to check if all members have accepted and update group status
+    private async Task CheckAndUpdateGroupStatus(int groupId)
+    {
+        var group = await _groupRepository.GetByIdAsync(groupId);
+        if (group == null)
+            return;
+        
+        // Only check groups that are in Pending status
+        if (group.Status != (int)GroupStatusEnum.Pending)
+            return;
+            
+        // Get all members for this group
+        var members = await _groupRepository.GetMembersByGroupId(groupId);
+        
+        // Check if all non-creator members have accepted (status is Active) or they've been rejected
+        bool allMembersResolved = true;
+        foreach (var member in members)
+        {
+            // Skip the creator who is automatically active
+            if (member.UserId == group.CreatedBy)
+                continue;
+                
+            // If there are any pending members, the group is not ready to be activated
+            if (member.Status == (int)GroupMemberStatus.Pending)
+            {
+                allMembersResolved = false;
+                break;
+            }
+        }
+        
+        // If all invitations have been either accepted or rejected, update the group status
+        if (allMembersResolved)
+        {
+            group.Status = (int)GroupStatusEnum.Active;
+            await _groupRepository.UpdateAsync(group);
         }
     }
 

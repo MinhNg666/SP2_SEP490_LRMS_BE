@@ -17,9 +17,7 @@ public partial class FundDisbursement
 
     public string? Description { get; set; }
 
-    public int SupervisorRequest { get; set; }
-
-    public int AuthorRequest { get; set; }
+    public int? UserRequest { get; set; }
 
     public int? AppovedBy { get; set; }
 
@@ -31,17 +29,17 @@ public partial class FundDisbursement
 
     public int? ProjectPhaseId { get; set; }
 
+    public string? RejectionReason { get; set; }
+
     public virtual GroupMember? AppovedByNavigation { get; set; }
 
-    public virtual Author AuthorRequestNavigation { get; set; } = null!;
+    public virtual User? UserRequestNavigation { get; set; }
 
     public virtual User? DisburseByNavigation { get; set; }
 
     public virtual ICollection<Document> Documents { get; set; } = new List<Document>();
 
     public virtual Project? Project { get; set; }
-
-    public virtual GroupMember SupervisorRequestNavigation { get; set; } = null!;
 
     public virtual Quota? Quota { get; set; }
 

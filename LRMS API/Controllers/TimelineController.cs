@@ -108,4 +108,18 @@ public class TimelineController : ApiBaseController
             return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, e.Message));
         }
     }
+
+    [HttpDelete("timelines/{id}")]
+    public async Task<IActionResult> DeleteTimeline(int id)
+    {
+        try
+        {
+            var result = await _timelineService.DeleteTimeline(id);
+            return Ok(new ApiResponse(StatusCodes.Status200OK, "Timeline deleted successfully", result));
+        }
+        catch (ServiceException e)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, e.Message));
+        }
+    }
 } 

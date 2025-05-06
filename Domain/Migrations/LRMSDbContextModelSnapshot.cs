@@ -83,6 +83,43 @@ namespace Domain.Migrations
                     b.ToTable("Category", (string)null);
                 });
 
+            modelBuilder.Entity("LRMS_API.CompletionRequestDetail", b =>
+                {
+                    b.Property<int>("CompletionDetailId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("completion_detail_id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CompletionDetailId"));
+
+                    b.Property<bool>("BudgetReconciled")
+                        .HasColumnType("bit")
+                        .HasColumnName("budget_reconciled");
+
+                    b.Property<decimal?>("BudgetRemaining")
+                        .HasColumnType("decimal(18, 2)")
+                        .HasColumnName("budget_remaining");
+
+                    b.Property<string>("BudgetVarianceExplanation")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("budget_variance_explanation");
+
+                    b.Property<string>("CompletionSummary")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("completion_summary");
+
+                    b.Property<int>("RequestId")
+                        .HasColumnType("int")
+                        .HasColumnName("request_id");
+
+                    b.HasKey("CompletionDetailId");
+
+                    b.HasIndex("RequestId")
+                        .IsUnique();
+
+                    b.ToTable("CompletionRequestDetails");
+                });
+
             modelBuilder.Entity("LRMS_API.Conference", b =>
                 {
                     b.Property<int>("ConferenceId")
@@ -96,6 +133,11 @@ namespace Domain.Migrations
                         .HasColumnType("datetime")
                         .HasColumnName("acceptance_date");
 
+                    b.Property<decimal?>("ConferenceFunding")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("conference_funding");
+
                     b.Property<string>("ConferenceName")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
@@ -104,6 +146,14 @@ namespace Domain.Migrations
                     b.Property<int?>("ConferenceRanking")
                         .HasColumnType("int")
                         .HasColumnName("conference_ranking");
+
+                    b.Property<int?>("ConferenceStatus")
+                        .HasColumnType("int")
+                        .HasColumnName("conference_status");
+
+                    b.Property<int?>("ConferenceSubmissionStatus")
+                        .HasColumnType("int")
+                        .HasColumnName("conference_submission_status");
 
                     b.Property<string>("Location")
                         .HasMaxLength(255)
@@ -121,6 +171,10 @@ namespace Domain.Migrations
                     b.Property<int?>("ProjectId")
                         .HasColumnType("int")
                         .HasColumnName("project_id");
+
+                    b.Property<string>("ReviewerComment")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("reviewer_comment");
 
                     b.HasKey("ConferenceId")
                         .HasName("PK__Conferen__DC92030881F39E56");
@@ -151,6 +205,10 @@ namespace Domain.Migrations
                     b.Property<int?>("ConferenceId")
                         .HasColumnType("int")
                         .HasColumnName("conference_id");
+
+                    b.Property<int?>("ExpenseStatus")
+                        .HasColumnType("int")
+                        .HasColumnName("expense_status");
 
                     b.Property<string>("Travel")
                         .HasMaxLength(255)
@@ -198,9 +256,13 @@ namespace Domain.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("DocumentId"));
 
-                    b.Property<int>("ConferenceExpenseId")
+                    b.Property<int?>("ConferenceExpenseId")
                         .HasColumnType("int")
                         .HasColumnName("conference_expense_id");
+
+                    b.Property<int?>("ConferenceId")
+                        .HasColumnType("int")
+                        .HasColumnName("conference_id");
 
                     b.Property<int?>("DocumentType")
                         .HasColumnType("int")
@@ -220,17 +282,25 @@ namespace Domain.Migrations
                         .HasColumnType("int")
                         .HasColumnName("fund_disbursement_id");
 
-                    b.Property<int?>("MilestoneId")
+                    b.Property<int?>("JournalId")
                         .HasColumnType("int")
-                        .HasColumnName("milestone_id");
+                        .HasColumnName("journal_id");
 
                     b.Property<int?>("ProjectId")
                         .HasColumnType("int")
                         .HasColumnName("project_id");
 
-                    b.Property<int>("ProjectResourceId")
+                    b.Property<int?>("ProjectPhaseId")
+                        .HasColumnType("int")
+                        .HasColumnName("project_phase_id");
+
+                    b.Property<int?>("ProjectResourceId")
                         .HasColumnType("int")
                         .HasColumnName("project_resource_id");
+
+                    b.Property<int?>("RequestId")
+                        .HasColumnType("int")
+                        .HasColumnName("request_id");
 
                     b.Property<DateTime?>("UploadAt")
                         .HasColumnType("datetime")
@@ -245,13 +315,19 @@ namespace Domain.Migrations
 
                     b.HasIndex("ConferenceExpenseId");
 
+                    b.HasIndex("ConferenceId");
+
                     b.HasIndex("FundDisbursementId");
 
-                    b.HasIndex("MilestoneId");
+                    b.HasIndex("JournalId");
 
                     b.HasIndex("ProjectId");
 
+                    b.HasIndex("ProjectPhaseId");
+
                     b.HasIndex("ProjectResourceId");
+
+                    b.HasIndex("RequestId");
 
                     b.HasIndex("UploadedBy");
 
@@ -273,10 +349,6 @@ namespace Domain.Migrations
                         .HasColumnType("int")
                         .HasColumnName("appoved_by");
 
-                    b.Property<int>("AuthorRequest")
-                        .HasColumnType("int")
-                        .HasColumnName("author_request");
-
                     b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("datetime")
                         .HasColumnName("created_at");
@@ -297,30 +369,43 @@ namespace Domain.Migrations
                         .HasColumnType("int")
                         .HasColumnName("project_id");
 
+                    b.Property<int?>("ProjectPhaseId")
+                        .HasColumnType("int")
+                        .HasColumnName("project_phase_id");
+
+                    b.Property<int?>("QuotaId")
+                        .HasColumnType("int")
+                        .HasColumnName("quota_id");
+
+                    b.Property<string>("RejectionReason")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int?>("Status")
                         .HasColumnType("int")
                         .HasColumnName("status");
 
-                    b.Property<int>("SupervisorRequest")
-                        .HasColumnType("int")
-                        .HasColumnName("supervisor_request");
-
                     b.Property<DateTime?>("UpdateAt")
                         .HasColumnType("datetime")
                         .HasColumnName("update_at");
+
+                    b.Property<int?>("UserRequest")
+                        .HasColumnType("int")
+                        .HasColumnName("user_request");
 
                     b.HasKey("FundDisbursementId")
                         .HasName("PK__Fund_Dis__7FED8C5489F7F33D");
 
                     b.HasIndex("AppovedBy");
 
-                    b.HasIndex("AuthorRequest");
-
                     b.HasIndex("DisburseBy");
 
                     b.HasIndex("ProjectId");
 
-                    b.HasIndex("SupervisorRequest");
+                    b.HasIndex("ProjectPhaseId");
+
+                    b.HasIndex("QuotaId");
+
+                    b.HasIndex("UserRequest");
 
                     b.ToTable("Fund_Disbursement", (string)null);
                 });
@@ -495,10 +580,19 @@ namespace Domain.Migrations
                         .HasColumnType("nvarchar(100)")
                         .HasColumnName("doi_number");
 
+                    b.Property<decimal?>("JournalFunding")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("journal_funding");
+
                     b.Property<string>("JournalName")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("journal_name");
+
+                    b.Property<int?>("JournalStatus")
+                        .HasColumnType("int")
+                        .HasColumnName("journal_status");
 
                     b.Property<int?>("ProjectId")
                         .HasColumnType("int")
@@ -531,60 +625,6 @@ namespace Domain.Migrations
                     b.HasIndex("ProjectId");
 
                     b.ToTable("Journal", (string)null);
-                });
-
-            modelBuilder.Entity("LRMS_API.Milestone", b =>
-                {
-                    b.Property<int>("MilestoneId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("milestone_id");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MilestoneId"));
-
-                    b.Property<int?>("AssignBy")
-                        .HasColumnType("int")
-                        .HasColumnName("assign_by");
-
-                    b.Property<int?>("AssignTo")
-                        .HasColumnType("int")
-                        .HasColumnName("assign_to");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("description");
-
-                    b.Property<DateTime?>("EndDate")
-                        .HasColumnType("datetime")
-                        .HasColumnName("end_date");
-
-                    b.Property<int?>("ProjectId")
-                        .HasColumnType("int")
-                        .HasColumnName("project_id");
-
-                    b.Property<DateTime?>("StartDate")
-                        .HasColumnType("datetime")
-                        .HasColumnName("start_date");
-
-                    b.Property<int?>("Status")
-                        .HasColumnType("int")
-                        .HasColumnName("status");
-
-                    b.Property<string>("Title")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
-                        .HasColumnName("title");
-
-                    b.HasKey("MilestoneId")
-                        .HasName("PK__Mileston__67592EB79C6F9174");
-
-                    b.HasIndex("AssignBy");
-
-                    b.HasIndex("AssignTo");
-
-                    b.HasIndex("ProjectId");
-
-                    b.ToTable("Milestone", (string)null);
                 });
 
             modelBuilder.Entity("LRMS_API.Notification", b =>
@@ -696,6 +736,13 @@ namespace Domain.Migrations
                         .HasColumnType("int")
                         .HasColumnName("project_type");
 
+                    b.Property<string>("RejectionReason")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("SequenceId")
+                        .HasColumnType("int")
+                        .HasColumnName("sequence_id");
+
                     b.Property<decimal>("SpentBudget")
                         .HasColumnType("decimal(18, 2)")
                         .HasColumnName("spent_budget");
@@ -723,9 +770,147 @@ namespace Domain.Migrations
 
                     b.HasIndex("GroupId");
 
+                    b.HasIndex("SequenceId");
+
                     b.HasIndex(new[] { "Status" }, "IDX_Projects_Status");
 
                     b.ToTable("Projects");
+                });
+
+            modelBuilder.Entity("LRMS_API.ProjectPhase", b =>
+                {
+                    b.Property<int>("ProjectPhaseId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("project_phase_id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProjectPhaseId"));
+
+                    b.Property<int?>("AssignBy")
+                        .HasColumnType("int")
+                        .HasColumnName("assign_by");
+
+                    b.Property<int?>("AssignTo")
+                        .HasColumnType("int")
+                        .HasColumnName("assign_to");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("description");
+
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("datetime")
+                        .HasColumnName("end_date");
+
+                    b.Property<int?>("ProjectId")
+                        .HasColumnType("int")
+                        .HasColumnName("project_id");
+
+                    b.Property<decimal>("SpentBudget")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(18, 2)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("spent_budget");
+
+                    b.Property<DateTime?>("StartDate")
+                        .HasColumnType("datetime")
+                        .HasColumnName("start_date");
+
+                    b.Property<int?>("Status")
+                        .HasColumnType("int")
+                        .HasColumnName("status");
+
+                    b.Property<string>("Title")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("title");
+
+                    b.HasKey("ProjectPhaseId")
+                        .HasName("PK__ProjectP__67592EB79C6F9174");
+
+                    b.HasIndex("AssignBy");
+
+                    b.HasIndex("AssignTo");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("ProjectPhase", (string)null);
+                });
+
+            modelBuilder.Entity("LRMS_API.ProjectRequest", b =>
+                {
+                    b.Property<int>("RequestId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("request_id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RequestId"));
+
+                    b.Property<int?>("ApprovalStatus")
+                        .HasColumnType("int")
+                        .HasColumnName("approval_status");
+
+                    b.Property<DateTime?>("ApprovedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("approved_at");
+
+                    b.Property<int?>("ApprovedById")
+                        .HasColumnType("int")
+                        .HasColumnName("approved_by");
+
+                    b.Property<int?>("AssignedCouncilId")
+                        .HasColumnType("int")
+                        .HasColumnName("assigned_council");
+
+                    b.Property<int?>("FundDisbursementId")
+                        .HasColumnType("int")
+                        .HasColumnName("fund_disbursement_id");
+
+                    b.Property<int?>("PhaseId")
+                        .HasColumnType("int")
+                        .HasColumnName("phase_id");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("int")
+                        .HasColumnName("project_id");
+
+                    b.Property<string>("RejectionReason")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("rejection_reason");
+
+                    b.Property<int>("RequestType")
+                        .HasColumnType("int")
+                        .HasColumnName("request_type");
+
+                    b.Property<DateTime>("RequestedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("requested_at");
+
+                    b.Property<int>("RequestedById")
+                        .HasColumnType("int")
+                        .HasColumnName("requested_by");
+
+                    b.Property<int?>("TimelineId")
+                        .HasColumnType("int")
+                        .HasColumnName("timeline_id");
+
+                    b.HasKey("RequestId");
+
+                    b.HasIndex("ApprovedById");
+
+                    b.HasIndex("AssignedCouncilId");
+
+                    b.HasIndex("FundDisbursementId");
+
+                    b.HasIndex("PhaseId");
+
+                    b.HasIndex("ProjectId");
+
+                    b.HasIndex("RequestedById");
+
+                    b.HasIndex("TimelineId");
+
+                    b.ToTable("ProjectRequests");
                 });
 
             modelBuilder.Entity("LRMS_API.ProjectResource", b =>
@@ -840,9 +1025,17 @@ namespace Domain.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("event");
 
+                    b.Property<int?>("SequenceId")
+                        .HasColumnType("int")
+                        .HasColumnName("sequence_id");
+
                     b.Property<DateTime?>("StartDate")
                         .HasColumnType("datetime")
                         .HasColumnName("start_date");
+
+                    b.Property<int?>("Status")
+                        .HasColumnType("int")
+                        .HasColumnName("status");
 
                     b.Property<int?>("TimelineType")
                         .HasColumnType("int")
@@ -852,12 +1045,59 @@ namespace Domain.Migrations
                         .HasColumnType("datetime")
                         .HasColumnName("update_at");
 
-                    b.HasKey("TimelineId")
-                        .HasName("PK__Timeline__DC6F55B058CB5F44");
+                    b.HasKey("TimelineId");
 
                     b.HasIndex("CreatedBy");
 
-                    b.ToTable("Timeline", (string)null);
+                    b.HasIndex("SequenceId");
+
+                    b.ToTable("Timeline", "dbo");
+                });
+
+            modelBuilder.Entity("LRMS_API.TimelineSequence", b =>
+                {
+                    b.Property<int>("SequenceId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("sequence_id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SequenceId"));
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("SequenceColor")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("sequence_color");
+
+                    b.Property<string>("SequenceDescription")
+                        .HasColumnType("nvarchar(MAX)")
+                        .HasColumnName("sequence_description");
+
+                    b.Property<string>("SequenceName")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("sequence_name");
+
+                    b.Property<int?>("Status")
+                        .HasColumnType("int")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("SequenceId");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.ToTable("TimelineSequence", "dbo");
                 });
 
             modelBuilder.Entity("LRMS_API.User", b =>
@@ -905,7 +1145,6 @@ namespace Domain.Migrations
                         .HasColumnName("phone");
 
                     b.Property<string>("RefreshToken")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("RefreshTokenExpiryTime")
@@ -966,6 +1205,17 @@ namespace Domain.Migrations
                     b.Navigation("Project");
                 });
 
+            modelBuilder.Entity("LRMS_API.CompletionRequestDetail", b =>
+                {
+                    b.HasOne("LRMS_API.ProjectRequest", "ProjectRequest")
+                        .WithOne("CompletionRequestDetail")
+                        .HasForeignKey("LRMS_API.CompletionRequestDetail", "RequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ProjectRequest");
+                });
+
             modelBuilder.Entity("LRMS_API.Conference", b =>
                 {
                     b.HasOne("LRMS_API.Project", "Project")
@@ -991,42 +1241,61 @@ namespace Domain.Migrations
                     b.HasOne("LRMS_API.ConferenceExpense", "ConferenceExpense")
                         .WithMany("Documents")
                         .HasForeignKey("ConferenceExpenseId")
-                        .IsRequired()
                         .HasConstraintName("FK_Documents_ConferenceExpense");
+
+                    b.HasOne("LRMS_API.Conference", "Conference")
+                        .WithMany()
+                        .HasForeignKey("ConferenceId")
+                        .HasConstraintName("FK_Documents_Conference");
 
                     b.HasOne("LRMS_API.FundDisbursement", "FundDisbursement")
                         .WithMany("Documents")
                         .HasForeignKey("FundDisbursementId")
                         .HasConstraintName("FK_Documents_FundDisbursement");
 
-                    b.HasOne("LRMS_API.Milestone", "Milestone")
-                        .WithMany("Documents")
-                        .HasForeignKey("MilestoneId")
-                        .HasConstraintName("FK_Documents_Milestone");
+                    b.HasOne("LRMS_API.Journal", "Journal")
+                        .WithMany()
+                        .HasForeignKey("JournalId")
+                        .HasConstraintName("FK_Documents_Journal");
 
                     b.HasOne("LRMS_API.Project", "Project")
                         .WithMany("Documents")
                         .HasForeignKey("ProjectId")
                         .HasConstraintName("FK_Documents_Projects");
 
+                    b.HasOne("LRMS_API.ProjectPhase", "ProjectPhase")
+                        .WithMany("Documents")
+                        .HasForeignKey("ProjectPhaseId")
+                        .HasConstraintName("FK_Documents_ProjectPhase");
+
                     b.HasOne("LRMS_API.ProjectResource", "ProjectResource")
                         .WithMany("Documents")
                         .HasForeignKey("ProjectResourceId")
-                        .IsRequired()
                         .HasConstraintName("FK_Documents_ProjectResources");
+
+                    b.HasOne("LRMS_API.ProjectRequest", "ProjectRequest")
+                        .WithMany()
+                        .HasForeignKey("RequestId")
+                        .HasConstraintName("FK_Documents_ProjectRequests");
 
                     b.HasOne("LRMS_API.User", "UploadedByNavigation")
                         .WithMany("Documents")
                         .HasForeignKey("UploadedBy")
                         .HasConstraintName("FK_Documents_Users");
 
+                    b.Navigation("Conference");
+
                     b.Navigation("ConferenceExpense");
 
                     b.Navigation("FundDisbursement");
 
-                    b.Navigation("Milestone");
+                    b.Navigation("Journal");
 
                     b.Navigation("Project");
+
+                    b.Navigation("ProjectPhase");
+
+                    b.Navigation("ProjectRequest");
 
                     b.Navigation("ProjectResource");
 
@@ -1040,12 +1309,6 @@ namespace Domain.Migrations
                         .HasForeignKey("AppovedBy")
                         .HasConstraintName("FK_FundDisbursement_GroupMember_Approved");
 
-                    b.HasOne("LRMS_API.Author", "AuthorRequestNavigation")
-                        .WithMany("FundDisbursements")
-                        .HasForeignKey("AuthorRequest")
-                        .IsRequired()
-                        .HasConstraintName("FK_FundDisbursement_Author");
-
                     b.HasOne("LRMS_API.User", "DisburseByNavigation")
                         .WithMany("FundDisbursements")
                         .HasForeignKey("DisburseBy")
@@ -1056,21 +1319,32 @@ namespace Domain.Migrations
                         .HasForeignKey("ProjectId")
                         .HasConstraintName("FK_FundDisbursement_Projects");
 
-                    b.HasOne("LRMS_API.GroupMember", "SupervisorRequestNavigation")
-                        .WithMany("FundDisbursementSupervisorRequestNavigations")
-                        .HasForeignKey("SupervisorRequest")
-                        .IsRequired()
-                        .HasConstraintName("FK_FundDisbursement_GroupMember");
+                    b.HasOne("LRMS_API.ProjectPhase", "ProjectPhase")
+                        .WithMany("FundDisbursements")
+                        .HasForeignKey("ProjectPhaseId")
+                        .HasConstraintName("FK_FundDisbursement_ProjectPhase");
+
+                    b.HasOne("LRMS_API.Quota", "Quota")
+                        .WithMany("FundDisbursements")
+                        .HasForeignKey("QuotaId")
+                        .HasConstraintName("FK_FundDisbursement_Quota");
+
+                    b.HasOne("LRMS_API.User", "UserRequestNavigation")
+                        .WithMany("FundDisbursementsAsRequester")
+                        .HasForeignKey("UserRequest")
+                        .HasConstraintName("FK_FundDisbursement_User_Request");
 
                     b.Navigation("AppovedByNavigation");
-
-                    b.Navigation("AuthorRequestNavigation");
 
                     b.Navigation("DisburseByNavigation");
 
                     b.Navigation("Project");
 
-                    b.Navigation("SupervisorRequestNavigation");
+                    b.Navigation("ProjectPhase");
+
+                    b.Navigation("Quota");
+
+                    b.Navigation("UserRequestNavigation");
                 });
 
             modelBuilder.Entity("LRMS_API.Group", b =>
@@ -1141,30 +1415,6 @@ namespace Domain.Migrations
                     b.Navigation("Project");
                 });
 
-            modelBuilder.Entity("LRMS_API.Milestone", b =>
-                {
-                    b.HasOne("LRMS_API.GroupMember", "AssignByNavigation")
-                        .WithMany("MilestoneAssignByNavigations")
-                        .HasForeignKey("AssignBy")
-                        .HasConstraintName("FK_Milestone_GroupMember_AssignBy");
-
-                    b.HasOne("LRMS_API.GroupMember", "AssignToNavigation")
-                        .WithMany("MilestoneAssignToNavigations")
-                        .HasForeignKey("AssignTo")
-                        .HasConstraintName("FK_Milestone_GroupMember_AssignTo");
-
-                    b.HasOne("LRMS_API.Project", "Project")
-                        .WithMany("Milestones")
-                        .HasForeignKey("ProjectId")
-                        .HasConstraintName("FK_Milestone_Projects");
-
-                    b.Navigation("AssignByNavigation");
-
-                    b.Navigation("AssignToNavigation");
-
-                    b.Navigation("Project");
-                });
-
             modelBuilder.Entity("LRMS_API.Notification", b =>
                 {
                     b.HasOne("LRMS_API.Invitation", "Invitation")
@@ -1211,6 +1461,11 @@ namespace Domain.Migrations
                         .HasForeignKey("GroupId")
                         .HasConstraintName("FK_Projects_Groups");
 
+                    b.HasOne("LRMS_API.TimelineSequence", "Sequence")
+                        .WithMany("Projects")
+                        .HasForeignKey("SequenceId")
+                        .HasConstraintName("FK_Project_TimelineSequence");
+
                     b.Navigation("ApprovedByNavigation");
 
                     b.Navigation("CreatedByNavigation");
@@ -1218,6 +1473,81 @@ namespace Domain.Migrations
                     b.Navigation("Department");
 
                     b.Navigation("Group");
+
+                    b.Navigation("Sequence");
+                });
+
+            modelBuilder.Entity("LRMS_API.ProjectPhase", b =>
+                {
+                    b.HasOne("LRMS_API.GroupMember", "AssignByNavigation")
+                        .WithMany("ProjectPhaseAssignByNavigations")
+                        .HasForeignKey("AssignBy")
+                        .HasConstraintName("FK_ProjectPhase_GroupMember_AssignBy");
+
+                    b.HasOne("LRMS_API.GroupMember", "AssignToNavigation")
+                        .WithMany("ProjectPhaseAssignToNavigations")
+                        .HasForeignKey("AssignTo")
+                        .HasConstraintName("FK_ProjectPhase_GroupMember_AssignTo");
+
+                    b.HasOne("LRMS_API.Project", "Project")
+                        .WithMany("ProjectPhases")
+                        .HasForeignKey("ProjectId")
+                        .HasConstraintName("FK_ProjectPhase_Projects");
+
+                    b.Navigation("AssignByNavigation");
+
+                    b.Navigation("AssignToNavigation");
+
+                    b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("LRMS_API.ProjectRequest", b =>
+                {
+                    b.HasOne("LRMS_API.User", "ApprovedBy")
+                        .WithMany()
+                        .HasForeignKey("ApprovedById");
+
+                    b.HasOne("LRMS_API.Group", "AssignedCouncil")
+                        .WithMany()
+                        .HasForeignKey("AssignedCouncilId");
+
+                    b.HasOne("LRMS_API.FundDisbursement", "FundDisbursement")
+                        .WithMany()
+                        .HasForeignKey("FundDisbursementId");
+
+                    b.HasOne("LRMS_API.ProjectPhase", "ProjectPhase")
+                        .WithMany()
+                        .HasForeignKey("PhaseId");
+
+                    b.HasOne("LRMS_API.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LRMS_API.User", "RequestedBy")
+                        .WithMany()
+                        .HasForeignKey("RequestedById")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LRMS_API.Timeline", "Timeline")
+                        .WithMany()
+                        .HasForeignKey("TimelineId");
+
+                    b.Navigation("ApprovedBy");
+
+                    b.Navigation("AssignedCouncil");
+
+                    b.Navigation("FundDisbursement");
+
+                    b.Navigation("Project");
+
+                    b.Navigation("ProjectPhase");
+
+                    b.Navigation("RequestedBy");
+
+                    b.Navigation("Timeline");
                 });
 
             modelBuilder.Entity("LRMS_API.ProjectResource", b =>
@@ -1254,6 +1584,23 @@ namespace Domain.Migrations
                         .HasForeignKey("CreatedBy")
                         .HasConstraintName("FK_Timeline_Users");
 
+                    b.HasOne("LRMS_API.TimelineSequence", "Sequence")
+                        .WithMany("Timelines")
+                        .HasForeignKey("SequenceId")
+                        .HasConstraintName("FK_Timeline_TimelineSequence");
+
+                    b.Navigation("CreatedByNavigation");
+
+                    b.Navigation("Sequence");
+                });
+
+            modelBuilder.Entity("LRMS_API.TimelineSequence", b =>
+                {
+                    b.HasOne("LRMS_API.User", "CreatedByNavigation")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .HasConstraintName("FK_TimelineSequence_Users");
+
                     b.Navigation("CreatedByNavigation");
                 });
 
@@ -1265,11 +1612,6 @@ namespace Domain.Migrations
                         .HasConstraintName("FK_Users_Department");
 
                     b.Navigation("Department");
-                });
-
-            modelBuilder.Entity("LRMS_API.Author", b =>
-                {
-                    b.Navigation("FundDisbursements");
                 });
 
             modelBuilder.Entity("LRMS_API.Conference", b =>
@@ -1309,11 +1651,9 @@ namespace Domain.Migrations
                 {
                     b.Navigation("FundDisbursementAppovedByNavigations");
 
-                    b.Navigation("FundDisbursementSupervisorRequestNavigations");
+                    b.Navigation("ProjectPhaseAssignByNavigations");
 
-                    b.Navigation("MilestoneAssignByNavigations");
-
-                    b.Navigation("MilestoneAssignToNavigations");
+                    b.Navigation("ProjectPhaseAssignToNavigations");
 
                     b.Navigation("Projects");
                 });
@@ -1321,11 +1661,6 @@ namespace Domain.Migrations
             modelBuilder.Entity("LRMS_API.Invitation", b =>
                 {
                     b.Navigation("Notifications");
-                });
-
-            modelBuilder.Entity("LRMS_API.Milestone", b =>
-                {
-                    b.Navigation("Documents");
                 });
 
             modelBuilder.Entity("LRMS_API.Project", b =>
@@ -1342,18 +1677,42 @@ namespace Domain.Migrations
 
                     b.Navigation("Journals");
 
-                    b.Navigation("Milestones");
-
                     b.Navigation("Notifications");
+
+                    b.Navigation("ProjectPhases");
 
                     b.Navigation("ProjectResources");
 
                     b.Navigation("Quota");
                 });
 
+            modelBuilder.Entity("LRMS_API.ProjectPhase", b =>
+                {
+                    b.Navigation("Documents");
+
+                    b.Navigation("FundDisbursements");
+                });
+
+            modelBuilder.Entity("LRMS_API.ProjectRequest", b =>
+                {
+                    b.Navigation("CompletionRequestDetail");
+                });
+
             modelBuilder.Entity("LRMS_API.ProjectResource", b =>
                 {
                     b.Navigation("Documents");
+                });
+
+            modelBuilder.Entity("LRMS_API.Quota", b =>
+                {
+                    b.Navigation("FundDisbursements");
+                });
+
+            modelBuilder.Entity("LRMS_API.TimelineSequence", b =>
+                {
+                    b.Navigation("Projects");
+
+                    b.Navigation("Timelines");
                 });
 
             modelBuilder.Entity("LRMS_API.User", b =>
@@ -1363,6 +1722,8 @@ namespace Domain.Migrations
                     b.Navigation("Documents");
 
                     b.Navigation("FundDisbursements");
+
+                    b.Navigation("FundDisbursementsAsRequester");
 
                     b.Navigation("GroupMembers");
 

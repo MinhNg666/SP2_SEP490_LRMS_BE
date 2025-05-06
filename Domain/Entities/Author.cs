@@ -17,8 +17,6 @@ public partial class Author
 
     public int? UserId { get; set; }
 
-    public virtual ICollection<FundDisbursement> FundDisbursements { get; set; } = new List<FundDisbursement>();
-
     public virtual Project Project { get; set; } = null!;
 
     public virtual User? User { get; set; }
