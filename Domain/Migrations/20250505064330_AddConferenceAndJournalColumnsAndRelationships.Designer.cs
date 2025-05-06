@@ -4,6 +4,7 @@ using LRMS_API;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Domain.Migrations
 {
     [DbContext(typeof(LRMSDbContext))]
-    partial class LRMSDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250505064330_AddConferenceAndJournalColumnsAndRelationships")]
+    partial class AddConferenceAndJournalColumnsAndRelationships
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -205,10 +208,6 @@ namespace Domain.Migrations
                     b.Property<int?>("ConferenceId")
                         .HasColumnType("int")
                         .HasColumnName("conference_id");
-
-                    b.Property<int?>("ExpenseStatus")
-                        .HasColumnType("int")
-                        .HasColumnName("expense_status");
 
                     b.Property<string>("Travel")
                         .HasMaxLength(255)

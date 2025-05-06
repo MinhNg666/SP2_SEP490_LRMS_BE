@@ -840,12 +840,46 @@ public class GroupService : IGroupService
         return false;
     }
 
-//     public async Task<List<string>> GetStakeholderEmails(int groupId)
-// {
-//     var stakeholders = await _context.GroupStakeholders
-//         .Where(s => s.GroupId == groupId)
-//         .Select(s => s.Email)
-//         .ToListAsync();
-//     return stakeholders;
-// }
+    public async Task<IEnumerable<UserGroupResponse>> GetUserGroupsBasicInfo(int userId)
+    {
+        try
+        {
+            // Get groups the user belongs to
+            var groups = await _groupRepository.GetGroupsByUserId(userId);
+            if (!groups.Any())
+            {
+                return new List<UserGroupResponse>();
+            }
+
+            var result = new List<UserGroupResponse>();
+            
+            foreach (var group in groups)
+            {
+                // Find this user's membership in the group to get their role
+                var membership = group.GroupMembers.FirstOrDefault(gm => 
+                    gm.UserId == userId && 
+                    (gm.Status == (int)GroupMemberStatus.Active || gm.Status == (int)GroupMemberStatus.Pending));
+                    
+                if (membership == null)
+                    continue;
+                    
+                result.Add(new UserGroupResponse
+                {
+                    GroupId = group.GroupId,
+                    GroupName = group.GroupName,
+                    Role = membership.Role,
+                    GroupType = group.GroupType,
+                    DepartmentId = group.GroupDepartment,
+                    DepartmentName = group.GroupDepartmentNavigation?.DepartmentName,
+                    Status = group.Status
+                });
+            }
+            
+            return result;
+        }
+        catch (Exception ex)
+        {
+            throw new ServiceException($"Error getting user's groups: {ex.Message}");
+        }
+    }
 }

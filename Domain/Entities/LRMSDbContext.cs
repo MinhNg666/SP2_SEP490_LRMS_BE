@@ -121,6 +121,9 @@ public partial class LRMSDbContext : DbContext
             entity.Property(e => e.PresentationType).HasColumnName("presentation_type");
             entity.Property(e => e.ProjectId).HasColumnName("project_id");
 
+            entity.Property(e => e.ConferenceFunding)
+                .HasPrecision(18, 2);
+
             entity.HasOne(d => d.Project).WithMany(p => p.Conferences)
                 .HasForeignKey(d => d.ProjectId)
                 .HasConstraintName("FK_Conference_Projects");
@@ -146,6 +149,8 @@ public partial class LRMSDbContext : DbContext
             entity.Property(e => e.TravelExpense)
                 .HasColumnType("decimal(18, 2)")
                 .HasColumnName("travel_expense");
+
+            entity.Property(e => e.ExpenseStatus).HasColumnName("expense_status");
 
             entity.HasOne(d => d.Conference).WithMany(p => p.ConferenceExpenses)
                 .HasForeignKey(d => d.ConferenceId)
@@ -188,9 +193,26 @@ public partial class LRMSDbContext : DbContext
                 .HasColumnName("upload_at");
             entity.Property(e => e.UploadedBy).HasColumnName("uploaded_by");
 
+            entity.Property(e => e.RequestId).HasColumnName("request_id");
+            entity.HasOne(d => d.ProjectRequest)
+                .WithMany()
+                .HasForeignKey(d => d.RequestId)
+                .HasConstraintName("FK_Documents_ProjectRequests");
+
+            entity.Property(e => e.ConferenceId).HasColumnName("conference_id");
+            entity.HasOne(d => d.Conference)
+                .WithMany()
+                .HasForeignKey(d => d.ConferenceId)
+                .HasConstraintName("FK_Documents_Conference");
+
+            entity.Property(e => e.JournalId).HasColumnName("journal_id");
+            entity.HasOne(d => d.Journal)
+                .WithMany()
+                .HasForeignKey(d => d.JournalId)
+                .HasConstraintName("FK_Documents_Journal");
+
             entity.HasOne(d => d.ConferenceExpense).WithMany(p => p.Documents)
                 .HasForeignKey(d => d.ConferenceExpenseId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Documents_ConferenceExpense");
 
             entity.HasOne(d => d.FundDisbursement).WithMany(p => p.Documents)
@@ -207,7 +229,6 @@ public partial class LRMSDbContext : DbContext
 
             entity.HasOne(d => d.ProjectResource).WithMany(p => p.Documents)
                 .HasForeignKey(d => d.ProjectResourceId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Documents_ProjectResources");
 
             entity.HasOne(d => d.UploadedByNavigation).WithMany(p => p.Documents)
@@ -388,6 +409,9 @@ public partial class LRMSDbContext : DbContext
             entity.Property(e => e.SubmissionDate)
                 .HasColumnType("datetime")
                 .HasColumnName("submission_date");
+
+            entity.Property(e => e.JournalFunding)
+                .HasPrecision(18, 2);
 
             entity.HasOne(d => d.Project).WithMany(p => p.Journals)
                 .HasForeignKey(d => d.ProjectId)

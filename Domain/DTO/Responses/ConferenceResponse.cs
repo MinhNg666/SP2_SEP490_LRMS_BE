@@ -16,6 +16,11 @@ public class ConferenceResponse
     public string ProjectName { get; set; }
     public ConferenceExpenseResponse Expense { get; set; }
     public List<DocumentResponse> Documents { get; set; }
+    public string ConferenceRankingName { get; set; }
+    public int ConferenceStatus { get; set; }
+    public string ConferenceStatusName { get; set; }
+    public int ConferenceSubmissionStatus { get; set; }
+    public string ConferenceSubmissionStatusName { get; set; }
 }
 
 public class ConferenceExpenseResponse

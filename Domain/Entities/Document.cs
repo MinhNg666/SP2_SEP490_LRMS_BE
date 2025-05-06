@@ -30,18 +30,30 @@ public partial class Document
 
     public int? RequestId { get; set; } // Nullable RequestId
 
+    [Column("conference_id")]
+    public int? ConferenceId { get; set; }
+
+    [Column("journal_id")]
+    public int? JournalId { get; set; }
+
+    [ForeignKey("JournalId")]
+    public virtual Journal? Journal { get; set; }
+
     [ForeignKey("RequestId")]
     public virtual ProjectRequest? ProjectRequest { get; set; }
 
-    public virtual ConferenceExpense ConferenceExpense { get; set; } = null!;
+    public virtual ConferenceExpense? ConferenceExpense { get; set; }
 
     public virtual FundDisbursement? FundDisbursement { get; set; }
 
     public virtual Project? Project { get; set; }
 
-    public virtual ProjectResource ProjectResource { get; set; } = null!;
+    public virtual ProjectResource? ProjectResource { get; set; }
 
     public virtual User? UploadedByNavigation { get; set; }
 
     public virtual ProjectPhase? ProjectPhase { get; set; }
+
+    [ForeignKey("ConferenceId")]
+    public virtual Conference? Conference { get; set; }
 }

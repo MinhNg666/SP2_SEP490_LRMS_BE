@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace LRMS_API;
 
@@ -24,6 +25,12 @@ public partial class Journal
     public string? ReviewerComments { get; set; }
 
     public int? ProjectId { get; set; }
+
+    [Column("journal_status")]
+    public int? JournalStatus { get; set; }
+
+    [Column("journal_funding")]
+    public decimal? JournalFunding { get; set; }
 
     public virtual Project? Project { get; set; }
 }
