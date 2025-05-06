@@ -339,7 +339,7 @@ public class GroupService : IGroupService
                         await _emailService.SendEmailAsync(
                         user.Email,
                         $"[LRMS] Thông báo: Lời mời tham gia nhóm nghiên cứu - {group.GroupName}",
-                        GroupEmailTemplates.GetMemberInvitationEmail(user, group, creator, member.Role)
+                        GroupEmailTemplates.GetMemberInvitationEmail(user, group, creator, member.Role));
                     }
                 }
                 else

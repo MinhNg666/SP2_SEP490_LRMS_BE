@@ -111,22 +111,22 @@ public class ConferenceService : IConferenceService
             var project = await _projectRepository.GetProjectWithDetailsAsync(projectId);
             if (project == null)
                 throw new ServiceException("Project not found");
-            
+
             // Check if project status is approved
             if (project.Status != (int)ProjectStatusEnum.Approved)
                 throw new ServiceException("Only approved projects can register for conferences");
-            
+
             // Check if project has at least one completed phase
             if (!project.ProjectPhases.Any(p => p.Status == (int)ProjectPhaseStatusEnum.Completed))
                 throw new ServiceException("Project must have at least one completed phase to register for a conference");
-            
+
             // Check if user is in the project group
             var isUserInGroup = project.Group?.GroupMembers
                 .Any(gm => gm.UserId == userId && gm.Status == (int)GroupMemberStatus.Active) ?? false;
-            
+
             if (!isUserInGroup)
                 throw new ServiceException("You must be a member of the project group to register for a conference");
-            
+
             // Create new conference with minimal information
             var conference = new Conference
             {
@@ -137,16 +137,15 @@ public class ConferenceService : IConferenceService
                 ConferenceStatus = (int)ConferenceStatusEnum.Active,
                 ConferenceSubmissionStatus = (int)ConferenceSubmissionStatusEnum.Pending
             };
-            
+
             await _context.Conferences.AddAsync(conference);
             await _context.SaveChangesAsync();
-            
             // Notify group members about the conference registration
             if (project.GroupId.HasValue)
             {
                 var groupMembers = await _groupRepository.GetMembersByGroupId(project.GroupId.Value);
                 // Lấy thông tin cần thiết
-                var creator = await _context.Users.FindAsync(leaderId);
+                var creator = await _context.Users.FindAsync(userId);
                 var group = project.Group;
                 var activeMembers = group.GroupMembers.Where(m => m.Status == (int)GroupMemberStatus.Active);
 
@@ -179,7 +178,8 @@ public class ConferenceService : IConferenceService
                         }
                     }
                 }
-            
+                return conference.ConferenceId;
+            }
             return conference.ConferenceId;
         }
         catch (Exception ex)

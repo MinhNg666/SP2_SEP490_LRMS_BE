@@ -548,6 +548,7 @@ public class ProjectService : IProjectService
             var approverUser = await _userRepository.GetByIdAsync(secretaryId);
             var group = await _groupRepository.GetByIdAsync(project.GroupId.Value);
             var department = await _departmentRepository.GetByIdAsync(project.DepartmentId.Value);
+            var documentUrl = urls[index];
 
             if (approverUser == null || group == null || department == null)
             {
@@ -718,6 +719,7 @@ public class ProjectService : IProjectService
             var department = await _departmentRepository.GetByIdAsync(project.DepartmentId.Value);
             var groupMembers = await _groupRepository.GetMembersByGroupId(project.GroupId.Value);
             var activeMembers = groupMembers.Where(m => m.Status == (int)GroupMemberStatus.Active);
+            var documentUrl = urls[index];
 
             // Gửi email và notification cho từng thành viên
             foreach (var member in activeMembers)
@@ -777,19 +779,19 @@ public class ProjectService : IProjectService
                     .ThenInclude(g => g.GroupMembers)
                         .ThenInclude(gm => gm.User)
                 .FirstOrDefaultAsync(p => p.ProjectId == projectId);
-            
+
             if (project == null)
                 throw new ServiceException("Project not found");
-            
+
             if (documentFiles != null && documentFiles.Any())
             {
                 var urls = await _s3Service.UploadFilesAsync(documentFiles, $"projects/{projectId}/documents");
                 int index = 0;
-                
+
                 // Save the first file's name and URL for notifications/emails
                 string firstFileName = documentFiles.First().FileName;
                 string firstFileUrl = urls[0];
-                
+
                 foreach (var file in documentFiles)
                 {
                     // Create ProjectResource for document
@@ -801,10 +803,10 @@ public class ProjectService : IProjectService
                         Acquired = true,
                         Quantity = 1
                     };
-                    
+
                     await _context.ProjectResources.AddAsync(projectResource);
                     await _context.SaveChangesAsync();
-                    
+
                     // Create document with the resource
                     var document = new Document
                     {
@@ -820,11 +822,11 @@ public class ProjectService : IProjectService
                     await _context.Documents.AddAsync(document);
                     index++;
                 }
-                
+
                 await _context.SaveChangesAsync();
 
                 var uploader = await _userRepository.GetByIdAsync(userId);
-
+                var documentUrl = urls[index];
                 // Only process group member notifications if the project has a group
                 if (project.Group != null)
                 {
@@ -832,37 +834,38 @@ public class ProjectService : IProjectService
                     var groupMembers = project.Group.GroupMembers
                         .Where(m => m.Status == (int)GroupMemberStatus.Active &&
                                    m.Role != (int)GroupMemberRoleEnum.Stakeholder);
-                var group = await _groupRepository.GetByIdAsync(project.GroupId.Value);
-                //var groupMembers = await _groupRepository.GetMembersByGroupId(project.GroupId.Value);
-                var activeMembers = groupMembers.Where(m => m.Status == (int)GroupMemberStatus.Active);
+                    var group = await _groupRepository.GetByIdAsync(project.GroupId.Value);
+                    //var groupMembers = await _groupRepository.GetMembersByGroupId(project.GroupId.Value);
+                    var activeMembers = groupMembers.Where(m => m.Status == (int)GroupMemberStatus.Active);
 
-                foreach (var member in activeMembers)
-                {
-                    if (member.UserId.HasValue && member.User != null)
+                    foreach (var member in activeMembers)
                     {
-                        // Gửi email
-                        var emailSubject = $"[LRMS] Tài liệu mới trong dự án: {project.ProjectName}";
-                        var emailContent = member.Role == (int)GroupMemberRoleEnum.Stakeholder
-                            ? ProjectEmailTemplates.GetStakeholderDocumentUploadEmail(member.User, project, uploader, group, documentFile.FileName, documentUrl)
-                            : ProjectEmailTemplates.GetMemberDocumentUploadEmail(member.User, project, uploader, group, documentFile.FileName, documentUrl);
-
-                        await _emailService.SendEmailAsync(member.User.Email, emailSubject, emailContent);
-
-                        // Tạo notification
-                        string title = member.UserId.Value == userId
-                            ? "Bạn đã tải lên tài liệu mới"
-                            : "Có tài liệu mới trong dự án";
-
-                        var notificationRequest = new CreateNotificationRequest
+                        if (member.UserId.HasValue && member.User != null)
                         {
-                            UserId = member.UserId.Value,
-                            Title = title,
-                            Message = $"Dự án: {project.ProjectName}\nTài liệu: {documentFile.FileName}\nNgười tải lên: {uploader?.FullName}",
-                            ProjectId = projectId,
-                            Status = 0,
-                            IsRead = false
-                        };
-                        await _notificationService.CreateNotification(notificationRequest);
+                            // Gửi email
+                            var emailSubject = $"[LRMS] Tài liệu mới trong dự án: {project.ProjectName}";
+                            var emailContent = member.Role == (int)GroupMemberRoleEnum.Stakeholder
+                                ? ProjectEmailTemplates.GetStakeholderDocumentUploadEmail(member.User, project, uploader, group, documentFiles.First().FileName, documentUrl)
+                                : ProjectEmailTemplates.GetMemberDocumentUploadEmail(member.User, project, uploader, group, documentFiles.First().FileName, documentUrl);
+
+                            await _emailService.SendEmailAsync(member.User.Email, emailSubject, emailContent);
+
+                            // Tạo notification
+                            string title = member.UserId.Value == userId
+                                ? "Bạn đã tải lên tài liệu mới"
+                                : "Có tài liệu mới trong dự án";
+
+                            var notificationRequest = new CreateNotificationRequest
+                            {
+                                UserId = member.UserId.Value,
+                                Title = title,
+                                Message = $"Dự án: {project.ProjectName}\nTài liệu: {documentFiles.First().FileName}\nNgười tải lên: {uploader?.FullName}",
+                                ProjectId = projectId,
+                                Status = 0,
+                                IsRead = false
+                            };
+                            await _notificationService.CreateNotification(notificationRequest);
+                        }
                     }
                 }
             }
