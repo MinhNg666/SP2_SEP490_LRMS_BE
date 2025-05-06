@@ -132,4 +132,44 @@ public class GroupController : ApiBaseController
             return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, e.Message));
         }
     }
+    [HttpGet("users/{userId}/groups/basic")]
+    [Authorize]
+    public async Task<IActionResult> GetUserGroupsBasicInfo(int userId)
+    {
+        try
+        {
+            // Check if the user is requesting their own groups or if they're an admin
+            var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+            
+            if (currentUserId != userId && userRole != SystemRoleEnum.Admin.ToString())
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, 
+                    new ApiResponse(StatusCodes.Status403Forbidden, "You are not authorized to view this user's groups."));
+            }
+            
+            var groups = await _groupService.GetUserGroupsBasicInfo(userId);
+            return Ok(new ApiResponse(StatusCodes.Status200OK, "User groups retrieved successfully", groups));
+        }
+        catch (ServiceException e)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, e.Message));
+        }
+    }
+
+    [HttpGet("users/me/groups/basic")]
+    [Authorize]
+    public async Task<IActionResult> GetMyGroupsBasicInfo()
+    {
+        try
+        {
+            var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            var groups = await _groupService.GetUserGroupsBasicInfo(currentUserId);
+            return Ok(new ApiResponse(StatusCodes.Status200OK, "Your groups retrieved successfully", groups));
+        }
+        catch (ServiceException e)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, e.Message));
+        }
+    }
 }

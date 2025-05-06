@@ -8,4 +8,5 @@ public enum ProjectRequestTypeEnum
     Paper_Creation = 4,
     Conference_Creation = 5,
     Fund_Disbursement = 6,
+    Conference_Expense = 7,
 }

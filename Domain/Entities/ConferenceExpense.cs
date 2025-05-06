@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace LRMS_API;
 
@@ -16,6 +17,9 @@ public partial class ConferenceExpense
     public decimal? TravelExpense { get; set; }
 
     public int? ConferenceId { get; set; }
+
+    [Column("expense_status")]
+    public int? ExpenseStatus { get; set; }
 
     public virtual Conference? Conference { get; set; }
 
