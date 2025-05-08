@@ -38,17 +38,17 @@ public class JournalController : ApiBaseController
     }
     [HttpPost("create-journal-from-research/{projectId}")]
     [Authorize]
-    public async Task<IActionResult> CreateFromResearch(int projectId, [FromForm] CreateJournalFromProjectRequest request, IFormFile documentFile)
+    public async Task<IActionResult> CreateFromResearch(int projectId, [FromBody] CreateJournalFromProjectRequest request)
     {
         try
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
             var journalId = await _journalService.CreateJournalFromResearch(projectId, userId, request);
-            return Ok(new { success = true, journalId = journalId, message = "Đã tạo Journal thành công" });
+            return Ok(new ApiResponse(StatusCodes.Status200OK, "Journal created successfully", new { journalId }));
         }
         catch (ServiceException ex)
         {
-            return BadRequest(new { success = false, message = ex.Message });
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
         }
     }
 

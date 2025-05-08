@@ -2437,7 +2437,11 @@ public class ProjectService : IProjectService
                 .Include(r => r.RequestedBy)
                 .Include(r => r.ApprovedBy)
                 .Include(r => r.FundDisbursement)
-                .Include(r => r.CompletionRequestDetail) // Add this line
+                .Include(r => r.CompletionRequestDetail)
+                .Include(r => r.FundDisbursement)
+                .ThenInclude(fd => fd.Conference)
+                .Include(r => r.FundDisbursement)
+                .ThenInclude(fd => fd.Journal)
                 .ToListAsync();
 
             return requests.Select(r => {
@@ -2475,14 +2479,23 @@ public class ProjectService : IProjectService
                     BudgetRemaining = null,
                     BudgetReconciled = null,
                     CompletionSummary = null,
-                    BudgetVarianceExplanation = null
+                    BudgetVarianceExplanation = null,
+                    
+                    // Add Fund Disbursement Type and related properties
+                    FundDisbursementType = r.FundDisbursement?.FundDisbursementType,
+                    // FundDisbursementTypeName = r.FundDisbursement?.FundDisbursementType.HasValue ? 
+                        // Enum.GetName(typeof(FundDisbursementTypeEnum), r.FundDisbursement.FundDisbursementType.Value) : null,
+                    ConferenceId = r.FundDisbursement?.ConferenceId,
+                    ConferenceName = r.FundDisbursement?.Conference?.ConferenceName,
+                    JournalId = r.FundDisbursement?.JournalId,
+                    JournalName = r.FundDisbursement?.Journal?.JournalName
                 };
                 
                 // Add completion-specific details if available
                 if (r.RequestType == ProjectRequestTypeEnum.Completion && r.CompletionRequestDetail != null)
                 {
                     response.BudgetRemaining = r.CompletionRequestDetail.BudgetRemaining;
-                    response.BudgetReconciled = r.CompletionRequestDetail.BudgetReconciled;
+                    // response.BudgetReconciled = r.CompletionRequestDetail.BudgetReconciled ?? false;
                     response.CompletionSummary = r.CompletionRequestDetail.CompletionSummary;
                     response.BudgetVarianceExplanation = r.CompletionRequestDetail.BudgetVarianceExplanation;
                 }
@@ -2616,126 +2629,138 @@ public class ProjectService : IProjectService
                     .ThenInclude(p => p.Group)
                         .ThenInclude(g => g.GroupMembers)
                             .ThenInclude(gm => gm.User)
-                .Include(r => r.Project)
-                    .ThenInclude(p => p.Documents)
-                .Include(r => r.Project)
-                    .ThenInclude(p => p.ProjectPhases)
-                .Include(r => r.Project)
-                    .ThenInclude(p => p.CreatedByNavigation)
-                .Include(r => r.Project)
-                    .ThenInclude(p => p.ApprovedByNavigation)
-                        .ThenInclude(gm => gm.User)
-                .Include(r => r.RequestedBy)
-                .Include(r => r.ApprovedBy)
-                .Include(r => r.FundDisbursement)
-                .Include(r => r.CompletionRequestDetail) // Add this line
-                .FirstOrDefaultAsync(r => r.RequestId == requestId);
+            .Include(r => r.Project)
+                .ThenInclude(p => p.Documents)
+            .Include(r => r.Project)
+                .ThenInclude(p => p.ProjectPhases)
+            .Include(r => r.Project)
+                .ThenInclude(p => p.CreatedByNavigation)
+            .Include(r => r.Project)
+                .ThenInclude(p => p.ApprovedByNavigation)
+                    .ThenInclude(gm => gm.User)
+            .Include(r => r.RequestedBy)
+            .Include(r => r.ApprovedBy)
+            .Include(r => r.FundDisbursement) // Include FundDisbursement
+                .ThenInclude(fd => fd.Conference) // Include Conference
+            .Include(r => r.FundDisbursement) // Include FundDisbursement again for Journal
+                .ThenInclude(fd => fd.Journal) // Include Journal
+            .Include(r => r.CompletionRequestDetail)
+            .FirstOrDefaultAsync(r => r.RequestId == requestId);
 
-            if (request == null)
-                throw new ServiceException("Project request not found");
+        if (request == null)
+            throw new ServiceException("Project request not found");
 
-            var project = request.Project;
-            if (project == null)
-                throw new ServiceException("Project associated with this request not found");
+        var project = request.Project;
+        if (project == null)
+            throw new ServiceException("Project associated with this request not found");
 
-            var detailResponse = new ProjectRequestDetailResponse
-            {
-                // Request information
-                RequestId = request.RequestId,
-                RequestType = request.RequestType,
-                ApprovalStatus = request.ApprovalStatus,
-                StatusName = request.ApprovalStatus.HasValue ? 
-                    Enum.GetName(typeof(ApprovalStatusEnum), request.ApprovalStatus.Value) : null,
-                RequestedAt = request.RequestedAt,
-                RejectionReason = request.RejectionReason,
-                
-                // Requester information
-                RequestedBy = request.RequestedBy != null ? new UserShortInfo
-                {
-                    UserId = request.RequestedBy.UserId,
-                    Username = request.RequestedBy.Username,
-                    FullName = request.RequestedBy.FullName,
-                    Email = request.RequestedBy.Email
-                } : null,
-                
-                // Approver information
-                ApprovedBy = request.ApprovedBy != null ? new UserShortInfo
-                {
-                    UserId = request.ApprovedBy.UserId,
-                    Username = request.ApprovedBy.Username,
-                    FullName = request.ApprovedBy.FullName,
-                    Email = request.ApprovedBy.Email
-                } : null,
-                ApprovedAt = request.ApprovedAt,
-                
-                // Fund disbursement information
-                FundDisbursementId = request.FundDisbursementId,
-                FundRequestAmount = request.FundDisbursement?.FundRequest,
-                
-                // Project information
-                ProjectId = project.ProjectId,
-                ProjectName = project.ProjectName,
-                ProjectType = project.ProjectType,
-                ProjectTypeName = project.ProjectType.HasValue ? 
-                    Enum.GetName(typeof(ProjectTypeEnum), project.ProjectType.Value) : null,
-                Description = project.Description,
-                ApprovedBudget = project.ApprovedBudget,
-                SpentBudget = project.SpentBudget,
-                Status = project.Status,
-                StartDate = project.StartDate,
-                EndDate = project.EndDate,
-                CreatedAt = project.CreatedAt,
-                UpdatedAt = project.UpdatedAt,
-                Methodology = project.Methodlogy,
-                
-                // Group information
-                Group = project.Group != null ? new GroupDetailInfo
-                {
-                    GroupId = project.Group.GroupId,
-                    GroupName = project.Group.GroupName,
-                    GroupType = project.Group.GroupType ?? 0,
-                    CurrentMember = project.Group.CurrentMember ?? 0,
-                    MaxMember = project.Group.MaxMember ?? 0,
-                    GroupDepartment = project.Group.GroupDepartment,
-                    DepartmentName = project.Group?.GroupDepartmentNavigation?.DepartmentName,
-                    Members = _mapper.Map<IEnumerable<GroupMemberResponse>>(
-                        project.Group.GroupMembers.Where(gm => gm.Status == (int)GroupMemberStatus.Active))
-                } : null,
-                
-                // Department information
-                Department = project.Department != null ? new DepartmentResponse
-                {
-                    DepartmentId = project.Department.DepartmentId,
-                    DepartmentName = project.Department.DepartmentName
-                } : null,
-                
-                // Project phases and documents
-                ProjectPhases = _mapper.Map<ICollection<ProjectPhaseResponse>>(project.ProjectPhases),
-                Documents = _mapper.Map<ICollection<DocumentResponse>>(project.Documents),
-                
-                // Completion-specific fields (with default null values)
-                BudgetRemaining = null,
-                BudgetReconciled = null,
-                CompletionSummary = null,
-                BudgetVarianceExplanation = null
-            };
-            
-            // Add completion details if this is a completion request
-            if (request.RequestType == ProjectRequestTypeEnum.Completion && request.CompletionRequestDetail != null)
-            {
-                detailResponse.BudgetRemaining = request.CompletionRequestDetail.BudgetRemaining;
-                detailResponse.BudgetReconciled = request.CompletionRequestDetail.BudgetReconciled;
-                detailResponse.CompletionSummary = request.CompletionRequestDetail.CompletionSummary;
-                detailResponse.BudgetVarianceExplanation = request.CompletionRequestDetail.BudgetVarianceExplanation;
-            }
-            
-            return detailResponse;
-        }
-        catch (Exception ex)
+        var detailResponse = new ProjectRequestDetailResponse
         {
-            throw new ServiceException($"Error retrieving project request details: {ex.Message}");
+            // Request information
+            RequestId = request.RequestId,
+            RequestType = request.RequestType,
+            ApprovalStatus = request.ApprovalStatus,
+            StatusName = request.ApprovalStatus.HasValue ? 
+                Enum.GetName(typeof(ApprovalStatusEnum), request.ApprovalStatus.Value) : null,
+            RequestedAt = request.RequestedAt,
+            RejectionReason = request.RejectionReason,
+            
+            // Requester information
+            RequestedBy = request.RequestedBy != null ? new UserShortInfo
+            {
+                UserId = request.RequestedBy.UserId,
+                Username = request.RequestedBy.Username,
+                FullName = request.RequestedBy.FullName,
+                Email = request.RequestedBy.Email
+            } : null,
+            
+            // Approver information
+            ApprovedBy = request.ApprovedBy != null ? new UserShortInfo
+            {
+                UserId = request.ApprovedBy.UserId,
+                Username = request.ApprovedBy.Username,
+                FullName = request.ApprovedBy.FullName,
+                Email = request.ApprovedBy.Email
+            } : null,
+            ApprovedAt = request.ApprovedAt,
+            
+            // Fund disbursement information
+            FundDisbursementId = request.FundDisbursementId,
+            FundRequestAmount = request.FundDisbursement?.FundRequest,
+            
+            // Include Fund Disbursement Type and related info
+            FundDisbursementType = request.FundDisbursement?.FundDisbursementType,
+            // FundDisbursementTypeName = request.FundDisbursement?.FundDisbursementType.HasValue ? 
+            //     Enum.GetName(typeof(FundDisbursementTypeEnum), request.FundDisbursement.FundDisbursementType.Value) : null,
+            ConferenceId = request.FundDisbursement?.ConferenceId,
+            ConferenceName = request.FundDisbursement?.Conference?.ConferenceName,
+            JournalId = request.FundDisbursement?.JournalId,
+            JournalName = request.FundDisbursement?.Journal?.JournalName,
+            
+            // Project information
+            ProjectId = project.ProjectId,
+            ProjectName = project.ProjectName,
+            ProjectType = project.ProjectType,
+            ProjectTypeName = project.ProjectType.HasValue ? 
+                Enum.GetName(typeof(ProjectTypeEnum), project.ProjectType.Value) : null,
+            Description = project.Description,
+            ApprovedBudget = project.ApprovedBudget,
+            SpentBudget = project.SpentBudget,
+            Status = project.Status,
+            StartDate = project.StartDate,
+            EndDate = project.EndDate,
+            CreatedAt = project.CreatedAt,
+            UpdatedAt = project.UpdatedAt,
+            Methodology = project.Methodlogy,
+            
+            // Group information
+            Group = project.Group != null ? new GroupDetailInfo
+            {
+                GroupId = project.Group.GroupId,
+                GroupName = project.Group.GroupName,
+                GroupType = project.Group.GroupType ?? 0,
+                CurrentMember = project.Group.CurrentMember ?? 0,
+                MaxMember = project.Group.MaxMember ?? 0,
+                GroupDepartment = project.Group.GroupDepartment,
+                DepartmentName = project.Group?.GroupDepartmentNavigation?.DepartmentName,
+                Members = _mapper.Map<IEnumerable<GroupMemberResponse>>(
+                    project.Group.GroupMembers.Where(gm => gm.Status == (int)GroupMemberStatus.Active))
+            } : null,
+            
+            // Department information
+            Department = project.Department != null ? new DepartmentResponse
+            {
+                DepartmentId = project.Department.DepartmentId,
+                DepartmentName = project.Department.DepartmentName
+            } : null,
+            
+            // Project phases and documents
+            ProjectPhases = _mapper.Map<ICollection<ProjectPhaseResponse>>(project.ProjectPhases),
+            Documents = _mapper.Map<ICollection<DocumentResponse>>(project.Documents),
+            
+            // Completion-specific fields (with default null values)
+            BudgetRemaining = null,
+            BudgetReconciled = null,
+            CompletionSummary = null,
+            BudgetVarianceExplanation = null
+        };
+        
+        // Add completion details if this is a completion request
+        if (request.RequestType == ProjectRequestTypeEnum.Completion && request.CompletionRequestDetail != null)
+        {
+            detailResponse.BudgetRemaining = request.CompletionRequestDetail.BudgetRemaining;
+            detailResponse.BudgetReconciled = request.CompletionRequestDetail.BudgetReconciled; // No ?? false needed here as DTO is nullable
+            detailResponse.CompletionSummary = request.CompletionRequestDetail.CompletionSummary;
+            detailResponse.BudgetVarianceExplanation = request.CompletionRequestDetail.BudgetVarianceExplanation;
         }
+        
+        return detailResponse;
     }
+    catch (Exception ex)
+    {
+        throw new ServiceException($"Error retrieving project request details: {ex.Message}");
+    }
+}
 
     public async Task<IEnumerable<ProjectRequestResponse>> GetPendingDepartmentRequestsAsync(int departmentId)
     {
@@ -2817,41 +2842,44 @@ public class ProjectService : IProjectService
         {
             var requests = await _context.ProjectRequests
                 .Include(r => r.Project)
-                    .ThenInclude(p => p.Department)
+                    .ThenInclude(p => p.Group) 
                 .Include(r => r.Project)
-                    .ThenInclude(p => p.Group)
+                    .ThenInclude(p => p.Department) 
                 .Include(r => r.RequestedBy)
                 .Include(r => r.ApprovedBy)
                 .Include(r => r.FundDisbursement)
-                .Include(r => r.CompletionRequestDetail) // Add this line
+                    .ThenInclude(fd => fd.Conference)
+                .Include(r => r.FundDisbursement)
+                    .ThenInclude(fd => fd.Journal)
                 .Where(r => r.RequestedById == userId)
+                .OrderByDescending(r => r.RequestedAt)
                 .ToListAsync();
 
             return requests.Select(r => {
                 var response = new ProjectRequestResponse
                 {
-                    // Existing properties
                     RequestId = r.RequestId,
+                    ProjectId = r.ProjectId,
                     RequestType = r.RequestType,
-                    ApprovalStatus = r.ApprovalStatus,
-                    RequestedAt = r.RequestedAt,
-                    RejectionReason = r.RejectionReason,
                     RequestedById = r.RequestedById,
                     RequesterName = r.RequestedBy?.FullName ?? "Unknown",
+                    ApprovalStatus = r.ApprovalStatus,
+                    StatusName = r.ApprovalStatus.HasValue ? 
+                        Enum.GetName(typeof(ApprovalStatusEnum), r.ApprovalStatus.Value) : null,
+                    RequestedAt = r.RequestedAt,
                     ApprovedById = r.ApprovedById,
                     ApproverName = r.ApprovedBy?.FullName,
                     ApprovedAt = r.ApprovedAt,
-                    ProjectId = r.ProjectId,
-                    ProjectName = r.Project?.ProjectName ?? "Unknown Project",
+                    RejectionReason = r.RejectionReason,
+                    ProjectName = r.Project?.ProjectName ?? "Unknown",
                     ProjectDescription = r.Project?.Description ?? "",
                     ProjectStatus = (ProjectStatusEnum)(r.Project?.Status ?? 0),
                     ApprovedBudget = r.Project?.ApprovedBudget,
                     SpentBudget = r.Project?.SpentBudget ?? 0,
                     DepartmentId = r.Project?.DepartmentId,
-                    DepartmentName = r.Project?.Department?.DepartmentName ?? "Unknown Department",
+                    DepartmentName = r.Project?.Department?.DepartmentName ?? "Unknown", // Now should map correctly
                     GroupId = r.Project?.GroupId,
-                    GroupName = r.Project?.Group?.GroupName ?? "Unknown Group",
-                    StatusName = ((ApprovalStatusEnum?)r.ApprovalStatus)?.ToString() ?? "Unknown",
+                    GroupName = r.Project?.Group?.GroupName ?? "Unknown", // Now should map correctly
                     ProjectType = r.Project?.ProjectType,
                     ProjectTypeName = r.Project?.ProjectType.HasValue == true ? 
                         Enum.GetName(typeof(ProjectTypeEnum), r.Project.ProjectType.Value) : null,
@@ -2862,17 +2890,24 @@ public class ProjectService : IProjectService
                     BudgetRemaining = null,
                     BudgetReconciled = null,
                     CompletionSummary = null,
-                    BudgetVarianceExplanation = null
+                    BudgetVarianceExplanation = null,
+                    FundDisbursementType = r.FundDisbursement?.FundDisbursementType,
+                    // FundDisbursementTypeName = r.FundDisbursement?.FundDisbursementType.HasValue ? 
+                    //     Enum.GetName(typeof(FundDisbursementTypeEnum), r.FundDisbursement.FundDisbursementType.Value) : null,
+                    ConferenceId = r.FundDisbursement?.ConferenceId,
+                    ConferenceName = r.FundDisbursement?.Conference?.ConferenceName,
+                    JournalId = r.FundDisbursement?.JournalId,
+                    JournalName = r.FundDisbursement?.Journal?.JournalName
                 };
                 
                 // Add completion-specific details if available
-                if (r.RequestType == ProjectRequestTypeEnum.Completion && r.CompletionRequestDetail != null)
-                {
-                    response.BudgetRemaining = r.CompletionRequestDetail.BudgetRemaining;
-                    response.BudgetReconciled = r.CompletionRequestDetail.BudgetReconciled;
-                    response.CompletionSummary = r.CompletionRequestDetail.CompletionSummary;
-                    response.BudgetVarianceExplanation = r.CompletionRequestDetail.BudgetVarianceExplanation;
-                }
+                // if (r.RequestType == ProjectRequestTypeEnum.Completion && r.CompletionRequestDetail != null)
+                // {
+                //     response.BudgetRemaining = r.CompletionRequestDetail.BudgetRemaining;
+                //     response.BudgetReconciled = r.CompletionRequestDetail.BudgetReconciled ?? false;
+                //     response.CompletionSummary = r.CompletionRequestDetail.CompletionSummary;
+                //     response.BudgetVarianceExplanation = r.CompletionRequestDetail.BudgetVarianceExplanation;
+                // }
                 
                 return response;
             }).ToList();
@@ -2895,7 +2930,10 @@ public class ProjectService : IProjectService
                 .Include(r => r.RequestedBy)
                 .Include(r => r.ApprovedBy)
                 .Include(r => r.FundDisbursement)
-                .Include(r => r.CompletionRequestDetail) // Add this line
+                    .ThenInclude(fd => fd.Conference)
+                .Include(r => r.FundDisbursement)
+                    .ThenInclude(fd => fd.Journal)
+                .Include(r => r.CompletionRequestDetail)
                 .Where(r => r.RequestedById == userId && 
                             r.ApprovalStatus == ApprovalStatusEnum.Pending)
                 .ToListAsync();
@@ -2930,6 +2968,15 @@ public class ProjectService : IProjectService
                         Enum.GetName(typeof(ProjectTypeEnum), r.Project.ProjectType.Value) : null,
                     FundDisbursementId = r.FundDisbursementId,
                     FundRequestAmount = r.FundDisbursement?.FundRequest,
+                    
+                    // Add the missing properties
+                    FundDisbursementType = r.FundDisbursement?.FundDisbursementType,
+                    // FundDisbursementTypeName = r.FundDisbursement?.FundDisbursementType.HasValue ?
+                    //     Enum.GetName(typeof(FundDisbursementTypeEnum), r.FundDisbursement.FundDisbursementType.Value) : null,
+                    ConferenceId = r.FundDisbursement?.ConferenceId,
+                    ConferenceName = r.FundDisbursement?.Conference?.ConferenceName,
+                    JournalId = r.FundDisbursement?.JournalId,
+                    JournalName = r.FundDisbursement?.Journal?.JournalName,
                     
                     // Set default completion values
                     BudgetRemaining = null,

@@ -51,5 +51,13 @@ namespace Domain.DTO.Responses
         public bool? BudgetReconciled { get; set; }
         public string? CompletionSummary { get; set; }
         public string? BudgetVarianceExplanation { get; set; }
+
+        // Add these properties for Fund Disbursement Type
+        public int? FundDisbursementType { get; set; }
+        public string? FundDisbursementTypeName { get; set; }
+        public int? ConferenceId { get; set; }
+        public string? ConferenceName { get; set; }
+        public int? JournalId { get; set; }
+        public string? JournalName { get; set; }
     }
 }

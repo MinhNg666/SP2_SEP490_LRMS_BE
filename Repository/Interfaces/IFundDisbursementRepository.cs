@@ -9,4 +9,5 @@ public interface IFundDisbursementRepository : IGenericRepository<FundDisburseme
     Task<FundDisbursement> GetByIdWithDetailsAsync(int fundDisbursementId);
     Task<IEnumerable<FundDisbursement>> GetByProjectIdAsync(int projectId);
     Task<IEnumerable<FundDisbursement>> GetByUserIdAsync(int userId);
+    Task<IEnumerable<FundDisbursement>> GetByConferenceIdAsync(int conferenceId);
 }

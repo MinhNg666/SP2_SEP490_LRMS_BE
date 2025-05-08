@@ -12,6 +12,7 @@ public interface IFundDisbursementService
     Task<FundDisbursementResponse> GetFundDisbursementById(int fundDisbursementId);
     Task<IEnumerable<FundDisbursementResponse>> GetFundDisbursementsByProjectId(int projectId);
     Task<IEnumerable<FundDisbursementResponse>> GetFundDisbursementsByUserId(int userId);
+    Task<IEnumerable<FundDisbursementResponse>> GetFundDisbursementsByConferenceId(int conferenceId);
     Task<bool> UploadDisbursementDocument(int fundDisbursementId, IFormFile documentFile, int userId);
     Task<bool> UploadDisbursementDocuments(int fundDisbursementId, IEnumerable<IFormFile> documentFiles, int userId);
     Task<bool> ApproveFundDisbursement(

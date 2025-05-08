@@ -82,53 +82,52 @@ public class JournalService : IJournalService
         }
     }
 
-public async Task<int> CreateJournalFromResearch(int projectId, int userId, CreateJournalFromProjectRequest request)
-{
-    try
+    public async Task<int> CreateJournalFromResearch(int projectId, int userId, CreateJournalFromProjectRequest request)
     {
-        // Kiểm tra project có tồn tại không
-        var project = await _context.Projects
-            .Include(p => p.ProjectPhases)
-            .Include(p => p.Group)
-                .ThenInclude(g => g.GroupMembers)
-            .FirstOrDefaultAsync(p => p.ProjectId == projectId);
-
-        if (project == null)
-            throw new ServiceException("Không tìm thấy project");
-
-        // Kiểm tra có phải là Research project không
-        if (project.ProjectType != (int)ProjectTypeEnum.Research)
-            throw new ServiceException("Chỉ có thể tạo Journal từ Research project");
-
-        // Kiểm tra người yêu cầu có phải là leader không
-        var leaderMember = project.Group.GroupMembers
-            .FirstOrDefault(m => m.UserId == userId && m.Status == (int)GroupMemberStatus.Active);
-
-        if (leaderMember == null || leaderMember.Role != (int)GroupMemberRoleEnum.Leader)
-            throw new ServiceException("Chỉ leader mới có quyền tạo Journal");
-
-        // Kiểm tra tất cả milestone đã hoàn thành chưa
-        if (project.ProjectPhases.Any(m => m.Status != (int)ProjectPhaseStatusEnum.Completed))
-            throw new ServiceException("Tất cả milestone phải hoàn thành trước khi tạo Journal");
-
-        // Cập nhật project hiện có
-        project.ProjectType = (int)ProjectTypeEnum.Journal;
-        project.Status = (int)ProjectStatusEnum.Pending;
-        await _context.SaveChangesAsync();
-
-        // Tạo Journal record
-        var journal = new Journal
+        try
         {
-            JournalName = request.JournalName,
-            PublisherName = request.PublisherName,
-            DoiNumber = request.DoiNumber,
-            SubmissionDate = request.SubmissionDate,
-            ProjectId = projectId,
-            PublisherStatus = (int)ProjectStatusEnum.Pending
-        };
+            // Kiểm tra project có tồn tại không
+            var project = await _context.Projects
+                .Include(p => p.ProjectPhases)
+                .Include(p => p.Group)
+                    .ThenInclude(g => g.GroupMembers)
+                .FirstOrDefaultAsync(p => p.ProjectId == projectId);
 
-        await _context.Journals.AddAsync(journal);
-        await _context.SaveChangesAsync();
+            if (project == null)
+                throw new ServiceException("Không tìm thấy project");
+
+            // Kiểm tra có phải là Research project không
+            if (project.ProjectType != (int)ProjectTypeEnum.Research)
+                throw new ServiceException("Chỉ có thể tạo Journal từ Research project");
+
+            // Kiểm tra người yêu cầu có phải là leader không
+            var leaderMember = project.Group.GroupMembers
+                .FirstOrDefault(m => m.UserId == userId && m.Status == (int)GroupMemberStatus.Active);
+
+            if (leaderMember == null || leaderMember.Role != (int)GroupMemberRoleEnum.Leader)
+                throw new ServiceException("Chỉ leader mới có quyền tạo Journal");
+
+            // Kiểm tra tất cả milestone đã hoàn thành chưa
+            if (project.ProjectPhases.Any(m => m.Status != (int)ProjectPhaseStatusEnum.Completed))
+                throw new ServiceException("Tất cả milestone phải hoàn thành trước khi tạo Journal");
+
+            // Cập nhật project hiện có
+            project.ProjectType = (int)ProjectTypeEnum.Journal;
+            project.Status = (int)ProjectStatusEnum.Pending;
+            await _context.SaveChangesAsync();
+
+            // Tạo Journal record
+            var journal = new Journal
+            {
+                JournalName = request.JournalName,
+                PublisherName = request.PublisherName,
+                ProjectId = projectId,
+                PublisherStatus = (int)PublisherStatusEnum.Pending,
+                SubmissionDate = DateTime.Now
+            };
+
+            await _context.Journals.AddAsync(journal);
+            await _context.SaveChangesAsync();
 
         // Lấy thông tin cần thiết
         var creator = await _context.Users.FindAsync(userId);
