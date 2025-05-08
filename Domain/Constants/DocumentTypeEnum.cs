@@ -16,5 +16,10 @@ namespace Domain.Constants
         DisbursementConfirmation =5,
         ProjectCompletion = 6,
         ConferencePaper = 7,
+        ConferenceExpense = 8,
+        ConferenceExpenseDecision = 9,
+        ConferenceFunding = 10,
+        JournalFunding = 11,
+        FundingConfirmation = 12,
     }
 }

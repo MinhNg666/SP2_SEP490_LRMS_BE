@@ -289,6 +289,13 @@ public partial class LRMSDbContext : DbContext
                 .HasForeignKey(d => d.ProjectPhaseId)
                 .HasConstraintName("FK_FundDisbursement_ProjectPhase");
 
+            entity.HasOne(d => d.ConferenceExpense)
+                .WithOne(p => p.FundDisbursement)
+                .HasForeignKey<FundDisbursement>(d => d.ExpenseId)
+                .HasConstraintName("FK_FundDisbursement_ConferenceExpense")
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.ClientSetNull);
+
             entity.Ignore("AuthorId");
             entity.Ignore("GroupMemberId");
         });

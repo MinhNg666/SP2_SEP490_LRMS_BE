@@ -4,6 +4,7 @@ using LRMS_API;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Domain.Migrations
 {
     [DbContext(typeof(LRMSDbContext))]
-    partial class LRMSDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250506071604_AddConferenceJournalAndTypeToFundDisbursement")]
+    partial class AddConferenceJournalAndTypeToFundDisbursement
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -364,9 +367,6 @@ namespace Domain.Migrations
                         .HasColumnType("int")
                         .HasColumnName("disburse_by");
 
-                    b.Property<int?>("ExpenseId")
-                        .HasColumnType("int");
-
                     b.Property<int?>("FundDisbursementType")
                         .HasColumnType("int");
 
@@ -412,10 +412,6 @@ namespace Domain.Migrations
                     b.HasIndex("ConferenceId");
 
                     b.HasIndex("DisburseBy");
-
-                    b.HasIndex("ExpenseId")
-                        .IsUnique()
-                        .HasFilter("[ExpenseId] IS NOT NULL");
 
                     b.HasIndex("JournalId");
 
@@ -1338,11 +1334,6 @@ namespace Domain.Migrations
                         .HasForeignKey("DisburseBy")
                         .HasConstraintName("FK_FundDisbursement_Users");
 
-                    b.HasOne("LRMS_API.ConferenceExpense", "ConferenceExpense")
-                        .WithOne("FundDisbursement")
-                        .HasForeignKey("LRMS_API.FundDisbursement", "ExpenseId")
-                        .HasConstraintName("FK_FundDisbursement_ConferenceExpense");
-
                     b.HasOne("LRMS_API.Journal", "Journal")
                         .WithMany()
                         .HasForeignKey("JournalId");
@@ -1370,8 +1361,6 @@ namespace Domain.Migrations
                     b.Navigation("AppovedByNavigation");
 
                     b.Navigation("Conference");
-
-                    b.Navigation("ConferenceExpense");
 
                     b.Navigation("DisburseByNavigation");
 
@@ -1661,8 +1650,6 @@ namespace Domain.Migrations
             modelBuilder.Entity("LRMS_API.ConferenceExpense", b =>
                 {
                     b.Navigation("Documents");
-
-                    b.Navigation("FundDisbursement");
                 });
 
             modelBuilder.Entity("LRMS_API.Department", b =>

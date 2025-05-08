@@ -217,7 +217,8 @@ public class FundDisbursementService : IFundDisbursementService
                 QuotaId = availableQuota.QuotaId,
                 Status = (int)FundDisbursementStatusEnum.Pending,
                 CreatedAt = DateTime.Now,
-                UserRequest = userId
+                UserRequest = userId,
+                FundDisbursementType = (int)FundDisbursementTypeEnum.ProjectPhase
             };
             
             await _fundDisbursementRepository.AddAsync(fundDisbursement);
@@ -253,13 +254,13 @@ public class FundDisbursementService : IFundDisbursementService
         try
         {
             var disbursements = await _fundDisbursementRepository.GetAllWithDetailsAsync();
-            Console.WriteLine($"Service received {disbursements.Count()} disbursements from repository.");
+            
+            
             return MapToDisbursementResponses(disbursements);
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"ERROR in FundDisbursementService.GetAllFundDisbursements: {ex.ToString()}");
-            throw new ServiceException($"Error retrieving fund disbursements: {ex.Message}", ex);
+            throw new ServiceException($"Error retrieving fund disbursements: {ex.Message}");
         }
     }
     
@@ -302,6 +303,19 @@ public class FundDisbursementService : IFundDisbursementService
         catch (Exception ex)
         {
             throw new ServiceException($"Error retrieving fund disbursements: {ex.Message}");
+        }
+    }
+    
+    public async Task<IEnumerable<FundDisbursementResponse>> GetFundDisbursementsByConferenceId(int conferenceId)
+    {
+        try
+        {
+            var disbursements = await _fundDisbursementRepository.GetByConferenceIdAsync(conferenceId);
+            return MapToDisbursementResponses(disbursements);
+        }
+        catch (Exception ex)
+        {
+            throw new ServiceException($"Error retrieving conference fund disbursements: {ex.Message}");
         }
     }
     
@@ -730,6 +744,49 @@ public class FundDisbursementService : IFundDisbursementService
             .Select(pr => pr.RequestId)
             .FirstOrDefault();
 
+        // Get the associated project request for approver information
+        var projectRequest = _context.ProjectRequests
+            .Include(pr => pr.ApprovedBy)
+            .FirstOrDefault(pr => pr.FundDisbursementId == disbursement.FundDisbursementId);
+
+        // Get detailed conference expense information if this is a conference expense disbursement
+        ConferenceExpenseDetail expenseDetail = null;
+        
+        if (disbursement.FundDisbursementType == (int)FundDisbursementTypeEnum.ConferenceExpense && 
+            disbursement.ExpenseId.HasValue && disbursement.ConferenceExpense != null)
+        {
+            var expense = disbursement.ConferenceExpense;
+            
+            expenseDetail = new ConferenceExpenseDetail
+            {
+                ExpenseId = expense.ExpenseId,
+                Accommodation = expense.Accomodation,
+                AccommodationExpense = expense.AccomodationExpense ?? 0,
+                Travel = expense.Travel,
+                TravelExpense = expense.TravelExpense ?? 0,
+                ExpenseStatus = expense.ExpenseStatus ?? 0,
+                ExpenseStatusName = Enum.GetName(typeof(ConferenceExpenseStatusEnum), expense.ExpenseStatus ?? 0),
+                RejectionReason = disbursement.RejectionReason
+            };
+        }
+
+        // Get detailed conference funding information if this is a conference funding disbursement
+        ConferenceFundingDetail fundingDetail = null;
+
+        if (disbursement.FundDisbursementType == (int)FundDisbursementTypeEnum.ConferenceFunding && 
+            disbursement.ConferenceId.HasValue && disbursement.Conference != null)
+        {
+            var conference = disbursement.Conference;
+            
+            fundingDetail = new ConferenceFundingDetail
+            {
+                Location = conference.Location,
+                PresentationDate = conference.PresentationDate,
+                AcceptanceDate = conference.AcceptanceDate,
+                ConferenceFunding = conference.ConferenceFunding
+            };
+        }
+
         var response = new FundDisbursementResponse
         {
             FundDisbursementId = disbursement.FundDisbursementId,
@@ -744,13 +801,28 @@ public class FundDisbursementService : IFundDisbursementService
             ProjectPhaseId = disbursement.ProjectPhaseId,
             ProjectPhaseTitle = disbursement.ProjectPhase?.Title,
             
+            // Add these lines for FundDisbursementType, Conference, and Journal
+            FundDisbursementType = disbursement.FundDisbursementType,
+            FundDisbursementTypeName = disbursement.FundDisbursementType.HasValue ? 
+                Enum.GetName(typeof(FundDisbursementTypeEnum), disbursement.FundDisbursementType.Value) : null,
+            ConferenceId = disbursement.ConferenceId,
+            ConferenceName = disbursement.Conference?.ConferenceName,
+            JournalId = disbursement.JournalId,
+            JournalName = disbursement.Journal?.JournalName,
+            
+            // Add the conference expense detail
+            ConferenceExpenseDetail = expenseDetail,
+            
+            // Add the conference funding detail
+            ConferenceFundingDetail = fundingDetail,
+            
             // User information
             RequesterId = disbursement.UserRequest ?? 0,
             RequesterName = disbursement.UserRequestNavigation?.FullName,
 
-            // Map Approver Info (using AppovedBy from entity)
-            ApprovedById = disbursement.AppovedByNavigation?.UserId, 
-            ApprovedByName = disbursement.AppovedByNavigation?.User?.FullName, 
+            // Map Approver Info
+            ApprovedById = projectRequest?.ApprovedById,
+            ApprovedByName = projectRequest?.ApprovedBy?.FullName,
 
             // Map Disburser Info
             DisbursedById = disbursement.DisburseBy,
@@ -792,7 +864,7 @@ public class FundDisbursementService : IFundDisbursementService
             // Map the RejectionReason
             RejectionReason = disbursement.RejectionReason,
 
-            // Add the new property
+            // Add the request ID
             RequestId = requestId > 0 ? requestId : null,
         };
         

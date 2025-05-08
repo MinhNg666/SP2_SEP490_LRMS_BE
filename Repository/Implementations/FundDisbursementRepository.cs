@@ -49,6 +49,9 @@ public class FundDisbursementRepository : GenericRepository<FundDisbursement>, I
             .Include(fd => fd.AppovedByNavigation)
                 .ThenInclude(gm => gm.User)
             .Include(fd => fd.DisburseByNavigation)
+            .Include(fd => fd.Conference)
+            .Include(fd => fd.Journal)
+            .Include(fd => fd.ConferenceExpense)
             .FirstOrDefaultAsync(fd => fd.FundDisbursementId == fundDisbursementId);
     }
     
@@ -79,6 +82,21 @@ public class FundDisbursementRepository : GenericRepository<FundDisbursement>, I
                 .ThenInclude(gm => gm.User)
             .Include(f => f.DisburseByNavigation)
             .Where(f => f.UserRequest == userId)
+            .ToListAsync();
+    }
+    
+    public async Task<IEnumerable<FundDisbursement>> GetByConferenceIdAsync(int conferenceId)
+    {
+        return await _context.FundDisbursements
+            .Include(f => f.Project)
+            .Include(f => f.UserRequestNavigation)
+            .Include(f => f.Quota)
+            .Include(f => f.Documents)
+            .Include(f => f.AppovedByNavigation)
+                .ThenInclude(gm => gm.User)
+            .Include(f => f.DisburseByNavigation)
+            .Include(f => f.Conference)
+            .Where(f => f.ConferenceId == conferenceId)
             .ToListAsync();
     }
 }

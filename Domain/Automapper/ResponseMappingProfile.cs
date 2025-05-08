@@ -120,6 +120,32 @@ public class ResponseMappingProfile : Profile
                     StatusName = pp.Status.HasValue ? Enum.GetName(typeof(ProjectPhaseStatusEnum), pp.Status.Value) : null,
                     SpentBudget = pp.SpentBudget
                 }).ToList() : new List<ProjectPhaseInfo>()
-            ));
+            ))
+            .ForMember(dest => dest.FundDisbursementType, opt => opt.MapFrom(src => src.FundDisbursementType))
+            .ForMember(dest => dest.FundDisbursementTypeName, opt => opt.MapFrom(src => 
+                src.FundDisbursementType.HasValue ? Enum.GetName(typeof(FundDisbursementTypeEnum), src.FundDisbursementType.Value) : null))
+            .ForMember(dest => dest.ConferenceId, opt => opt.MapFrom(src => src.ConferenceId))
+            .ForMember(dest => dest.ConferenceName, opt => opt.MapFrom(src => 
+                src.Conference != null ? src.Conference.ConferenceName : null))
+            .ForMember(dest => dest.JournalId, opt => opt.MapFrom(src => src.JournalId))
+            .ForMember(dest => dest.JournalName, opt => opt.MapFrom(src => 
+                src.Journal != null ? src.Journal.JournalName : null));
+
+        CreateMap<ProjectRequest, ProjectRequestResponse>()
+            .ForMember(dest => dest.FundDisbursementType, opt => opt.MapFrom(src => 
+                src.FundDisbursement != null ? src.FundDisbursement.FundDisbursementType : null))
+            .ForMember(dest => dest.FundDisbursementTypeName, opt => opt.MapFrom(src => 
+                src.FundDisbursement != null && src.FundDisbursement.FundDisbursementType.HasValue ? 
+                Enum.GetName(typeof(FundDisbursementTypeEnum), src.FundDisbursement.FundDisbursementType.Value) : null))
+            .ForMember(dest => dest.ConferenceId, opt => opt.MapFrom(src => 
+                src.FundDisbursement != null ? src.FundDisbursement.ConferenceId : null))
+            .ForMember(dest => dest.ConferenceName, opt => opt.MapFrom(src => 
+                src.FundDisbursement != null && src.FundDisbursement.Conference != null ? 
+                src.FundDisbursement.Conference.ConferenceName : null))
+            .ForMember(dest => dest.JournalId, opt => opt.MapFrom(src => 
+                src.FundDisbursement != null ? src.FundDisbursement.JournalId : null))
+            .ForMember(dest => dest.JournalName, opt => opt.MapFrom(src => 
+                src.FundDisbursement != null && src.FundDisbursement.Journal != null ? 
+                src.FundDisbursement.Journal.JournalName : null));
     } 
 }

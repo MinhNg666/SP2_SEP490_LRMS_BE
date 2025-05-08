@@ -203,6 +203,13 @@ namespace Service.Implementations
                 if (quota == null)
                     throw new ServiceException("Quota not found");
 
+                // Load ProjectRequests for all FundDisbursements to get approver information
+                var fundDisbursementIds = quota.FundDisbursements.Select(fd => fd.FundDisbursementId).ToList();
+                var projectRequests = await _context.ProjectRequests
+                    .Include(pr => pr.ApprovedBy)
+                    .Where(pr => pr.FundDisbursementId.HasValue && fundDisbursementIds.Contains(pr.FundDisbursementId.Value))
+                    .ToDictionaryAsync(pr => pr.FundDisbursementId.Value, pr => pr);
+                
                 decimal disbursedAmount = quota.FundDisbursements
                     .Where(fd => fd.Status == (int)FundDisbursementStatusEnum.Approved || 
                                 fd.Status == (int)FundDisbursementStatusEnum.Disbursed)
@@ -239,23 +246,35 @@ namespace Service.Implementations
                     DisbursedAmount = disbursedAmount,
                     
                     // Add the detailed disbursements
-                    Disbursements = quota.FundDisbursements.Select(fd => new DisbursementInfo
+                    Disbursements = quota.FundDisbursements.Select(fd => 
                     {
-                        FundDisbursementId = fd.FundDisbursementId,
-                        FundRequest = fd.FundRequest ?? 0,
-                        Status = fd.Status ?? 0,
-                        StatusName = Enum.GetName(typeof(FundDisbursementStatusEnum), fd.Status ?? 0),
-                        CreatedAt = fd.CreatedAt,
-                        Description = fd.Description,
+                        // Get the associated ProjectRequest to extract approver information
+                        projectRequests.TryGetValue(fd.FundDisbursementId, out var request);
                         
-                        RequesterId = fd.UserRequest ?? 0,
-                        RequesterName = fd.UserRequestNavigation?.FullName,
-                        
-                        ApprovedById = fd.AppovedByNavigation?.UserId,
-                        ApprovedByName = fd.AppovedByNavigation?.User?.FullName,
-                        
-                        ProjectPhaseId = fd.ProjectPhaseId,
-                        ProjectPhaseTitle = fd.ProjectPhase?.Title
+                        return new DisbursementInfo
+                        {
+                            FundDisbursementId = fd.FundDisbursementId,
+                            FundRequest = fd.FundRequest ?? 0,
+                            Status = fd.Status ?? 0,
+                            StatusName = Enum.GetName(typeof(FundDisbursementStatusEnum), fd.Status ?? 0),
+                            CreatedAt = fd.CreatedAt,
+                            Description = fd.Description,
+                            
+                            RequesterId = fd.UserRequest ?? 0,
+                            RequesterName = fd.UserRequestNavigation?.FullName,
+                            
+                            // Get approver info from ProjectRequest instead of FundDisbursement.AppovedByNavigation
+                            ApprovedById = request?.ApprovedById,
+                            ApprovedByName = request?.ApprovedBy?.FullName,
+                            
+                            ProjectPhaseId = fd.ProjectPhaseId,
+                            ProjectPhaseTitle = fd.ProjectPhase?.Title,
+                            
+                            // Add fund disbursement type information
+                            FundDisbursementType = fd.FundDisbursementType,
+                            FundDisbursementTypeName = fd.FundDisbursementType.HasValue ? 
+                                Enum.GetName(typeof(FundDisbursementTypeEnum), fd.FundDisbursementType.Value) : null
+                        };
                     }).ToList()
                 };
                 

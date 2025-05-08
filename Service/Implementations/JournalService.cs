@@ -81,107 +81,106 @@ public class JournalService : IJournalService
         }
     }
 
-public async Task<int> CreateJournalFromResearch(int projectId, int userId, CreateJournalFromProjectRequest request)
-{
-    try
+    public async Task<int> CreateJournalFromResearch(int projectId, int userId, CreateJournalFromProjectRequest request)
     {
-        // Kiểm tra project có tồn tại không
-        var project = await _context.Projects
-            .Include(p => p.ProjectPhases)
-            .Include(p => p.Group)
-                .ThenInclude(g => g.GroupMembers)
-            .FirstOrDefaultAsync(p => p.ProjectId == projectId);
-
-        if (project == null)
-            throw new ServiceException("Không tìm thấy project");
-
-        // Kiểm tra có phải là Research project không
-        if (project.ProjectType != (int)ProjectTypeEnum.Research)
-            throw new ServiceException("Chỉ có thể tạo Journal từ Research project");
-
-        // Kiểm tra người yêu cầu có phải là leader không
-        var leaderMember = project.Group.GroupMembers
-            .FirstOrDefault(m => m.UserId == userId && m.Status == (int)GroupMemberStatus.Active);
-
-        if (leaderMember == null || leaderMember.Role != (int)GroupMemberRoleEnum.Leader)
-            throw new ServiceException("Chỉ leader mới có quyền tạo Journal");
-
-        // Kiểm tra tất cả milestone đã hoàn thành chưa
-        if (project.ProjectPhases.Any(m => m.Status != (int)ProjectPhaseStatusEnum.Completed))
-            throw new ServiceException("Tất cả milestone phải hoàn thành trước khi tạo Journal");
-
-        // Cập nhật project hiện có
-        project.ProjectType = (int)ProjectTypeEnum.Journal;
-        project.Status = (int)ProjectStatusEnum.Pending;
-        await _context.SaveChangesAsync();
-
-        // Tạo Journal record
-        var journal = new Journal
+        try
         {
-            JournalName = request.JournalName,
-            PublisherName = request.PublisherName,
-            DoiNumber = request.DoiNumber,
-            SubmissionDate = request.SubmissionDate,
-            ProjectId = projectId,
-            PublisherStatus = (int)ProjectStatusEnum.Pending
-        };
+            // Kiểm tra project có tồn tại không
+            var project = await _context.Projects
+                .Include(p => p.ProjectPhases)
+                .Include(p => p.Group)
+                    .ThenInclude(g => g.GroupMembers)
+                .FirstOrDefaultAsync(p => p.ProjectId == projectId);
 
-        await _context.Journals.AddAsync(journal);
-        await _context.SaveChangesAsync();
+            if (project == null)
+                throw new ServiceException("Không tìm thấy project");
 
-        // Gửi thông báo cho các thành viên
-        var groupMembers = await _groupRepository.GetMembersByGroupId(project.GroupId.Value);
-        var activeMembers = groupMembers.Where(m => m.Status == (int)GroupMemberStatus.Active);
+            // Kiểm tra có phải là Research project không
+            if (project.ProjectType != (int)ProjectTypeEnum.Research)
+                throw new ServiceException("Chỉ có thể tạo Journal từ Research project");
 
-        // Tạo thông tin chi tiết về journal
-        var journalInfo = new StringBuilder();
-        journalInfo.AppendLine($"Thông tin chi tiết về Journal:");
-        journalInfo.AppendLine($"- Tên Journal: {journal.JournalName}");
-        journalInfo.AppendLine($"- Nhà xuất bản: {journal.PublisherName}");
-        journalInfo.AppendLine($"- DOI: {journal.DoiNumber}");
-        journalInfo.AppendLine($"- Ngày nộp: {journal.SubmissionDate:dd/MM/yyyy}");
+            // Kiểm tra người yêu cầu có phải là leader không
+            var leaderMember = project.Group.GroupMembers
+                .FirstOrDefault(m => m.UserId == userId && m.Status == (int)GroupMemberStatus.Active);
 
-        // Gửi thông báo cho thành viên thường
-        foreach (var member in activeMembers.Where(m => m.Role != (int)GroupMemberRoleEnum.Stakeholder))
-        {
-            if (member.UserId.HasValue)
+            if (leaderMember == null || leaderMember.Role != (int)GroupMemberRoleEnum.Leader)
+                throw new ServiceException("Chỉ leader mới có quyền tạo Journal");
+
+            // Kiểm tra tất cả milestone đã hoàn thành chưa
+            if (project.ProjectPhases.Any(m => m.Status != (int)ProjectPhaseStatusEnum.Completed))
+                throw new ServiceException("Tất cả milestone phải hoàn thành trước khi tạo Journal");
+
+            // Cập nhật project hiện có
+            project.ProjectType = (int)ProjectTypeEnum.Journal;
+            project.Status = (int)ProjectStatusEnum.Pending;
+            await _context.SaveChangesAsync();
+
+            // Tạo Journal record
+            var journal = new Journal
             {
-                var notificationRequest = new CreateNotificationRequest
+                JournalName = request.JournalName,
+                PublisherName = request.PublisherName,
+                ProjectId = projectId,
+                PublisherStatus = (int)PublisherStatusEnum.Pending,
+                SubmissionDate = DateTime.Now
+            };
+
+            await _context.Journals.AddAsync(journal);
+            await _context.SaveChangesAsync();
+
+            // Gửi thông báo cho các thành viên
+            var groupMembers = await _groupRepository.GetMembersByGroupId(project.GroupId.Value);
+            var activeMembers = groupMembers.Where(m => m.Status == (int)GroupMemberStatus.Active);
+
+            // Tạo thông tin chi tiết về journal
+            var journalInfo = new StringBuilder();
+            journalInfo.AppendLine($"Thông tin chi tiết về Journal:");
+            journalInfo.AppendLine($"- Tên Journal: {journal.JournalName}");
+            journalInfo.AppendLine($"- Nhà xuất bản: {journal.PublisherName}");
+            journalInfo.AppendLine($"- Ngày nộp: {journal.SubmissionDate:dd/MM/yyyy}");
+
+            // Gửi thông báo cho thành viên thường
+            foreach (var member in activeMembers.Where(m => m.Role != (int)GroupMemberRoleEnum.Stakeholder))
+            {
+                if (member.UserId.HasValue)
                 {
-                    UserId = member.UserId.Value,
-                    Title = "Đăng ký xuất bản Journal mới",
-                    Message = $"Project đã được chuyển thành Journal và đang chờ phê duyệt.\n\n{journalInfo}",
-                    ProjectId = projectId,
-                    Status = 0,
-                    IsRead = false
-                };
-                await _notificationService.CreateNotification(notificationRequest);
+                    var notificationRequest = new CreateNotificationRequest
+                    {
+                        UserId = member.UserId.Value,
+                        Title = "Đăng ký xuất bản Journal mới",
+                        Message = $"Project đã được chuyển thành Journal và đang chờ phê duyệt.\n\n{journalInfo}",
+                        ProjectId = projectId,
+                        Status = 0,
+                        IsRead = false
+                    };
+                    await _notificationService.CreateNotification(notificationRequest);
+                }
             }
-        }
-        // Gửi email cho stakeholder
-        var stakeholders = activeMembers.Where(m =>
-        m.Role == (int)GroupMemberRoleEnum.Stakeholder &&
-        m.User != null);
+            // Gửi email cho stakeholder
+            var stakeholders = activeMembers.Where(m =>
+            m.Role == (int)GroupMemberRoleEnum.Stakeholder &&
+            m.User != null);
 
-        foreach (var stakeholder in stakeholders)
+            foreach (var stakeholder in stakeholders)
+            {
+                await _emailService.SendEmailAsync(
+                stakeholder.User.Email,
+                $"Thông báo đăng ký Journal mới",
+                $"Xin chào {stakeholder.User.FullName},\n\n" +
+                $"Dự án nghiên cứu đã được đăng ký xuất bản Journal.\n\n" +
+                $"{journalInfo}\n\n" +
+                $"Trân trọng."
+                );
+            }
+
+            return projectId;
+        }
+        catch (Exception ex)
         {
-            await _emailService.SendEmailAsync(
-            stakeholder.User.Email,
-            $"Thông báo đăng ký Journal mới",
-            $"Xin chào {stakeholder.User.FullName},\n\n" +
-            $"Dự án nghiên cứu đã được đăng ký xuất bản Journal.\n\n" +
-            $"{journalInfo}\n\n" +
-            $"Trân trọng."
-            );
+            throw new ServiceException($"Lỗi khi tạo Journal: {ex.Message}");
         }
+    }
 
-        return projectId;
-    }
-    catch (Exception ex)
-    {
-        throw new ServiceException($"Lỗi khi tạo Journal: {ex.Message}");
-    }
-}
     public async Task<bool> ApproveJournal(int journalId, int secretaryId, IFormFile documentFile)
     {
         try

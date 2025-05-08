@@ -24,4 +24,6 @@ public partial class ConferenceExpense
     public virtual Conference? Conference { get; set; }
 
     public virtual ICollection<Document> Documents { get; set; } = new List<Document>();
+
+    public virtual FundDisbursement? FundDisbursement { get; set; }
 }
