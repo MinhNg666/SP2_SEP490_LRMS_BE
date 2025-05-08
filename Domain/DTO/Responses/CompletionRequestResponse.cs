@@ -26,7 +26,7 @@ namespace Domain.DTO.Responses
         
         // CompletionRequestDetail data
         public decimal? BudgetRemaining { get; set; }
-        public bool BudgetReconciled { get; set; }
+        public bool? BudgetReconciled { get; set; }
         public string? CompletionSummary { get; set; }
         public string? BudgetVarianceExplanation { get; set; }
         

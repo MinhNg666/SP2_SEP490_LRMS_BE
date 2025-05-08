@@ -28,5 +28,8 @@ namespace Domain.DTO.Responses
         // Project phase information (if applicable)
         public int? ProjectPhaseId { get; set; }
         public string ProjectPhaseTitle { get; set; }
+
+        public int? FundDisbursementType { get; set; }
+        public string FundDisbursementTypeName { get; set; }
     }
 }

@@ -22,5 +22,9 @@ public interface IConferenceService
     Task<int> CreateNewSubmissionAfterRejection(int projectId, int userId, int rejectedConferenceId, CreateNewSubmissionRequest request);
     Task<IEnumerable<ConferenceResponse>> GetUserConferences(int userId);
     Task<ConferenceDetailResponse> GetConferenceDetails(int conferenceId);
-    Task<int> RequestConferenceExpenseAsync(int userId, RequestConferenceExpenseRequest request);
+    Task<int> RequestConferenceExpenseAsync(int userId, RequestConferenceExpenseRequest request, IEnumerable<IFormFile> documentFiles);
+    Task<bool> UpdateConferenceExpenseStatus(int requestId, int newStatus, string rejectionReason = null, IEnumerable<IFormFile> documentFiles = null, int approverId = 0);
+    Task<IEnumerable<ConferenceExpenseRequestResponse>> GetPendingConferenceExpenseRequestsAsync();
+    Task<IEnumerable<ConferenceExpenseResponse>> GetConferenceExpensesAsync(int conferenceId);
+    Task<int> RequestConferenceFundingAsync(int userId, RequestConferenceFundingRequest request, IEnumerable<IFormFile> documentFiles);
 } 

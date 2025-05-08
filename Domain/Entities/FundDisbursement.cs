@@ -31,6 +31,13 @@ public partial class FundDisbursement
 
     public string? RejectionReason { get; set; }
 
+    public int? ConferenceId { get; set; } 
+    public int? JournalId { get; set; } 
+    public int? FundDisbursementType { get; set; } 
+
+    public int? ExpenseId { get; set; }
+    public virtual ConferenceExpense? ConferenceExpense { get; set; }
+
     public virtual GroupMember? AppovedByNavigation { get; set; }
 
     public virtual User? UserRequestNavigation { get; set; }
@@ -44,4 +51,7 @@ public partial class FundDisbursement
     public virtual Quota? Quota { get; set; }
 
     public virtual ProjectPhase? ProjectPhase { get; set; }
+
+    public virtual Conference? Conference { get; set; }
+    public virtual Journal? Journal { get; set; }
 }

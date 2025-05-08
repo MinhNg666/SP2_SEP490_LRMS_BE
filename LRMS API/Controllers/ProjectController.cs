@@ -611,6 +611,28 @@ public class ProjectController : ApiBaseController
         }
     }
 
+    [HttpGet("pending-fund-disbursement-requests")]
+    [Authorize]
+    public async Task<IActionResult> GetPendingFundDisbursementRequests()
+    {
+        try
+        {
+            var requests = await _projectService.GetAllProjectRequestsAsync();
+            var pendingFundRequests = requests.Where(r => 
+                r.RequestType == ProjectRequestTypeEnum.Fund_Disbursement && 
+                r.ApprovalStatus == ApprovalStatusEnum.Pending);
+            
+            return Ok(new ApiResponse(
+                StatusCodes.Status200OK, 
+                $"Found {pendingFundRequests.Count()} pending fund disbursement requests", 
+                pendingFundRequests));
+        }
+        catch (ServiceException ex)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
+        }
+    }
+
     [HttpGet("fund-disbursement-requests")]
     [Authorize]
     public async Task<IActionResult> GetFundDisbursementRequests()

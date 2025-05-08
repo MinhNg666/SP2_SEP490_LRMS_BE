@@ -30,4 +30,7 @@ public class ConferenceExpenseResponse
     public decimal AccomodationExpense { get; set; }
     public string Travel { get; set; }
     public decimal TravelExpense { get; set; }
+    public int? ExpenseStatus { get; set; }
+    public string ExpenseStatusName { get; set; }
+    public string RejectionReason { get; set; }
 } 

@@ -15,6 +15,15 @@ public class FundDisbursementResponse
     public int? QuotaId { get; set; }
     public int? ProjectPhaseId { get; set; }
     public string? ProjectPhaseTitle { get; set; }
+
+   public int? FundDisbursementType { get; set; }
+   public string? FundDisbursementTypeName { get; set; }
+   
+   
+   public int? ConferenceId { get; set; }
+   public string? ConferenceName { get; set; }
+   public int? JournalId { get; set; }
+   public string? JournalName { get; set; }
     
     // Requester Information
     public int RequesterId { get; set; }  
@@ -38,6 +47,12 @@ public class FundDisbursementResponse
     public ICollection<ProjectPhaseInfo>? ProjectPhases { get; set; }
     public string? RejectionReason { get; set; }
     public int? RequestId { get; set; }
+    
+    // Conference expense details 
+    public ConferenceExpenseDetail? ConferenceExpenseDetail { get; set; }
+    
+    // Conference funding details
+    public ConferenceFundingDetail? ConferenceFundingDetail { get; set; }
 }
 
 public class ProjectPhaseInfo
@@ -49,4 +64,26 @@ public class ProjectPhaseInfo
     public int? Status { get; set; }
     public string? StatusName { get; set; }
     public decimal SpentBudget { get; set; } = 0;
+}
+
+// Added class to include detailed conference expense information
+public class ConferenceExpenseDetail
+{
+    public int ExpenseId { get; set; }
+    public string? Accommodation { get; set; }
+    public decimal AccommodationExpense { get; set; }
+    public string? Travel { get; set; }
+    public decimal TravelExpense { get; set; }
+    public int ExpenseStatus { get; set; }
+    public string? ExpenseStatusName { get; set; }
+    public string? RejectionReason { get; set; }
+}
+
+// Added class to include detailed conference funding information
+public class ConferenceFundingDetail
+{
+    public string? Location { get; set; }
+    public DateTime? PresentationDate { get; set; }
+    public DateTime? AcceptanceDate { get; set; }
+    public decimal? ConferenceFunding { get; set; }
 }
