@@ -12,6 +12,7 @@ using Repository.Implementations;
 using Repository.Interfaces;
 using Service.Exceptions;
 using Service.Interfaces;
+using Service.Settings;
 
 namespace Service.Implementations;
 public class InvitationService : IInvitationService
@@ -19,15 +20,18 @@ public class InvitationService : IInvitationService
     private readonly IInvitationRepository _invitationRepository;
     private readonly IGroupRepository _groupRepository;
     private readonly INotificationService _notificationService;
+    private readonly IEmailService _emailService;
     private readonly IMapper _mapper;
     private readonly IUserRepository _userRepository;
 
-    public InvitationService(IInvitationRepository invitationRepository, IMapper mapper, IGroupRepository groupRepository, INotificationService notificationService, IUserRepository userRepository)
+    public InvitationService(IInvitationRepository invitationRepository, IMapper mapper, IGroupRepository groupRepository,
+        IEmailService emailService, INotificationService notificationService, IUserRepository userRepository)
     {
         _invitationRepository = invitationRepository;
         _mapper = mapper;
         _groupRepository = groupRepository;
         _notificationService = notificationService;
+        _emailService = emailService;
         _userRepository = userRepository;
     }
 
@@ -47,6 +51,13 @@ public class InvitationService : IInvitationService
             throw new ServiceException("Sender not found.");
         }
 
+        // Get invited user info
+        var invitedUser = await _userRepository.GetByIdAsync(request.InvitedUserId);
+        if (invitedUser == null)
+        {
+            throw new ServiceException("Invited user not found.");
+        }
+
         var invitation = new Invitation
         {
             Message = request.Content,
@@ -60,13 +71,20 @@ public class InvitationService : IInvitationService
 
         await _invitationRepository.AddInvitationAsync(invitation);
 
-        // Create notification with sender's name
-        var senderName = sender.FullName ?? "Unknown User";
+        // Gửi email thông báo cho người được mời
+        var emailContent = InvitationEmailTemplates.GetInvitationEmail(invitedUser, group, sender);
+        await _emailService.SendEmailAsync(
+            invitedUser.Email,
+            $"[LRMS] Lời mời tham gia nhóm - {group.GroupName}",
+            emailContent
+        );
+
+        // Tạo notification cho người được mời
         var notificationRequest = new CreateNotificationRequest
         {
             UserId = request.InvitedUserId,
-            Title = "Group Invitation",
-            Message = $"You have been invited by {senderName} to join the group '{group.GroupName}'",
+            Title = "Lời mời tham gia nhóm",
+            Message = $"Bạn nhận được lời mời tham gia nhóm nghiên cứu {group.GroupName} từ {sender.FullName}",
             ProjectId = request.ProjectId,
             Status = 0,
             IsRead = false,
@@ -94,21 +112,46 @@ public class InvitationService : IInvitationService
             throw new ServiceException("Invitation has already been processed.");
         }
 
+        // Get necessary information for email
+        var group = await _groupRepository.GetByIdAsync(invitation.GroupId.Value);
+        var member = await _userRepository.GetByIdAsync(userId);
+        var leader = await _userRepository.GetByIdAsync(invitation.SentBy.Value);
+
         invitation.Status = (int)InvitationEnum.Accepted;
         invitation.RespondDate = DateTime.Now;
         await _invitationRepository.UpdateInvitation(invitation);
-        
+
         // Update notification status
         await _notificationService.UpdateNotificationForInvitation(invitationId, (int)InvitationEnum.Accepted);
-        
+
         if (invitation.GroupId.HasValue)
         {
             var groupMember = await _groupRepository.GetGroupMember(invitation.GroupId.Value, userId);
             if (groupMember != null)
             {
-                groupMember.Status = 1; // Active
+                groupMember.Status = (int)GroupMemberStatus.Active;
                 groupMember.JoinDate = DateTime.Now;
                 await _groupRepository.UpdateMemberAsync(groupMember);
+
+                // Gửi email thông báo cho leader
+                var emailContent = InvitationEmailTemplates.GetAcceptInvitationEmail(member, group, leader);
+                await _emailService.SendEmailAsync(
+                    leader.Email,
+                    $"[LRMS] Thành viên mới đã tham gia nhóm - {group.GroupName}",
+                    emailContent
+                );
+
+                // Tạo notification cho leader
+                var notificationRequest = new CreateNotificationRequest
+                {
+                    UserId = leader.UserId,
+                    Title = $"Thành viên mới trong nhóm {group.GroupName}",
+                    Message = $"{member.FullName} đã chấp nhận lời mời tham gia nhóm",
+                    Status = 0,
+                    IsRead = false,
+                    InvitationId = invitationId
+                };
+                await _notificationService.CreateNotification(notificationRequest);
                 
                 // Check if all members have accepted their invitations
                 await CheckAndUpdateGroupStatus(invitation.GroupId.Value);
@@ -171,13 +214,18 @@ public class InvitationService : IInvitationService
             throw new ServiceException("Invitation has already been processed.");
         }
 
+        // Get necessary information for email
+        var group = await _groupRepository.GetByIdAsync(invitation.GroupId.Value);
+        var member = await _userRepository.GetByIdAsync(userId);
+        var leader = await _userRepository.GetByIdAsync(invitation.SentBy.Value);
+
         invitation.Status = (int)InvitationEnum.Rejected;
         invitation.RespondDate = DateTime.Now;
         await _invitationRepository.UpdateInvitation(invitation);
-        
+
         // Update notification status
         await _notificationService.UpdateNotificationForInvitation(invitationId, (int)InvitationEnum.Rejected);
-        
+
         if (invitation.GroupId.HasValue)
         {
             // Update member status to rejected
@@ -186,6 +234,26 @@ public class InvitationService : IInvitationService
             {
                 groupMember.Status = (int)GroupMemberStatus.Rejected;
                 await _groupRepository.UpdateMemberAsync(groupMember);
+
+                // Gửi email thông báo cho leader
+                var emailContent = InvitationEmailTemplates.GetRejectInvitationEmail(member, group, leader);
+                await _emailService.SendEmailAsync(
+                    leader.Email,
+                    $"[LRMS] Phản hồi lời mời tham gia nhóm - {group.GroupName}",
+                    emailContent
+                );
+
+                // Tạo notification cho leader
+                var notificationRequest = new CreateNotificationRequest
+                {
+                    UserId = leader.UserId,
+                    Title = $"Phản hồi lời mời nhóm {group.GroupName}",
+                    Message = $"{member.FullName} đã từ chối lời mời tham gia nhóm",
+                    Status = 0,
+                    IsRead = false,
+                    InvitationId = invitationId
+                };
+                await _notificationService.CreateNotification(notificationRequest);
             }
         }
     }

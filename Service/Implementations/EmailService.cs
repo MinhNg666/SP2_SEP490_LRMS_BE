@@ -9,39 +9,42 @@ namespace Service.Implementations;
 public class EmailService : IEmailService
 {
     private readonly IConfiguration _configuration;
+    private readonly string _sender;
+    private readonly string _senderName;
+    private readonly SmtpClient _smtpClient;
 
     public EmailService(IConfiguration configuration)
     {
-        _configuration = configuration;
+        _sender = configuration["EmailSettings:Sender"]
+                ?? throw new ArgumentNullException("EmailSettings:Sender configuration is missing");
+        _senderName = configuration["EmailSettings:SenderName"]
+            ?? throw new ArgumentNullException("EmailSettings:SenderName configuration is missing");
+
+        _smtpClient = new SmtpClient
+        {
+            Host = configuration["EmailSettings:SmtpServer"],
+            Port = int.Parse(configuration["EmailSettings:Port"]),
+            EnableSsl = bool.Parse(configuration["EmailSettings:EnableSsl"]),
+            Credentials = new NetworkCredential(
+                configuration["EmailSettings:Username"],
+                configuration["EmailSettings:Password"]
+            )
+        };
     }
 
-    public async Task SendEmailAsync(string email, string subject, string message)
+    public async Task SendEmailAsync(string to, string subject, string htmlBody)
     {
-        try
-        {
-            var smtpSettings = _configuration.GetSection("EmailSettings");
-            var mailMessage = new MailMessage
-            {
-                From = new MailAddress(smtpSettings["Sender"], smtpSettings["SenderName"]),
-                Subject = subject,
-                Body = message,
-                IsBodyHtml = true,
-            };
-            mailMessage.To.Add(email);
+        string htmlFormattedBody = htmlBody.Replace(Environment.NewLine, "<br>");
+    
+    var mailMessage = new MailMessage
+    {
+        From = new MailAddress(_sender, _senderName),
+        Subject = subject,
+        Body = htmlFormattedBody,
+        IsBodyHtml = true // Enable HTML
+    };
+    mailMessage.To.Add(to);
 
-            using (var client = new SmtpClient(smtpSettings["SmtpServer"], int.Parse(smtpSettings["Port"])))
-            {
-                client.UseDefaultCredentials = false;
-                client.Credentials = new NetworkCredential(smtpSettings["Username"], smtpSettings["Password"]);
-                client.EnableSsl = bool.Parse(smtpSettings["EnableSsl"]);
-
-                await client.SendMailAsync(mailMessage);
-            }
-        }
-        catch (Exception ex)
-        {
-            // Log error
-            Console.WriteLine($"Error sending email: {ex.Message}");
-        }
+    await _smtpClient.SendMailAsync(mailMessage);
     }
 }
