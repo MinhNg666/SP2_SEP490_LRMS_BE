@@ -14,9 +14,9 @@ public static class ConferenceEmailTemplates
         if (expense == null) return "";
 
         return $@"<p>
-<strong>Chi phí dự kiến:</strong><br/>
-- Chi phí đi lại: {expense.TravelExpense:N0} VND ({expense.Travel})<br/>
-- Chi phí lưu trú: {expense.AccomodationExpense:N0} VND ({expense.Accomodation})
+<strong>Estimated Expenses:</strong><br/>
+- Travel Expenses: {expense.TravelExpense:N0} USD ({expense.Travel})<br/>
+- Accommodation Expenses: {expense.AccomodationExpense:N0} USD ({expense.Accomodation})
 </p>";
     }
 
@@ -27,7 +27,7 @@ public static class ConferenceEmailTemplates
 <head>
     <meta charset=""UTF-8"">
     <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
-    <title>Thông báo tạo Conference</title>
+    <title>Conference Creation Notification</title>
     <style>
         body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
         .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
@@ -39,33 +39,33 @@ public static class ConferenceEmailTemplates
 <body>
     <div class=""container"">
         <div class=""header"">
-            <p>Kính gửi {stakeholder.FullName},</p>
+            <p>Dear {stakeholder.FullName},</p>
         </div>
         <div class=""content"">
-            <p>Dự án nghiên cứu của nhóm đã được chuyển đổi thành Conference. Chi tiết như sau:</p>
+            <p>The research project of the group has been converted to a Conference. Details are as follows:</p>
             
-            <p><strong>Thông tin dự án gốc:</strong><br/>
-            - Tên dự án: {project.ProjectName}<br/>
-            - Nhóm nghiên cứu: {group.GroupName}<br/>
-            - Trạng thái: Đang chờ phê duyệt</p>
+            <p><strong>Original Project Information:</strong><br/>
+            - Project Name: {project.ProjectName}<br/>
+            - Research Group: {group.GroupName}<br/>
+            - Status: Pending Approval</p>
             
-            <p><strong>Thông tin Conference:</strong><br/>
-            - Tên Conference: {conference.ConferenceName}<br/>
-            - Địa điểm: {conference.Location}<br/>
-            - Xếp hạng: {conference.ConferenceRanking}<br/>
-            - Ngày thuyết trình: {conference.PresentationDate:dd/MM/yyyy}<br/>
-            - Hình thức: {conference.PresentationType}</p>
+            <p><strong>Conference Information:</strong><br/>
+            - Conference Name: {conference.ConferenceName}<br/>
+            - Location: {conference.Location}<br/>
+            - Ranking: {conference.ConferenceRanking}<br/>
+            - Presentation Date: {conference.PresentationDate:dd/MM/yyyy}<br/>
+            - Presentation Type: {conference.PresentationType}</p>
             
             {GetExpenseInfo(conference)}
             
-            <p>Vui lòng truy cập hệ thống để xem thêm chi tiết và theo dõi quá trình phê duyệt.</p>
+            <p>Please access the system to view more details and track the approval process.</p>
         </div>
         <div class=""footer"">
-            <p>Trân trọng,<br/>
-            Hệ thống LRMS</p>
+            <p>Best regards,<br/>
+            LRMS System</p>
             
-            <p><em>Lưu ý: Đây là email tự động, vui lòng không phản hồi email này.<br/>
-            Nếu có bất kỳ thắc mắc nào, vui lòng liên hệ với trưởng nhóm hoặc quản trị viên để được hỗ trợ.</em></p>
+            <p><em>Note: This is an automated email, please do not reply.<br/>
+            If you have any questions, please contact the group leader or administrator for assistance.</em></p>
         </div>
     </div>
 </body>
@@ -79,7 +79,7 @@ public static class ConferenceEmailTemplates
 <head>
     <meta charset=""UTF-8"">
     <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
-    <title>Thông báo tạo Conference</title>
+    <title>Conference Creation Notification</title>
     <style>
         body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
         .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
@@ -91,33 +91,33 @@ public static class ConferenceEmailTemplates
 <body>
     <div class=""container"">
         <div class=""header"">
-            <p>Kính gửi {member.FullName},</p>
+            <p>Dear {member.FullName},</p>
         </div>
         <div class=""content"">
-            <p>Dự án nghiên cứu của nhóm đã được chuyển đổi thành Conference. Chi tiết như sau:</p>
+            <p>The research project of the group has been converted to a Conference. Details are as follows:</p>
             
-            <p><strong>Thông tin dự án gốc:</strong><br/>
-            - Tên dự án: {project.ProjectName}<br/>
-            - Nhóm nghiên cứu: {group.GroupName}<br/>
-            - Trạng thái: Đang chờ phê duyệt</p>
+            <p><strong>Original Project Information:</strong><br/>
+            - Project Name: {project.ProjectName}<br/>
+            - Research Group: {group.GroupName}<br/>
+            - Status: Pending Approval</p>
             
-            <p><strong>Thông tin Conference:</strong><br/>
-            - Tên Conference: {conference.ConferenceName}<br/>
-            - Địa điểm: {conference.Location}<br/>
-            - Xếp hạng: {conference.ConferenceRanking}<br/>
-            - Ngày thuyết trình: {conference.PresentationDate:dd/MM/yyyy}<br/>
-            - Hình thức: {conference.PresentationType}</p>
+            <p><strong>Conference Information:</strong><br/>
+            - Conference Name: {conference.ConferenceName}<br/>
+            - Location: {conference.Location}<br/>
+            - Ranking: {conference.ConferenceRanking}<br/>
+            - Presentation Date: {conference.PresentationDate:dd/MM/yyyy}<br/>
+            - Presentation Type: {conference.PresentationType}</p>
             
             {GetExpenseInfo(conference)}
             
-            <p>Vui lòng truy cập hệ thống để xem thêm chi tiết và theo dõi quá trình phê duyệt.</p>
+            <p>Please access the system to view more details and track the approval process.</p>
         </div>
         <div class=""footer"">
-            <p>Trân trọng,<br/>
-            Hệ thống LRMS</p>
+            <p>Best regards,<br/>
+            LRMS System</p>
             
-            <p><em>Lưu ý: Đây là email tự động, vui lòng không phản hồi email này.<br/>
-            Nếu có bất kỳ thắc mắc nào, vui lòng liên hệ với trưởng nhóm hoặc quản trị viên để được hỗ trợ.</em></p>
+            <p><em>Note: This is an automated email, please do not reply.<br/>
+            If you have any questions, please contact the group leader or administrator for assistance.</em></p>
         </div>
     </div>
 </body>
@@ -131,7 +131,7 @@ public static class ConferenceEmailTemplates
 <head>
     <meta charset=""UTF-8"">
     <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
-    <title>Thông báo phê duyệt Conference</title>
+    <title>Conference Approval Notification</title>
     <style>
         body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
         .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
@@ -144,34 +144,34 @@ public static class ConferenceEmailTemplates
 <body>
     <div class=""container"">
         <div class=""header"">
-            <p>Kính gửi {stakeholder.FullName},</p>
+            <p>Dear {stakeholder.FullName},</p>
         </div>
         <div class=""content"">
-            <p>Conference của nhóm đã được hội đồng phê duyệt. Chi tiết như sau:</p>
+            <p>The group's Conference has been approved by the council. Details are as follows:</p>
             
-            <p><strong>Thông tin Conference:</strong><br/>
-            - Tên Conference: {conference.ConferenceName}<br/>
-            - Địa điểm: {conference.Location}<br/>
-            - Xếp hạng: {conference.ConferenceRanking}<br/>
-            - Ngày thuyết trình: {conference.PresentationDate:dd/MM/yyyy}<br/>
-            - Hình thức: {conference.PresentationType}<br/>
-            - Người phê duyệt: {approver.FullName}</p>
+            <p><strong>Conference Information:</strong><br/>
+            - Conference Name: {conference.ConferenceName}<br/>
+            - Location: {conference.Location}<br/>
+            - Ranking: {conference.ConferenceRanking}<br/>
+            - Presentation Date: {conference.PresentationDate:dd/MM/yyyy}<br/>
+            - Presentation Type: {conference.PresentationType}<br/>
+            - Approver: {approver.FullName}</p>
             
             {GetExpenseInfo(conference)}
             
             <div class=""document-link"">
-                <p><strong>Biên bản họp hội đồng xét duyệt:</strong><br/>
-                <a href=""{documentUrl}"">Xem biên bản</a></p>
+                <p><strong>Council Meeting Minutes:</strong><br/>
+                <a href=""{documentUrl}"">View Minutes</a></p>
             </div>
             
-            <p>Vui lòng truy cập hệ thống để xem thêm chi tiết.</p>
+            <p>Please access the system to view more details.</p>
         </div>
         <div class=""footer"">
-            <p>Trân trọng,<br/>
-            Hệ thống LRMS</p>
+            <p>Best regards,<br/>
+            LRMS System</p>
             
-            <p><em>Lưu ý: Đây là email tự động, vui lòng không phản hồi email này.<br/>
-            Nếu có bất kỳ thắc mắc nào, vui lòng liên hệ với trưởng nhóm hoặc quản trị viên để được hỗ trợ.</em></p>
+            <p><em>Note: This is an automated email, please do not reply.<br/>
+            If you have any questions, please contact the group leader or administrator for assistance.</em></p>
         </div>
     </div>
 </body>
@@ -185,7 +185,7 @@ public static class ConferenceEmailTemplates
 <head>
     <meta charset=""UTF-8"">
     <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
-    <title>Thông báo phê duyệt Conference</title>
+    <title>Conference Approval Notification</title>
     <style>
         body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
         .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
@@ -198,34 +198,34 @@ public static class ConferenceEmailTemplates
 <body>
     <div class=""container"">
         <div class=""header"">
-            <p>Kính gửi {member.FullName},</p>
+            <p>Dear {member.FullName},</p>
         </div>
         <div class=""content"">
-            <p>Conference của nhóm đã được hội đồng phê duyệt. Chi tiết như sau:</p>
+            <p>The group's Conference has been approved by the council. Details are as follows:</p>
             
-            <p><strong>Thông tin Conference:</strong><br/>
-            - Tên Conference: {conference.ConferenceName}<br/>
-            - Địa điểm: {conference.Location}<br/>
-            - Xếp hạng: {conference.ConferenceRanking}<br/>
-            - Ngày thuyết trình: {conference.PresentationDate:dd/MM/yyyy}<br/>
-            - Hình thức: {conference.PresentationType}<br/>
-            - Người phê duyệt: {approver.FullName}</p>
+            <p><strong>Conference Information:</strong><br/>
+            - Conference Name: {conference.ConferenceName}<br/>
+            - Location: {conference.Location}<br/>
+            - Ranking: {conference.ConferenceRanking}<br/>
+            - Presentation Date: {conference.PresentationDate:dd/MM/yyyy}<br/>
+            - Presentation Type: {conference.PresentationType}<br/>
+            - Approver: {approver.FullName}</p>
             
             {GetExpenseInfo(conference)}
             
             <div class=""document-link"">
-                <p><strong>Biên bản họp hội đồng xét duyệt:</strong><br/>
-                <a href=""{documentUrl}"">Xem biên bản</a></p>
+                <p><strong>Council Meeting Minutes:</strong><br/>
+                <a href=""{documentUrl}"">View Minutes</a></p>
             </div>
             
-            <p>Vui lòng truy cập hệ thống để xem thêm chi tiết.</p>
+            <p>Please access the system to view more details.</p>
         </div>
         <div class=""footer"">
-            <p>Trân trọng,<br/>
-            Hệ thống LRMS</p>
+            <p>Best regards,<br/>
+            LRMS System</p>
             
-            <p><em>Lưu ý: Đây là email tự động, vui lòng không phản hồi email này.<br/>
-            Nếu có bất kỳ thắc mắc nào, vui lòng liên hệ với trưởng nhóm hoặc quản trị viên để được hỗ trợ.</em></p>
+            <p><em>Note: This is an automated email, please do not reply.<br/>
+            If you have any questions, please contact the group leader or administrator for assistance.</em></p>
         </div>
     </div>
 </body>
@@ -239,7 +239,7 @@ public static class ConferenceEmailTemplates
 <head>
     <meta charset=""UTF-8"">
     <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
-    <title>Thông báo từ chối Conference</title>
+    <title>Conference Rejection Notification</title>
     <style>
         body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
         .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
@@ -253,33 +253,33 @@ public static class ConferenceEmailTemplates
 <body>
     <div class=""container"">
         <div class=""header"">
-            <p>Kính gửi {stakeholder.FullName},</p>
+            <p>Dear {stakeholder.FullName},</p>
         </div>
         <div class=""content"">
-            <p class=""rejection""><strong>Conference của nhóm đã bị hội đồng từ chối.</strong> Chi tiết như sau:</p>
+            <p class=""rejection""><strong>The group's Conference has been rejected by the council.</strong> Details are as follows:</p>
             
-            <p><strong>Thông tin Conference:</strong><br/>
-            - Tên Conference: {conference.ConferenceName}<br/>
-            - Địa điểm: {conference.Location}<br/>
-            - Xếp hạng: {conference.ConferenceRanking}<br/>
-            - Ngày thuyết trình: {conference.PresentationDate:dd/MM/yyyy}<br/>
-            - Hình thức: {conference.PresentationType}</p>
+            <p><strong>Conference Information:</strong><br/>
+            - Conference Name: {conference.ConferenceName}<br/>
+            - Location: {conference.Location}<br/>
+            - Ranking: {conference.ConferenceRanking}<br/>
+            - Presentation Date: {conference.PresentationDate:dd/MM/yyyy}<br/>
+            - Presentation Type: {conference.PresentationType}</p>
             
             {GetExpenseInfo(conference)}
             
             <div class=""document-link"">
-                <p><strong>Biên bản họp hội đồng xét duyệt (bao gồm lý do từ chối):</strong><br/>
-                <a href=""{documentUrl}"">Xem biên bản</a></p>
+                <p><strong>Council Meeting Minutes (including rejection reasons):</strong><br/>
+                <a href=""{documentUrl}"">View Minutes</a></p>
             </div>
             
-            <p>Vui lòng xem xét các ý kiến từ hội đồng và thực hiện các điều chỉnh cần thiết trước khi nộp lại.</p>
+            <p>Please review the council's comments and make necessary adjustments before resubmitting.</p>
         </div>
         <div class=""footer"">
-            <p>Trân trọng,<br/>
-            Hệ thống LRMS</p>
+            <p>Best regards,<br/>
+            LRMS System</p>
             
-            <p><em>Lưu ý: Đây là email tự động, vui lòng không phản hồi email này.<br/>
-            Nếu có bất kỳ thắc mắc nào, vui lòng liên hệ với trưởng nhóm hoặc quản trị viên để được hỗ trợ.</em></p>
+            <p><em>Note: This is an automated email, please do not reply.<br/>
+            If you have any questions, please contact the group leader or administrator for assistance.</em></p>
         </div>
     </div>
 </body>
@@ -293,7 +293,7 @@ public static class ConferenceEmailTemplates
 <head>
     <meta charset=""UTF-8"">
     <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
-    <title>Thông báo từ chối Conference</title>
+    <title>Conference Rejection Notification</title>
     <style>
         body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
         .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
@@ -307,33 +307,33 @@ public static class ConferenceEmailTemplates
 <body>
     <div class=""container"">
         <div class=""header"">
-            <p>Kính gửi {member.FullName},</p>
+            <p>Dear {member.FullName},</p>
         </div>
         <div class=""content"">
-            <p class=""rejection""><strong>Conference của nhóm đã bị hội đồng từ chối.</strong> Chi tiết như sau:</p>
+            <p class=""rejection""><strong>The group's Conference has been rejected by the council.</strong> Details are as follows:</p>
             
-            <p><strong>Thông tin Conference:</strong><br/>
-            - Tên Conference: {conference.ConferenceName}<br/>
-            - Địa điểm: {conference.Location}<br/>
-            - Xếp hạng: {conference.ConferenceRanking}<br/>
-            - Ngày thuyết trình: {conference.PresentationDate:dd/MM/yyyy}<br/>
-            - Hình thức: {conference.PresentationType}</p>
+            <p><strong>Conference Information:</strong><br/>
+            - Conference Name: {conference.ConferenceName}<br/>
+            - Location: {conference.Location}<br/>
+            - Ranking: {conference.ConferenceRanking}<br/>
+            - Presentation Date: {conference.PresentationDate:dd/MM/yyyy}<br/>
+            - Presentation Type: {conference.PresentationType}</p>
             
             {GetExpenseInfo(conference)}
             
             <div class=""document-link"">
-                <p><strong>Biên bản họp hội đồng xét duyệt (bao gồm lý do từ chối):</strong><br/>
-                <a href=""{documentUrl}"">Xem biên bản</a></p>
+                <p><strong>Council Meeting Minutes (including rejection reasons):</strong><br/>
+                <a href=""{documentUrl}"">View Minutes</a></p>
             </div>
             
-            <p>Vui lòng phối hợp với các thành viên trong nhóm để xem xét các ý kiến từ hội đồng và thực hiện các điều chỉnh cần thiết trước khi nộp lại.</p>
+            <p>Please collaborate with group members to review the council's comments and make necessary adjustments before resubmitting.</p>
         </div>
         <div class=""footer"">
-            <p>Trân trọng,<br/>
-            Hệ thống LRMS</p>
+            <p>Best regards,<br/>
+            LRMS System</p>
             
-            <p><em>Lưu ý: Đây là email tự động, vui lòng không phản hồi email này.<br/>
-            Nếu có bất kỳ thắc mắc nào, vui lòng liên hệ với trưởng nhóm hoặc quản trị viên để được hỗ trợ.</em></p>
+            <p><em>Note: This is an automated email, please do not reply.<br/>
+            If you have any questions, please contact the group leader or administrator for assistance.</em></p>
         </div>
     </div>
 </body>
@@ -347,7 +347,7 @@ public static class ConferenceEmailTemplates
 <head>
     <meta charset=""UTF-8"">
     <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
-    <title>Thông báo tài liệu Conference mới</title>
+    <title>New Conference Document Notification</title>
     <style>
         body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
         .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
@@ -360,33 +360,33 @@ public static class ConferenceEmailTemplates
 <body>
     <div class=""container"">
         <div class=""header"">
-            <p>Kính gửi {stakeholder.FullName},</p>
+            <p>Dear {stakeholder.FullName},</p>
         </div>
         <div class=""content"">
-            <p>Một tài liệu mới đã được tải lên cho Conference của nhóm. Chi tiết như sau:</p>
+            <p>A new document has been uploaded for the group's Conference. Details are as follows:</p>
             
-            <p><strong>Thông tin Conference:</strong><br/>
-            - Tên Conference: {conference.ConferenceName}<br/>
-            - Địa điểm: {conference.Location}<br/>
-            - Xếp hạng: {conference.ConferenceRanking}<br/>
-            - Ngày thuyết trình: {conference.PresentationDate:dd/MM/yyyy}</p>
+            <p><strong>Conference Information:</strong><br/>
+            - Conference Name: {conference.ConferenceName}<br/>
+            - Location: {conference.Location}<br/>
+            - Ranking: {conference.ConferenceRanking}<br/>
+            - Presentation Date: {conference.PresentationDate:dd/MM/yyyy}</p>
             
             <div class=""document-info"">
-                <p><strong>Thông tin tài liệu:</strong><br/>
-                - Tên tài liệu: {fileName}<br/>
-                - Người tải lên: {uploader.FullName}<br/>
-                - Thời gian: {DateTime.Now:dd/MM/yyyy HH:mm}<br/>
-                - <a href=""{documentUrl}"">Xem tài liệu</a></p>
+                <p><strong>Document Information:</strong><br/>
+                - Document Name: {fileName}<br/>
+                - Uploaded By: {uploader.FullName}<br/>
+                - Time: {DateTime.Now:dd/MM/yyyy HH:mm}<br/>
+                - <a href=""{documentUrl}"">View Document</a></p>
             </div>
             
-            <p>Vui lòng truy cập hệ thống để xem chi tiết tài liệu.</p>
+            <p>Please access the system to view document details.</p>
         </div>
         <div class=""footer"">
-            <p>Trân trọng,<br/>
-            Hệ thống LRMS</p>
+            <p>Best regards,<br/>
+            LRMS System</p>
             
-            <p><em>Lưu ý: Đây là email tự động, vui lòng không phản hồi email này.<br/>
-            Nếu có bất kỳ thắc mắc nào, vui lòng liên hệ với trưởng nhóm hoặc quản trị viên để được hỗ trợ.</em></p>
+            <p><em>Note: This is an automated email, please do not reply.<br/>
+            If you have any questions, please contact the group leader or administrator for assistance.</em></p>
         </div>
     </div>
 </body>
@@ -400,7 +400,7 @@ public static class ConferenceEmailTemplates
 <head>
     <meta charset=""UTF-8"">
     <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
-    <title>Thông báo tài liệu Conference mới</title>
+    <title>New Conference Document Notification</title>
     <style>
         body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
         .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
@@ -413,33 +413,33 @@ public static class ConferenceEmailTemplates
 <body>
     <div class=""container"">
         <div class=""header"">
-            <p>Kính gửi {member.FullName},</p>
+            <p>Dear {member.FullName},</p>
         </div>
         <div class=""content"">
-            <p>Một tài liệu mới đã được tải lên cho Conference của nhóm. Chi tiết như sau:</p>
+            <p>A new document has been uploaded for the group's Conference. Details are as follows:</p>
             
-            <p><strong>Thông tin Conference:</strong><br/>
-            - Tên Conference: {conference.ConferenceName}<br/>
-            - Địa điểm: {conference.Location}<br/>
-            - Xếp hạng: {conference.ConferenceRanking}<br/>
-            - Ngày thuyết trình: {conference.PresentationDate:dd/MM/yyyy}</p>
+            <p><strong>Conference Information:</strong><br/>
+            - Conference Name: {conference.ConferenceName}<br/>
+            - Location: {conference.Location}<br/>
+            - Ranking: {conference.ConferenceRanking}<br/>
+            - Presentation Date: {conference.PresentationDate:dd/MM/yyyy}</p>
             
             <div class=""document-info"">
-                <p><strong>Thông tin tài liệu:</strong><br/>
-                - Tên tài liệu: {fileName}<br/>
-                - Người tải lên: {uploader.FullName}<br/>
-                - Thời gian: {DateTime.Now:dd/MM/yyyy HH:mm}<br/>
-                - <a href=""{documentUrl}"">Xem tài liệu</a></p>
+                <p><strong>Document Information:</strong><br/>
+                - Document Name: {fileName}<br/>
+                - Uploaded By: {uploader.FullName}<br/>
+                - Time: {DateTime.Now:dd/MM/yyyy HH:mm}<br/>
+                - <a href=""{documentUrl}"">View Document</a></p>
             </div>
             
-            <p>Vui lòng truy cập hệ thống để xem chi tiết tài liệu.</p>
+            <p>Please access the system to view document details.</p>
         </div>
         <div class=""footer"">
-            <p>Trân trọng,<br/>
-            Hệ thống LRMS</p>
+            <p>Best regards,<br/>
+            LRMS System</p>
             
-            <p><em>Lưu ý: Đây là email tự động, vui lòng không phản hồi email này.<br/>
-            Nếu có bất kỳ thắc mắc nào, vui lòng liên hệ với trưởng nhóm hoặc quản trị viên để được hỗ trợ.</em></p>
+            <p><em>Note: This is an automated email, please do not reply.<br/>
+            If you have any questions, please contact the group leader or administrator for assistance.</em></p>
         </div>
     </div>
 </body>

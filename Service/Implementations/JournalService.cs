@@ -140,7 +140,7 @@ public class JournalService : IJournalService
             if (member.UserId.HasValue && member.User != null)
             {
                 // Gửi email
-                var emailSubject = $"[LRMS] Thông báo: Dự án chuyển đổi thành Journal - {project.ProjectName}";
+                var emailSubject = $"[LRMS] Notification: Project Converted to Journal - {project.ProjectName}";
                 var emailContent = member.Role == (int)GroupMemberRoleEnum.Stakeholder
                     ? JournalEmailTemplates.GetStakeholderJournalCreationEmail(member.User, project, journal, group, creator)
                     : JournalEmailTemplates.GetMemberJournalCreationEmail(member.User, project, journal, group, creator);
@@ -153,9 +153,9 @@ public class JournalService : IJournalService
                     var notificationRequest = new CreateNotificationRequest
                     {
                         UserId = member.UserId.Value,
-                        Title = "Đăng ký xuất bản Journal mới",
-                        Message = $"Dự án '{project.ProjectName}' đã được chuyển thành Journal '{journal.JournalName}' và đang chờ phê duyệt",
-                        ProjectId = projectId,
+                        Title = "New Journal Publication Registered", // Đã thay đổi
+                        Message = $"A new journal article '{journal.JournalName}' has been registered for project '{project.ProjectName}'", // Đã thay đổi
+                        ProjectId = project.ProjectId,
                         Status = 0,
                         IsRead = false
                     };
@@ -237,7 +237,7 @@ public class JournalService : IJournalService
                 if (member.UserId.HasValue && member.User != null)
                 {
                     // Gửi email
-                    var emailSubject = $"[LRMS] Thông báo: Journal đã được phê duyệt - {journal.JournalName}";
+                    var emailSubject = $"[LRMS] Notification: Journal Approved - {journal.JournalName}";
                     var emailContent = member.Role == (int)GroupMemberRoleEnum.Stakeholder
                         ? JournalEmailTemplates.GetStakeholderJournalApprovalEmail(member.User, journal.Project, journal, group, approver, documentUrl)
                         : JournalEmailTemplates.GetMemberJournalApprovalEmail(member.User, journal.Project, journal, group, approver, documentUrl);
@@ -250,8 +250,8 @@ public class JournalService : IJournalService
                         var notificationRequest = new CreateNotificationRequest
                         {
                             UserId = member.UserId.Value,
-                            Title = "Journal đã được phê duyệt",
-                            Message = $"Journal '{journal.JournalName}' đã được hội đồng phê duyệt",
+                            Title = "Journal Approved", // Đã thay đổi
+                            Message = $"Journal '{journal.JournalName}' has been approved. Please check the council meeting documents for details.", // Đã thay đổi
                             ProjectId = journal.ProjectId.Value,
                             Status = 0,
                             IsRead = false
@@ -335,7 +335,7 @@ public class JournalService : IJournalService
                 if (member.UserId.HasValue && member.User != null)
                 {
                     // Gửi email
-                    var emailSubject = $"[LRMS] Thông báo: Journal đã bị từ chối - {journal.JournalName}";
+                    var emailSubject = $"[LRMS] Notification: Journal Rejected - {journal.JournalName}";
                     var emailContent = member.Role == (int)GroupMemberRoleEnum.Stakeholder
                         ? JournalEmailTemplates.GetStakeholderJournalRejectionEmail(member.User, journal.Project, journal, group, documentUrl)
                         : JournalEmailTemplates.GetMemberJournalRejectionEmail(member.User, journal.Project, journal, group, documentUrl);
@@ -348,8 +348,8 @@ public class JournalService : IJournalService
                         var notificationRequest = new CreateNotificationRequest
                         {
                             UserId = member.UserId.Value,
-                            Title = "Journal đã bị từ chối",
-                            Message = $"Journal '{journal.JournalName}' đã bị hội đồng từ chối. Vui lòng xem biên bản tại: {documentUrl}",
+                            Title = "Journal Rejected", // Đã thay đổi
+                            Message = $"Journal '{journal.JournalName}' has been rejected. Please check the council meeting documents for details.", // Đã thay đổi
                             ProjectId = journal.ProjectId.Value,
                             Status = 0,
                             IsRead = false
@@ -420,7 +420,7 @@ public class JournalService : IJournalService
                 if (member.UserId.HasValue && member.User != null)
                 {
                     // Gửi email
-                    var emailSubject = $"[LRMS] Thông báo: Tài liệu mới cho Journal - {journal.JournalName}";
+                    var emailSubject = $"[LRMS] Notification: New Document for Journal - {journal.JournalName}";
                     var emailContent = member.Role == (int)GroupMemberRoleEnum.Stakeholder
                         ? JournalEmailTemplates.GetStakeholderJournalDocumentEmail(member.User, journal.Project, journal, uploader, documentFile.FileName, documentUrl)
                         : JournalEmailTemplates.GetMemberJournalDocumentEmail(member.User, journal.Project, journal, uploader, documentFile.FileName, documentUrl);
@@ -431,14 +431,14 @@ public class JournalService : IJournalService
                     if (member.Role != (int)GroupMemberRoleEnum.Stakeholder)
                     {
                         string title = member.UserId.Value == userId
-                            ? "Bạn đã tải lên tài liệu mới"
-                            : "Có tài liệu mới trong Journal";
+                            ? "You Have Uploaded New Document" // Đã thay đổi
+                            : "New Document in Journal"; // Đã thay đổi
 
                         var notificationRequest = new CreateNotificationRequest
                         {
                             UserId = member.UserId.Value,
                             Title = title,
-                            Message = $"Journal: {journal.JournalName}\nTài liệu: {documentFile.FileName}\nNgười tải lên: {uploader?.FullName}",
+                            Message = $"Project: {journal.JournalName}\nDocument: {documentFile.FileName}\nUploaded by: {uploader?.FullName}", // Đã thay đổi
                             ProjectId = journal.ProjectId.Value,
                             Status = 0,
                             IsRead = false

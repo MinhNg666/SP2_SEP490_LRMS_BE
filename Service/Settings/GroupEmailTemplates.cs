@@ -9,47 +9,47 @@ using LRMS_API;
 namespace Service.Settings;
 public static class GroupEmailTemplates
 {
-    // Template email cho người tạo nhóm
+    // Template email for group creator
     public static string GetCreatorGroupCreationEmail(User creator, Group group)
     {
         if (creator == null || group == null)
         {
-            return "Không thể tạo nội dung email do thiếu thông tin.";
+            return "Unable to create email content due to missing information.";
         }
 
         return $@"<html>
 <body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
     <div style='max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px;'>
-        <h2 style='color: #00477e;'>Thông báo tạo nhóm thành công</h2>
-        <p>Kính gửi <strong>{creator.FullName}</strong>,</p>
-        <p>Bạn đã tạo thành công nhóm nghiên cứu mới. Chi tiết như sau:</p>
+        <h2 style='color: #00477e;'>Group Creation Successful</h2>
+        <p>Dear <strong>{creator.FullName}</strong>,</p>
+        <p>You have successfully created a new research group. Details are as follows:</p>
         <div style='background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 15px 0;'>
-            <h3 style='margin-top: 0; color: #00477e;'>Thông tin nhóm:</h3>
+            <h3 style='margin-top: 0; color: #00477e;'>Group Information:</h3>
             <ul style='padding-left: 20px;'>
-                <li><strong>Tên nhóm:</strong> {group.GroupName}</li>
-                <li><strong>Loại nhóm:</strong> {(group.GroupType == (int)GroupTypeEnum.Student ? "Nhóm nghiên cứu sinh viên" : "Hội đồng")}</li>
-                <li><strong>Số thành viên tối đa:</strong> {group.MaxMember}</li>
-                <li><strong>Ngày tạo:</strong> {group.CreatedAt:dd/MM/yyyy HH:mm}</li>
+                <li><strong>Group Name:</strong> {group.GroupName}</li>
+                <li><strong>Group Type:</strong> {(group.GroupType == (int)GroupTypeEnum.Student ? "Student Research Group" : "Council")}</li>
+                <li><strong>Maximum Members:</strong> {group.MaxMember}</li>
+                <li><strong>Creation Date:</strong> {group.CreatedAt:dd/MM/yyyy HH:mm}</li>
             </ul>
         </div>
-        <p>Lời mời đã được gửi đến các thành viên bạn đã thêm vào nhóm. Bạn có thể theo dõi trạng thái phản hồi của họ trong hệ thống.</p>
-        <p>Trân trọng,<br>Hệ thống LRMS</p>
+        <p>Invitations have been sent to the members you added to the group. You can track their response status in the system.</p>
+        <p>Best regards,<br>LRMS System</p>
         <hr style='border: none; border-top: 1px solid #ddd; margin: 20px 0;'>
         <p style='font-size: 12px; color: #777;'>
-            <em>Lưu ý: Đây là email tự động, vui lòng không phản hồi email này.<br>
-            Nếu có bất kỳ thắc mắc nào, vui lòng liên hệ với quản trị viên để được hỗ trợ.</em>
+            <em>Note: This is an automated email, please do not reply.<br>
+            If you have any questions, please contact the administrator for assistance.</em>
         </p>
     </div>
 </body>
 </html>";
     }
 
-    // Template email mời thành viên tham gia nhóm
+    // Template email inviting members to join the group
     public static string GetMemberInvitationEmail(User member, Group group, User inviter, int role)
     {
         if (member == null || group == null || inviter == null)
         {
-            return "Không thể tạo nội dung email do thiếu thông tin.";
+            return "Unable to create email content due to missing information.";
         }
 
         string roleName = GetRoleName(role);
@@ -57,24 +57,24 @@ public static class GroupEmailTemplates
         return $@"<html>
 <body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
     <div style='max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px;'>
-        <h2 style='color: #00477e;'>Lời mời tham gia nhóm nghiên cứu</h2>
-        <p>Kính gửi <strong>{member.FullName}</strong>,</p>
-        <p>Bạn đã được mời tham gia nhóm nghiên cứu. Chi tiết như sau:</p>
+        <h2 style='color: #00477e;'>Research Group Invitation</h2>
+        <p>Dear <strong>{member.FullName}</strong>,</p>
+        <p>You have been invited to join a research group. Details are as follows:</p>
         <div style='background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 15px 0;'>
-            <h3 style='margin-top: 0; color: #00477e;'>Thông tin nhóm:</h3>
+            <h3 style='margin-top: 0; color: #00477e;'>Group Information:</h3>
             <ul style='padding-left: 20px;'>
-                <li><strong>Tên nhóm:</strong> {group.GroupName}</li>
-                <li><strong>Loại nhóm:</strong> {(group.GroupType == (int)GroupTypeEnum.Student ? "Nhóm nghiên cứu sinh viên" : "Hội đồng")}</li>
-                <li><strong>Vai trò được mời:</strong> {roleName}</li>
-                <li><strong>Người mời:</strong> {inviter.FullName}</li>
+                <li><strong>Group Name:</strong> {group.GroupName}</li>
+                <li><strong>Group Type:</strong> {(group.GroupType == (int)GroupTypeEnum.Student ? "Student Research Group" : "Council")}</li>
+                <li><strong>Invited Role:</strong> {roleName}</li>
+                <li><strong>Inviter:</strong> {inviter.FullName}</li>
             </ul>
         </div>
-        <p>Vui lòng đăng nhập vào hệ thống LRMS để xem và phản hồi lời mời này.</p>
-        <p>Trân trọng,<br>Hệ thống LRMS</p>
+        <p>Please log in to the LRMS system to view and respond to this invitation.</p>
+        <p>Best regards,<br>LRMS System</p>
         <hr style='border: none; border-top: 1px solid #ddd; margin: 20px 0;'>
         <p style='font-size: 12px; color: #777;'>
-            <em>Lưu ý: Đây là email tự động, vui lòng không phản hồi email này.<br>
-            Nếu có bất kỳ thắc mắc nào, vui lòng liên hệ với người mời hoặc quản trị viên để được hỗ trợ.</em>
+            <em>Note: This is an automated email, please do not reply.<br>
+            If you have any questions, please contact the inviter or administrator for assistance.</em>
         </p>
     </div>
 </body>
@@ -85,47 +85,47 @@ public static class GroupEmailTemplates
     {
         if (stakeholder == null || group == null || creator == null)
         {
-            return "Không thể tạo nội dung email do thiếu thông tin.";
+            return "Unable to create email content due to missing information.";
         }
 
         return $@"<html>
 <body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
     <div style='max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px;'>
-        <h2 style='color: #00477e;'>Thông báo vai trò Stakeholder</h2>
-        <p>Kính gửi <strong>{stakeholder.FullName}</strong>,</p>
-        <p>Bạn đã được thêm làm Stakeholder của nhóm nghiên cứu. Chi tiết như sau:</p>
+        <h2 style='color: #00477e;'>Stakeholder Notification</h2>
+        <p>Dear <strong>{stakeholder.FullName}</strong>,</p>
+        <p>You have been added as a Stakeholder to a research group. Details are as follows:</p>
         <div style='background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 15px 0;'>
-            <h3 style='margin-top: 0; color: #00477e;'>Thông tin nhóm:</h3>
+            <h3 style='margin-top: 0; color: #00477e;'>Group Information:</h3>
             <ul style='padding-left: 20px;'>
-                <li><strong>Tên nhóm:</strong> {group.GroupName}</li>
-                <li><strong>Người tạo:</strong> {creator.FullName}</li>
+                <li><strong>Group Name:</strong> {group.GroupName}</li>
+                <li><strong>Creator:</strong> {creator.FullName}</li>
             </ul>
         </div>
-        <p>Với vai trò Stakeholder, bạn sẽ nhận được các thông báo về tiến độ và cập nhật quan trọng của các dự án thuộc nhóm này qua email.</p>
-        <p>Trân trọng,<br>Hệ thống LRMS</p>
+        <p>As a Stakeholder, you will receive notifications about progress and important updates of projects in this group via email.</p>
+        <p>Best regards,<br>LRMS System</p>
         <hr style='border: none; border-top: 1px solid #ddd; margin: 20px 0;'>
         <p style='font-size: 12px; color: #777;'>
-            <em>Lưu ý: Đây là email tự động, vui lòng không phản hồi email này.<br>
-            Nếu có bất kỳ thắc mắc nào, vui lòng liên hệ với người tạo nhóm hoặc quản trị viên để được hỗ trợ.</em>
+            <em>Note: This is an automated email, please do not reply.<br>
+            If you have any questions, please contact the group creator or administrator for assistance.</em>
         </p>
     </div>
 </body>
 </html>";
     }
 
-    // Phương thức trợ giúp để lấy tên vai trò
+    // Helper method to get role name
     public static string GetRoleName(int role)
     {
         return role switch
         {
-            (int)GroupMemberRoleEnum.Leader => "Trưởng nhóm",
-            (int)GroupMemberRoleEnum.Member => "Thành viên",
-            (int)GroupMemberRoleEnum.Supervisor => "Giáo viên hướng dẫn",
+            (int)GroupMemberRoleEnum.Leader => "Group Leader",
+            (int)GroupMemberRoleEnum.Member => "Member",
+            (int)GroupMemberRoleEnum.Supervisor => "Supervisor",
             (int)GroupMemberRoleEnum.Stakeholder => "Stakeholder",
-            (int)GroupMemberRoleEnum.Council_Chairman => "Chủ tịch hội đồng",
-            (int)GroupMemberRoleEnum.Secretary => "Thư ký hội đồng",
-            (int)GroupMemberRoleEnum.Council_Member => "Thành viên hội đồng",
-            _ => "Thành viên"
+            (int)GroupMemberRoleEnum.Council_Chairman => "Council Chairman",
+            (int)GroupMemberRoleEnum.Secretary => "Council Secretary",
+            (int)GroupMemberRoleEnum.Council_Member => "Council Member",
+            _ => "Member"
         };
     }
 }

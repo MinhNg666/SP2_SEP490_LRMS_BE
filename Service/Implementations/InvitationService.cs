@@ -75,7 +75,7 @@ public class InvitationService : IInvitationService
         var emailContent = InvitationEmailTemplates.GetInvitationEmail(invitedUser, group, sender);
         await _emailService.SendEmailAsync(
             invitedUser.Email,
-            $"[LRMS] Lời mời tham gia nhóm - {group.GroupName}",
+            $"[LRMS] Notification: Group Membership Invitation - {group.GroupName}",
             emailContent
         );
 
@@ -83,8 +83,8 @@ public class InvitationService : IInvitationService
         var notificationRequest = new CreateNotificationRequest
         {
             UserId = request.InvitedUserId,
-            Title = "Lời mời tham gia nhóm",
-            Message = $"Bạn nhận được lời mời tham gia nhóm nghiên cứu {group.GroupName} từ {sender.FullName}",
+            Title = "Group Membership Invitation", // Đã thay đổi
+            Message = $"You have received an invitation to join the research group {group.GroupName} from {sender.FullName}", // Đã thay đổi
             ProjectId = request.ProjectId,
             Status = 0,
             IsRead = false,
@@ -137,7 +137,7 @@ public class InvitationService : IInvitationService
                 var emailContent = InvitationEmailTemplates.GetAcceptInvitationEmail(member, group, leader);
                 await _emailService.SendEmailAsync(
                     leader.Email,
-                    $"[LRMS] Thành viên mới đã tham gia nhóm - {group.GroupName}",
+                    $"[LRMS] Notification: New Member Has Joined Group - {group.GroupName}",
                     emailContent
                 );
 
@@ -145,8 +145,8 @@ public class InvitationService : IInvitationService
                 var notificationRequest = new CreateNotificationRequest
                 {
                     UserId = leader.UserId,
-                    Title = $"Thành viên mới trong nhóm {group.GroupName}",
-                    Message = $"{member.FullName} đã chấp nhận lời mời tham gia nhóm",
+                    Title = $"New Member in Group {group.GroupName}", // Đã thay đổi
+                    Message = $"{member.FullName} has accepted the invitation to join the group", // Đã thay đổi
                     Status = 0,
                     IsRead = false,
                     InvitationId = invitationId
@@ -239,7 +239,7 @@ public class InvitationService : IInvitationService
                 var emailContent = InvitationEmailTemplates.GetRejectInvitationEmail(member, group, leader);
                 await _emailService.SendEmailAsync(
                     leader.Email,
-                    $"[LRMS] Phản hồi lời mời tham gia nhóm - {group.GroupName}",
+                    $"[LRMS] Notification: Group Invitation Response - {group.GroupName}",
                     emailContent
                 );
 
@@ -247,8 +247,8 @@ public class InvitationService : IInvitationService
                 var notificationRequest = new CreateNotificationRequest
                 {
                     UserId = leader.UserId,
-                    Title = $"Phản hồi lời mời nhóm {group.GroupName}",
-                    Message = $"{member.FullName} đã từ chối lời mời tham gia nhóm",
+                    Title = $"Group Invitation Response - {group.GroupName}", // Đã thay đổi
+                    Message = $"{member.FullName} has declined the invitation to join the group", // Đã thay đổi
                     Status = 0,
                     IsRead = false,
                     InvitationId = invitationId
