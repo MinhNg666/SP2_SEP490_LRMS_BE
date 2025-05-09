@@ -319,6 +319,19 @@ public class FundDisbursementService : IFundDisbursementService
         }
     }
     
+    public async Task<IEnumerable<FundDisbursementResponse>> GetFundDisbursementsByJournalId(int journalId)
+    {
+        try
+        {
+            var disbursements = await _fundDisbursementRepository.GetByJournalIdAsync(journalId);
+            return MapToDisbursementResponses(disbursements);
+        }
+        catch (Exception ex)
+        {
+            throw new ServiceException($"Error retrieving journal fund disbursements: {ex.Message}");
+        }
+    }
+    
     public async Task<bool> UploadDisbursementDocuments(int fundDisbursementId, IEnumerable<IFormFile> documentFiles, int userId)
     {
         try
@@ -786,6 +799,23 @@ public class FundDisbursementService : IFundDisbursementService
                 ConferenceFunding = conference.ConferenceFunding
             };
         }
+        
+        // Get detailed journal funding information if this is a journal funding disbursement
+        JournalFundingDetail journalFundingDetail = null;
+        
+        if (disbursement.FundDisbursementType == (int)FundDisbursementTypeEnum.JournalFunding && 
+            disbursement.JournalId.HasValue && disbursement.Journal != null)
+        {
+            var journal = disbursement.Journal;
+            
+            journalFundingDetail = new JournalFundingDetail
+            {
+                DoiNumber = journal.DoiNumber,
+                AcceptanceDate = journal.AcceptanceDate,
+                PublicationDate = journal.PublicationDate,
+                JournalFunding = journal.JournalFunding
+            };
+        }
 
         var response = new FundDisbursementResponse
         {
@@ -815,6 +845,9 @@ public class FundDisbursementService : IFundDisbursementService
             
             // Add the conference funding detail
             ConferenceFundingDetail = fundingDetail,
+            
+            // Add the journal funding detail
+            JournalFundingDetail = journalFundingDetail,
             
             // User information
             RequesterId = disbursement.UserRequest ?? 0,

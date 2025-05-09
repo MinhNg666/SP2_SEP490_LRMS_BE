@@ -4,9 +4,9 @@ namespace Domain.Constants
     {
         ProjectRegistration = 1,
         ReviewPeriod = 2,
-        FundRequest = 3,
-        FundApproval = 4,
-        ConferenceSubmission = 5,
-        PaperReview = 6
+        //FundRequest = 3,
+        //FundReview = 4,
+        //ConferenceSubmission = 5,
+        //PaperReview = 6
     }
 }

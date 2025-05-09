@@ -53,6 +53,9 @@ public class FundDisbursementResponse
     
     // Conference funding details
     public ConferenceFundingDetail? ConferenceFundingDetail { get; set; }
+    
+    // Journal funding details
+    public JournalFundingDetail? JournalFundingDetail { get; set; }
 }
 
 public class ProjectPhaseInfo
@@ -86,4 +89,13 @@ public class ConferenceFundingDetail
     public DateTime? PresentationDate { get; set; }
     public DateTime? AcceptanceDate { get; set; }
     public decimal? ConferenceFunding { get; set; }
+}
+
+// Added class to include detailed journal funding information
+public class JournalFundingDetail
+{
+    public string? DoiNumber { get; set; }
+    public DateTime? AcceptanceDate { get; set; }
+    public DateTime? PublicationDate { get; set; }
+    public decimal? JournalFunding { get; set; }
 }

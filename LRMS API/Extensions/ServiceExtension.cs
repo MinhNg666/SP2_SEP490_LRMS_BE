@@ -38,6 +38,8 @@ public static class ServiceExtension
         services.AddScoped<IS3Service, S3Service>();
         services.AddScoped<ITimelineService, TimelineService>();
         services.AddScoped<ITimelineSequenceService, TimelineSequenceService>();
+        services.AddScoped<ITimelineValidationService, TimelineValidationService>();
+        services.AddScoped<ITimelineManagementService, TimelineManagementService>();
         services.AddScoped<IDocumentService, DocumentService>();
         services.AddScoped<IConferenceService, ConferenceService>();
         services.AddScoped<IQuotaService, QuotaService>();

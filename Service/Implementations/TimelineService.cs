@@ -33,6 +33,20 @@ public class TimelineService : ITimelineService
                 throw new ServiceException("StartDate and EndDate are required");
             }
             
+            // Validate that no other active timeline with the same type exists
+            if (request.TimelineType.HasValue)
+            {
+                var existingTimeline = await _context.Timelines
+                    .Where(t => t.TimelineType == request.TimelineType &&
+                           t.Status == (int)TimelineStatusEnum.Active)
+                    .FirstOrDefaultAsync();
+                
+                if (existingTimeline != null)
+                {
+                    throw new ServiceException($"An active timeline of type {(TimelineTypeEnum)request.TimelineType} already exists. Please deactivate it before creating a new one.");
+                }
+            }
+            
             // If no sequenceId is provided, use a default one or the most recent/active sequence
             if (request.SequenceId == null || request.SequenceId <= 0)
             {
@@ -46,6 +60,18 @@ public class TimelineService : ITimelineService
                 }
                 
                 request.SequenceId = defaultSequence.SequenceId;
+            }
+
+            // Validate that the sequence exists and is active
+            var sequence = await _context.TimelineSequence.FindAsync(request.SequenceId);
+            if (sequence == null)
+            {
+                throw new ServiceException("Timeline sequence not found.");
+            }
+
+            if (sequence.Status != (int)TimelineSequenceStatusEnum.Active)
+            {
+                throw new ServiceException("Cannot add a timeline to an inactive or archived sequence.");
             }
 
             // Set default status to Active if not provided
@@ -70,7 +96,7 @@ public class TimelineService : ITimelineService
             await _context.SaveChangesAsync();
 
             var createdUser = await _context.Users.FindAsync(createdBy);
-            var sequence = await _context.Set<TimelineSequence>().FindAsync(request.SequenceId);
+            var sequenceDetails = await _context.Set<TimelineSequence>().FindAsync(request.SequenceId);
             
             string statusName = timeline.Status.HasValue 
                 ? Enum.GetName(typeof(TimelineStatusEnum), timeline.Status) 
@@ -80,8 +106,8 @@ public class TimelineService : ITimelineService
             {
                 Id = timeline.TimelineId,
                 SequenceId = timeline.SequenceId,
-                SequenceName = sequence?.SequenceName,
-                SequenceColor = sequence?.SequenceColor,
+                SequenceName = sequenceDetails?.SequenceName,
+                SequenceColor = sequenceDetails?.SequenceColor,
                 StartDate = timeline.StartDate,
                 EndDate = timeline.EndDate,
                 Event = timeline.Event,
