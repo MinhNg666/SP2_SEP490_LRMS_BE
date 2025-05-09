@@ -7,7 +7,7 @@ namespace Service.Interfaces;
 public interface IConferenceService
 {
     Task<ConferenceResponse> CreateConference(CreateConferenceRequest request, int createdBy);
-    Task<int> CreateConferenceFromResearch(int projectId, int leaderId, CreateConferenceFromProjectRequest request);
+    Task<int> CreateConferenceFromResearch(int projectId, int userId, CreateConferenceFromProjectRequest request);
     Task<IEnumerable<ConferenceResponse>> GetAllConferences();
     Task<ConferenceResponse> GetConferenceById(int conferenceId);
     Task<IEnumerable<ConferenceResponse>> GetConferencesByProjectId(int projectId);

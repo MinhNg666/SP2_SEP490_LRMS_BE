@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Repository.Interfaces;
 using Service.Exceptions;
 using Service.Interfaces;
+using Service.Settings;
 using System.Text;
 
 namespace Service.Implementations;
@@ -414,6 +415,45 @@ public class JournalService : IJournalService
 
             await _context.Documents.AddAsync(document);
             await _context.SaveChangesAsync();
+
+            // Lấy thông tin cần thiết
+            var uploader = await _context.Users.FindAsync(userId);
+            var group = journal.Project.Group;
+            var activeMembers = group.GroupMembers.Where(m => m.Status == (int)GroupMemberStatus.Active);
+
+            // Gửi email và notification cho từng thành viên
+            foreach (var member in activeMembers)
+            {
+                if (member.UserId.HasValue && member.User != null)
+                {
+                    // Gửi email
+                    var emailSubject = $"[LRMS] Notification: New Document for Journal - {journal.JournalName}";
+                    var emailContent = member.Role == (int)GroupMemberRoleEnum.Stakeholder
+                        ? JournalEmailTemplates.GetStakeholderJournalDocumentEmail(member.User, journal.Project, journal, uploader, documentFile.FileName, documentUrl)
+                        : JournalEmailTemplates.GetMemberJournalDocumentEmail(member.User, journal.Project, journal, uploader, documentFile.FileName, documentUrl);
+
+                    await _emailService.SendEmailAsync(member.User.Email, emailSubject, emailContent);
+
+                    // Gửi notification cho thành viên thường
+                    if (member.Role != (int)GroupMemberRoleEnum.Stakeholder)
+                    {
+                        string title = member.UserId.Value == userId
+                            ? "You Have Uploaded New Document" // Đã thay đổi
+                            : "New Document in Journal"; // Đã thay đổi
+
+                        var notificationRequest = new CreateNotificationRequest
+                        {
+                            UserId = member.UserId.Value,
+                            Title = title,
+                            Message = $"Project: {journal.JournalName}\nDocument: {documentFile.FileName}\nUploaded by: {uploader?.FullName}", // Đã thay đổi
+                            ProjectId = journal.ProjectId.Value,
+                            Status = 0,
+                            IsRead = false
+                        };
+                        await _notificationService.CreateNotification(notificationRequest);
+                    }
+                }
+            }
 
             return true;
         }
