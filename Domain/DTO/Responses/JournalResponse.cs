@@ -8,6 +8,7 @@ public class JournalResponse
     public string? JournalName { get; set; }
     public string? PublisherName { get; set; }
     public int? PublisherStatus { get; set; }
+    public string? PublisherStatusName { get; set; }
     public string? DoiNumber { get; set; }
     public DateTime? AcceptanceDate { get; set; }
     public DateTime? PublicationDate { get; set; }

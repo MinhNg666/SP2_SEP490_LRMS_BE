@@ -25,11 +25,13 @@ public class ProjectService : IProjectService
     private readonly IEmailService _emailService;
     private readonly IMapper _mapper;
     private readonly LRMSDbContext _context;
+    private readonly ITimelineValidationService _timelineValidationService;
 
 
     public ProjectService(IS3Service s3Service, IProjectRepository projectRepository, IGroupRepository groupRepository,
         IDepartmentRepository departmentRepository, IUserRepository userRepository, IGroupService groupService, IEmailService emailService,
-        IProjectPhaseRepository projectPhaseRepository, INotificationService notificationService, IMapper mapper, LRMSDbContext context)
+        IProjectPhaseRepository projectPhaseRepository, INotificationService notificationService, IMapper mapper, LRMSDbContext context,
+        ITimelineValidationService timelineValidationService)
 
     {
         _s3Service = s3Service;
@@ -43,6 +45,7 @@ public class ProjectService : IProjectService
         _emailService = emailService;
         _mapper = mapper;
         _context = context;
+        _timelineValidationService = timelineValidationService;
 
     }
 
@@ -150,6 +153,7 @@ public class ProjectService : IProjectService
             throw new ServiceException($"Error getting project by user id: {ex.Message}");
         }
     }
+
     public async Task<int> CreateResearchProject(CreateProjectRequest request, IFormFile documentFile, int createdBy)
     {
         try
@@ -160,23 +164,24 @@ public class ProjectService : IProjectService
                 throw new ServiceException($"'{request.ProjectName}' has already exist. Please choose a different name.");
             }
             
-            // Find the current active registration timeline
+            // Define currentDate variable for use later in the method
             var currentDate = DateTime.Now;
-            var activeRegistrationTimeline = await _context.Timelines
-                .Include(t => t.Sequence)
-                .Where(t => t.TimelineType == (int)TimelineTypeEnum.ProjectRegistration &&
-                       t.StartDate <= currentDate &&
-                       t.EndDate >= currentDate)
-                .FirstOrDefaultAsync();
             
-            if (activeRegistrationTimeline == null)
+            // Validate timeline for project registration
+            var isValidTime = await _timelineValidationService.IsValidTimeForAction(TimelineTypeEnum.ProjectRegistration);
+            if (!isValidTime)
             {
                 throw new ServiceException("Project registration is not currently open. Please check the registration schedule.");
             }
-            
-            // Use the sequence ID from the active timeline
-            int sequenceId = activeRegistrationTimeline.SequenceId.Value;
-            
+
+            // Get active timeline to use its sequence ID
+            var activeTimeline = await _timelineValidationService.GetActiveTimeline(TimelineTypeEnum.ProjectRegistration);
+            if (activeTimeline == null)
+            {
+                throw new ServiceException("No active timeline found for project registration.");
+            }
+            int sequenceId = activeTimeline.SequenceId.Value;
+
             // Create project with initial Pending status
             var project = new Project
             {
@@ -485,25 +490,15 @@ public class ProjectService : IProjectService
             if (documentFiles == null || !documentFiles.Any())
                 throw new ServiceException("Please upload the council meeting minutes document");
             
-            // Timeline validation code remains the same
-            var currentDate = DateTime.Now.Date;
-            var allReviewTimelines = await _context.Timelines
-                .Where(t => t.TimelineType == (int)TimelineTypeEnum.ReviewPeriod)
-                .ToListAsync();
-
-            // Console logging code remains the same
-            
-            var activeReviewTimeline = await _context.Timelines
-                .Include(t => t.Sequence)
-                .Where(t => t.TimelineType == (int)TimelineTypeEnum.ReviewPeriod && 
-                       t.StartDate <= currentDate &&
-                       t.EndDate >= currentDate)
-                .FirstOrDefaultAsync();
-            
-            if (activeReviewTimeline == null)
+            // Timeline validation using TimelineValidationService instead of direct lookup
+            var isValidTime = await _timelineValidationService.IsValidTimeForAction(TimelineTypeEnum.ReviewPeriod);
+            if (!isValidTime)
             {
                 throw new ServiceException("Project review is not currently open. Please check the review schedule.");
             }
+
+            // Get the active timeline if needed for any other purpose
+            var activeReviewTimeline = await _timelineValidationService.GetActiveTimeline(TimelineTypeEnum.ReviewPeriod);
 
             // Get project information
             var project = await _projectRepository.GetByIdAsync(projectId);
@@ -670,23 +665,15 @@ public class ProjectService : IProjectService
             if (documentFiles == null || !documentFiles.Any())
                 throw new ServiceException("Please upload the council meeting minutes document");
             
-            // Timeline validation code remains the same
-            var currentDate = DateTime.Now.Date;
-            var allReviewTimelines = await _context.Timelines
-                .Where(t => t.TimelineType == (int)TimelineTypeEnum.ReviewPeriod)
-                .ToListAsync();
-            
-            var activeReviewTimeline = await _context.Timelines
-                .Include(t => t.Sequence)
-                .Where(t => t.TimelineType == (int)TimelineTypeEnum.ReviewPeriod && 
-                       t.StartDate <= currentDate &&
-                       t.EndDate >= currentDate)
-                .FirstOrDefaultAsync();
-            
-            if (activeReviewTimeline == null)
+            // Timeline validation using TimelineValidationService
+            var isValidTime = await _timelineValidationService.IsValidTimeForAction(TimelineTypeEnum.ReviewPeriod);
+            if (!isValidTime)
             {
                 throw new ServiceException("Project review is not currently open. Please check the review schedule.");
             }
+
+            // Get active timeline if needed for other purposes
+            var activeReviewTimeline = await _timelineValidationService.GetActiveTimeline(TimelineTypeEnum.ReviewPeriod);
 
             // Get project information
             var project = await _projectRepository.GetByIdAsync(projectId);
@@ -857,7 +844,7 @@ public class ProjectService : IProjectService
                     var projectResource = new ProjectResource
                     {
                         ResourceName = file.FileName,
-                        ResourceType = 1, // Document type
+                        ResourceType = 1, 
                         ProjectId = projectId,
                         Acquired = true,
                         Quantity = 1
@@ -2060,6 +2047,9 @@ public class ProjectService : IProjectService
         using var transaction = await _context.Database.BeginTransactionAsync();
         try
         {
+            // Timeline validation for project review period
+            await _timelineValidationService.IsValidTimeForAction(TimelineTypeEnum.ReviewPeriod, null, true);
+            
             var request = await _context.ProjectRequests
                 .Include(r => r.Project)
                     .ThenInclude(p => p.Department)
@@ -2316,6 +2306,9 @@ public class ProjectService : IProjectService
         using var transaction = await _context.Database.BeginTransactionAsync();
         try
         {
+            // Timeline validation for project review period
+            await _timelineValidationService.IsValidTimeForAction(TimelineTypeEnum.ReviewPeriod, null, true);
+            
             var request = await _context.ProjectRequests
                 .Include(r => r.Project)
                     .ThenInclude(p => p.Department)

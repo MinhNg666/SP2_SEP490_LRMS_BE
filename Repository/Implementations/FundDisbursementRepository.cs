@@ -99,4 +99,19 @@ public class FundDisbursementRepository : GenericRepository<FundDisbursement>, I
             .Where(f => f.ConferenceId == conferenceId)
             .ToListAsync();
     }
+    
+    public async Task<IEnumerable<FundDisbursement>> GetByJournalIdAsync(int journalId)
+    {
+        return await _context.FundDisbursements
+            .Include(f => f.Project)
+            .Include(f => f.UserRequestNavigation)
+            .Include(f => f.Quota)
+            .Include(f => f.Documents)
+            .Include(f => f.AppovedByNavigation)
+                .ThenInclude(gm => gm.User)
+            .Include(f => f.DisburseByNavigation)
+            .Include(f => f.Journal)
+            .Where(f => f.JournalId == journalId)
+            .ToListAsync();
+    }
 }

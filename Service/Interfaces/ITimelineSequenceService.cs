@@ -11,4 +11,6 @@ public interface ITimelineSequenceService
     Task<IEnumerable<TimelineSequenceResponse>> GetAllTimelineSequences();
     Task<TimelineSequenceResponse> GetTimelineSequenceById(int id);
     Task<TimelineSequenceResponse> UpdateTimelineSequence(int id, TimelineSequenceRequest request, int updatedBy);
+    Task<bool> DeleteTimelineSequence(int id);
+    Task<bool> UpdateTimelineStatusesInSequence(int sequenceId, int newStatus, int updatedBy);
 } 

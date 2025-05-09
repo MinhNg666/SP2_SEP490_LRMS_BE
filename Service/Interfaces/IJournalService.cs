@@ -14,4 +14,11 @@ public interface IJournalService
     Task<bool> AddJournalDocument(int journalId, int userId, IFormFile documentFile);
     Task<bool> ApproveJournal(int journalId, int secretaryId, IFormFile documentFile);
     Task<bool> RejectJournal(int journalId, int secretaryId, IFormFile documentFile);
+    Task<IEnumerable<JournalResponse>> GetUserJournals(int userId);
+    Task<JournalDetailResponse> GetJournalDetails(int journalId);
+    Task<bool> UpdateJournalStatus(int journalId, UpdateJournalStatusRequest request, int userId);
+    Task<bool> UpdateJournalDetails(int journalId, UpdateJournalDetailsRequest request, int userId);
+    Task<int> RequestJournalFundingAsync(int userId, RequestJournalFundingRequest request, IEnumerable<IFormFile> documentFiles);
+    Task<bool> ApproveJournalFundingRequest(int requestId, int approverId, IEnumerable<IFormFile> documentFiles);
+    Task<bool> RejectJournalFundingRequest(int requestId, int rejecterId, string rejectionReason, IEnumerable<IFormFile> documentFiles);
 } 

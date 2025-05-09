@@ -115,10 +115,6 @@ public class ConferenceService : IConferenceService
             if (project.Status != (int)ProjectStatusEnum.Approved)
                 throw new ServiceException("Only approved projects can register for conferences");
             
-            // Check if project has at least one completed phase
-            if (!project.ProjectPhases.Any(p => p.Status == (int)ProjectPhaseStatusEnum.Completed))
-                throw new ServiceException("Project must have at least one completed phase to register for a conference");
-            
             // Check if user is in the project group
             var isUserInGroup = project.Group?.GroupMembers
                 .Any(gm => gm.UserId == userId && gm.Status == (int)GroupMemberStatus.Active) ?? false;
@@ -126,7 +122,7 @@ public class ConferenceService : IConferenceService
             if (!isUserInGroup)
                 throw new ServiceException("You must be a member of the project group to register for a conference");
             
-            // Create new conference with minimal information
+            // Create new conference
             var conference = new Conference
             {
                 ConferenceName = request.ConferenceName,
