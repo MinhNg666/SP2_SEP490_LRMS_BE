@@ -382,14 +382,14 @@ public class ProjectService : IProjectService
                 {
                     // Tạo và gửi thông báo
                     var notificationTitle = member.Role == (int)GroupMemberRoleEnum.Stakeholder
-                        ? "Giám sát dự án mới"
-                        : "Dự án nghiên cứu mới";
+                        ? "New Project to Monitor" // Đã thay đổi
+                        : "New Research Project"; // Đã thay đổi
 
                     var notificationRequest = new CreateNotificationRequest
                     {
                         UserId = member.UserId.Value,
                         Title = notificationTitle,
-                        Message = $"Dự án '{project.ProjectName}' đã được tạo.",
+                        Message = $"Project '{project.ProjectName}' has been created.", // Đã thay đổi
                         ProjectId = project.ProjectId,
                         Status = 0,
                         IsRead = false
@@ -397,7 +397,7 @@ public class ProjectService : IProjectService
                     await _notificationService.CreateNotification(notificationRequest);
 
                     // Tạo và gửi email
-                    var emailSubject = $"[LRMS] Thông báo: {notificationTitle} - {project.ProjectName}";
+                    var emailSubject = $"[LRMS] Notification: {notificationTitle} - {project.ProjectName}";
                     var emailContent = member.Role == (int)GroupMemberRoleEnum.Stakeholder
                         ? ProjectEmailTemplates.GetStakeholderProjectCreationEmail(member.User, project, creator, group, department)
                         : ProjectEmailTemplates.GetMemberProjectCreationEmail(member.User, project, creator, group, department);
@@ -567,8 +567,8 @@ public class ProjectService : IProjectService
                     var notificationRequest = new CreateNotificationRequest
                     {
                         UserId = member.UserId.Value,
-                        Title = "Dự án đã được phê duyệt",
-                        Message = $"Dự án '{project.ProjectName}' đã được hội đồng phê duyệt",
+                        Title = "Project Approved", // Đã thay đổi
+                        Message = $"Project '{project.ProjectName}' has been approved by the council. Please check the council meeting documents for details", // Đã thay đổi
                         ProjectId = project.ProjectId,
                         Status = 0,
                         IsRead = false
@@ -576,7 +576,7 @@ public class ProjectService : IProjectService
                     await _notificationService.CreateNotification(notificationRequest);
 
                     // Tạo và gửi email
-                    var emailSubject = $"[LRMS] Thông báo phê duyệt dự án: {project.ProjectName}";
+                    var emailSubject = $"[LRMS] Notification: Project Approval - {project.ProjectName}";
                     var emailContent = member.Role == (int)GroupMemberRoleEnum.Stakeholder
                         ? ProjectEmailTemplates.GetStakeholderProjectApprovalEmail(member.User, project, approverUser, group, department, documentUrl)
                         : ProjectEmailTemplates.GetMemberProjectApprovalEmail(member.User, project, approverUser, group, department, documentUrl);
@@ -729,29 +729,25 @@ public class ProjectService : IProjectService
                     // Gửi email
                     if (member.Role == (int)GroupMemberRoleEnum.Stakeholder)
                     {
+                        var emailSubject = $"[LRMS] Notification: Project has been rejected - {project.ProjectName}";
                         var emailContent = ProjectEmailTemplates.GetStakeholderProjectRejectionEmail(
                             member.User, project, group, documentUrl);
-                        await _emailService.SendEmailAsync(
-                            member.User.Email,
-                            $"[LRMS] Thông báo từ chối dự án: {project.ProjectName}",
-                            emailContent);
+                        await _emailService.SendEmailAsync(member.User.Email,emailSubject,emailContent);
                     }
                     else
                     {
+                        var emailSubject = $"[LRMS] Notification: Project has been rejected - {project.ProjectName}";
                         var emailContent = ProjectEmailTemplates.GetMemberProjectRejectionEmail(
                             member.User, project, group, documentUrl);
-                        await _emailService.SendEmailAsync(
-                            member.User.Email,
-                            $"[LRMS] Thông báo từ chối dự án: {project.ProjectName}",
-                            emailContent);
+                        await _emailService.SendEmailAsync(member.User.Email, emailSubject, emailContent);
                     }
 
                     // Tạo notification
                     var notificationRequest = new CreateNotificationRequest
                     {
                         UserId = member.UserId.Value,
-                        Title = "Dự án bị từ chối",
-                        Message = $"Dự án '{project.ProjectName}' đã bị từ chối. Vui lòng xem biên bản họp hội đồng để biết thêm chi tiết.",
+                        Title = "Project Rejected", // Đã thay đổi
+                        Message = $"Project '{project.ProjectName}' has been rejected. Please check the council meeting documents for details.", // Đã thay đổi
                         ProjectId = project.ProjectId,
                         Status = 0,
                         IsRead = false
@@ -843,7 +839,7 @@ public class ProjectService : IProjectService
                         if (member.UserId.HasValue && member.User != null)
                         {
                             // Gửi email
-                            var emailSubject = $"[LRMS] Tài liệu mới trong dự án: {project.ProjectName}";
+                            var emailSubject = $"[LRMS] Notification: New Document in Project - {project.ProjectName}";
                             var emailContent = member.Role == (int)GroupMemberRoleEnum.Stakeholder
                                 ? ProjectEmailTemplates.GetStakeholderDocumentUploadEmail(member.User, project, uploader, group, documentFiles.First().FileName, documentUrl)
                                 : ProjectEmailTemplates.GetMemberDocumentUploadEmail(member.User, project, uploader, group, documentFiles.First().FileName, documentUrl);
@@ -852,14 +848,14 @@ public class ProjectService : IProjectService
 
                             // Tạo notification
                             string title = member.UserId.Value == userId
-                                ? "Bạn đã tải lên tài liệu mới"
-                                : "Có tài liệu mới trong dự án";
+                                ? "You Have Uploaded New Document" // Đã thay đổi
+                                : "New Document in Project"; // Đã thay đổi
 
                             var notificationRequest = new CreateNotificationRequest
                             {
                                 UserId = member.UserId.Value,
                                 Title = title,
-                                Message = $"Dự án: {project.ProjectName}\nTài liệu: {documentFiles.First().FileName}\nNgười tải lên: {uploader?.FullName}",
+                                Message = $"Project: {project.ProjectName}\nDocument: {documentFiles.First().FileName}\nUploaded by: {uploader?.FullName}", // Đã thay đổi
                                 ProjectId = projectId,
                                 Status = 0,
                                 IsRead = false

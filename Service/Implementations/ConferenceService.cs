@@ -155,7 +155,7 @@ public class ConferenceService : IConferenceService
                     if (member.UserId.HasValue && member.User != null)
                     {
                         // Gửi email
-                        var emailSubject = $"[LRMS] Thông báo: Dự án chuyển đổi thành Conference - {project.ProjectName}";
+                        var emailSubject = $"[LRMS] Notification: Project Converted to Conference - {project.ProjectName}";
                         var emailContent = member.Role == (int)GroupMemberRoleEnum.Stakeholder
                             ? ConferenceEmailTemplates.GetStakeholderConferenceCreationEmail(member.User, project, conference, group, creator)
                             : ConferenceEmailTemplates.GetMemberConferenceCreationEmail(member.User, project, conference, group, creator);
@@ -168,8 +168,8 @@ public class ConferenceService : IConferenceService
                             var notificationRequest = new CreateNotificationRequest
                             {
                                 UserId = member.UserId.Value,
-                                Title = "Đăng ký tham gia Conference mới",
-                                Message = $"Dự án '{project.ProjectName}' đã được chuyển thành Conference '{conference.ConferenceName}' và đang chờ phê duyệt",
+                                Title = "New Conference Registration", // Đã thay đổi
+                                Message = $"A new conference '{conference.ConferenceName}' has been registered for project '{project.ProjectName}'", // Đã thay đổi
                                 ProjectId = projectId,
                                 Status = 0,
                                 IsRead = false
@@ -248,7 +248,7 @@ public class ConferenceService : IConferenceService
                 if (member.UserId.HasValue && member.User != null)
                 {
                     // Gửi email
-                    var emailSubject = $"[LRMS] Thông báo: Conference đã được phê duyệt - {conference.ConferenceName}";
+                    var emailSubject = $"[LRMS] Notification: Conference Approved - {conference.ConferenceName}";
                     var emailContent = member.Role == (int)GroupMemberRoleEnum.Stakeholder
                         ? ConferenceEmailTemplates.GetStakeholderConferenceApprovalEmail(member.User, conference.Project, conference, group, approver, documentUrl)
                         : ConferenceEmailTemplates.GetMemberConferenceApprovalEmail(member.User, conference.Project, conference, group, approver, documentUrl);
@@ -261,8 +261,8 @@ public class ConferenceService : IConferenceService
                         var notificationRequest = new CreateNotificationRequest
                         {
                             UserId = member.UserId.Value,
-                            Title = "Conference đã được phê duyệt",
-                            Message = $"Conference '{conference.ConferenceName}' đã được hội đồng phê duyệt",
+                            Title = "Conference Approved", // Đã thay đổi
+                            Message = $"Conference '{conference.ConferenceName}' has been approved. Please check the council meeting documents for details.", // Đã thay đổi
                             ProjectId = conference.ProjectId.Value,
                             Status = 0,
                             IsRead = false
@@ -339,7 +339,7 @@ public class ConferenceService : IConferenceService
                 if (member.UserId.HasValue && member.User != null)
                 {
                     // Gửi email
-                    var emailSubject = $"[LRMS] Thông báo: Conference đã bị từ chối - {conference.ConferenceName}";
+                    var emailSubject = $"[LRMS] Notification: Conference Rejected - {conference.ConferenceName}";
                     var emailContent = member.Role == (int)GroupMemberRoleEnum.Stakeholder
                         ? ConferenceEmailTemplates.GetStakeholderConferenceRejectionEmail(member.User, conference.Project, conference, group, documentUrl)
                         : ConferenceEmailTemplates.GetMemberConferenceRejectionEmail(member.User, conference.Project, conference, group, documentUrl);
@@ -352,8 +352,8 @@ public class ConferenceService : IConferenceService
                         var notificationRequest = new CreateNotificationRequest
                         {
                             UserId = member.UserId.Value,
-                            Title = "Conference đã bị từ chối",
-                            Message = $"Conference '{conference.ConferenceName}' đã bị hội đồng từ chối. Vui lòng xem biên bản tại: {documentUrl}",
+                            Title = "Conference Rejected", // Đã thay đổi
+                            Message = $"Conference '{conference.ConferenceName}' has been rejected. Please check the council meeting documents for details.", // Đã thay đổi
                             ProjectId = conference.ProjectId.Value,
                             Status = 0,
                             IsRead = false
@@ -423,7 +423,7 @@ public class ConferenceService : IConferenceService
                 if (member.UserId.HasValue && member.User != null)
                 {
                     // Gửi email
-                    var emailSubject = $"[LRMS] Thông báo: Tài liệu mới cho Conference - {conference.ConferenceName}";
+                    var emailSubject = $"[LRMS] Notification: New Document for Conference - {conference.ConferenceName}";
                     var emailContent = member.Role == (int)GroupMemberRoleEnum.Stakeholder
                         ? ConferenceEmailTemplates.GetStakeholderConferenceDocumentEmail(member.User, conference.Project, conference, uploader, documentFile.FileName, documentUrl)
                         : ConferenceEmailTemplates.GetMemberConferenceDocumentEmail(member.User, conference.Project, conference, uploader, documentFile.FileName, documentUrl);
@@ -434,14 +434,14 @@ public class ConferenceService : IConferenceService
                     if (member.Role != (int)GroupMemberRoleEnum.Stakeholder)
                     {
                         string title = member.UserId.Value == userId
-                            ? "Bạn đã tải lên tài liệu mới"
-                            : "Có tài liệu mới trong Conference";
+                            ? "You Have Uploaded New Document" // Đã thay đổi
+                            : "New Document in Conference"; // Đã thay đổi
 
                         var notificationRequest = new CreateNotificationRequest
                         {
                             UserId = member.UserId.Value,
                             Title = title,
-                            Message = $"Conference: {conference.ConferenceName}\nTài liệu: {documentFile.FileName}\nNgười tải lên: {uploader?.FullName}",
+                            Message = $"Project: {conference.ConferenceName}\nDocument: {documentFile.FileName}\nUploaded by: {uploader?.FullName}", // Đã thay đổi
                             ProjectId = conference.ProjectId.Value,
                             Status = 0,
                             IsRead = false
