@@ -19,6 +19,7 @@ namespace Service.Interfaces
         Task<IEnumerable<UserResponse>> GetUsersByLevel(LevelEnum level);
         Task<IEnumerable<StudentResponse>> GetAllStudents();
         Task<IEnumerable<LecturerResponse>> GetAllLecturers();
+        Task<IEnumerable<ResearcherResponse>> GetAllResearchers();
         Task CreateUser(CreateUserRequest request);
         Task<UserResponse> UpdateUser(int userId, UpdateUserRequest request);
         Task<bool> DeleteUser(int userId);

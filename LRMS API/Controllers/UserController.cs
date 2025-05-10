@@ -163,11 +163,13 @@ public class UserController : ApiBaseController
         {
             var students = await _userService.GetAllStudents();
             var lecturers = await _userService.GetAllLecturers();
+            var researchers = await _userService.GetAllResearchers();
             
             var academicUsers = new 
             {
                 Students = students,
-                Lecturers = lecturers
+                Lecturers = lecturers,
+                Researchers = researchers
             };
             
             return Ok(new ApiResponse(StatusCodes.Status200OK, MessageConstants.SUCCESSFUL, academicUsers));
