@@ -13,51 +13,108 @@ public class ProjectEmailTemplates
     {
         return projectType switch
         {
-            (int)ProjectTypeEnum.Research => "Nghiên cứu",
-            (int)ProjectTypeEnum.Conference => "Hội nghị",
-            (int)ProjectTypeEnum.Journal => "Tạp chí",
-            _ => "Không xác định"
+            (int)ProjectTypeEnum.Research => "Research",
+            (int)ProjectTypeEnum.Conference => "Conference",
+            (int)ProjectTypeEnum.Journal => "Journal",
+            _ => "Unknown"
         };
+    }
+
+    // Helper to render project phases as HTML (for Domain.DTO.Responses.ProjectPhaseResponse)
+    private static string RenderProjectPhases(IEnumerable<Domain.DTO.Responses.ProjectPhaseResponse> phases)
+    {
+        if (phases == null || !phases.Any())
+            return "<p>No project phases defined.</p>";
+        var html = @"<table style='width:100%; border-collapse:collapse; margin-bottom:15px;'>
+            <thead><tr style='background:#f2f2f2;'><th style='border:1px solid #ddd;padding:8px;'>Title</th><th style='border:1px solid #ddd;padding:8px;'>Start Date</th><th style='border:1px solid #ddd;padding:8px;'>End Date</th><th style='border:1px solid #ddd;padding:8px;'>Status</th><th style='border:1px solid #ddd;padding:8px;'>Spent Budget</th></tr></thead><tbody>";
+        foreach (var phase in phases)
+        {
+            html += $"<tr><td style='border:1px solid #ddd;padding:8px;'>{phase.Title}</td><td style='border:1px solid #ddd;padding:8px;'>{phase.StartDate:yyyy-MM-dd}</td><td style='border:1px solid #ddd;padding:8px;'>{phase.EndDate:yyyy-MM-dd}</td><td style='border:1px solid #ddd;padding:8px;'>{phase.Status}</td><td style='border:1px solid #ddd;padding:8px;'>{phase.SpentBudget:N0}</td></tr>";
+        }
+        html += "</tbody></table>";
+        return html;
+    }
+
+    // Helper to render project phases as HTML (for LRMS_API.ProjectPhase)
+    private static string RenderProjectPhases(IEnumerable<LRMS_API.ProjectPhase> phases)
+    {
+        if (phases == null || !phases.Any())
+            return "<p>No project phases defined.</p>";
+        var html = @"<table style='width:100%; border-collapse:collapse; margin-bottom:15px;'>
+            <thead><tr style='background:#f2f2f2;'><th style='border:1px solid #ddd;padding:8px;'>Title</th><th style='border:1px solid #ddd;padding:8px;'>Start Date</th><th style='border:1px solid #ddd;padding:8px;'>End Date</th><th style='border:1px solid #ddd;padding:8px;'>Status</th><th style='border:1px solid #ddd;padding:8px;'>Spent Budget</th></tr></thead><tbody>";
+        foreach (var phase in phases)
+        {
+            html += $"<tr><td style='border:1px solid #ddd;padding:8px;'>{phase.Title}</td><td style='border:1px solid #ddd;padding:8px;'>{phase.StartDate:yyyy-MM-dd}</td><td style='border:1px solid #ddd;padding:8px;'>{phase.EndDate:yyyy-MM-dd}</td><td style='border:1px solid #ddd;padding:8px;'>{phase.Status}</td><td style='border:1px solid #ddd;padding:8px;'>{phase.SpentBudget:N0}</td></tr>";
+        }
+        html += "</tbody></table>";
+        return html;
+    }
+
+    // Helper to render documents as HTML (for Domain.DTO.Responses.DocumentResponse)
+    private static string RenderDocuments(IEnumerable<Domain.DTO.Responses.DocumentResponse> documents)
+    {
+        if (documents == null || !documents.Any())
+            return "<p>No documents attached.</p>";
+        var html = @"<ul style='padding-left:20px;'>";
+        foreach (var doc in documents)
+        {
+            html += $"<li><a href='{doc.DocumentUrl}' style='color:#00477e;'>{doc.FileName}</a> (Uploaded: {doc.UploadAt:yyyy-MM-dd})</li>";
+        }
+        html += "</ul>";
+        return html;
+    }
+
+    // Helper to render documents as HTML (for LRMS_API.Document)
+    private static string RenderDocuments(IEnumerable<LRMS_API.Document> documents)
+    {
+        if (documents == null || !documents.Any())
+            return "<p>No documents attached.</p>";
+        var html = @"<ul style='padding-left:20px;'>";
+        foreach (var doc in documents)
+        {
+            html += $"<li><a href='{doc.DocumentUrl}' style='color:#00477e;'>{doc.FileName}</a> (Uploaded: {doc.UploadAt:yyyy-MM-dd})</li>";
+        }
+        html += "</ul>";
+        return html;
     }
 
     public static string GetMemberProjectCreationEmail(User member, Project project, User creator, Group group, Department department)
     {
         if (member == null || project == null || creator == null || group == null || department == null)
         {
-            return "Không thể tạo nội dung email do thiếu thông tin.";
+            return "Unable to create email content due to missing information.";
         }
+
+        var phasesHtml = RenderProjectPhases(project.ProjectPhases);
+        var documentsHtml = RenderDocuments(project.Documents);
 
         return $@"<html>
 <body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
     <div style='max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px;'>
-        <h2 style='color: #00477e;'>Thông báo dự án mới</h2>
-        <p>Kính gửi <strong>{member.FullName}</strong>,</p>
-        <p>Bạn đã được thêm vào dự án nghiên cứu mới với vai trò thành viên nhóm. Dưới đây là thông tin chi tiết:</p>
-        
+        <h2 style='color: #00477e;'>New Project Creation Notification</h2>
+        <p>Dear <strong>{member.FullName}</strong>,</p>
+        <p>Your group has created a new project. Details are as follows:</p>
         <div style='background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 15px 0;'>
-            <h3 style='margin-top: 0; color: #00477e;'>Thông tin dự án:</h3>
+            <h3 style='margin-top: 0; color: #00477e;'>Project Information:</h3>
             <ul style='padding-left: 20px;'>
-                <li><strong>Tên dự án:</strong> {project.ProjectName}</li>
-                <li><strong>Loại dự án:</strong> {GetProjectTypeName(project.ProjectType)}</li>
-                <li><strong>Người khởi tạo:</strong> {creator.FullName}</li>
-                <li><strong>Khoa/Phòng ban:</strong> {department.DepartmentName}</li>
-                <li><strong>Nhóm nghiên cứu:</strong> {group.GroupName}</li>
+                <li><strong>Project Name:</strong> {project.ProjectName}</li>
+                <li><strong>Project Type:</strong> {GetProjectTypeName(project.ProjectType)}</li>
+                <li><strong>Department:</strong> {department.DepartmentName}</li>
+                <li><strong>Research Group:</strong> {group.GroupName}</li>
+                <li><strong>Creator:</strong> {creator.FullName}</li>
+                <li><strong>Created At:</strong> {project.CreatedAt:dd/MM/yyyy}</li>
+                <li><strong>Approved Budget:</strong> {project.ApprovedBudget:N0} VND</li>
             </ul>
-            
-            <h3 style='color: #00477e;'>Chi tiết thời gian:</h3>
-            <ul style='padding-left: 20px;'>
-                <li><strong>Ngày bắt đầu:</strong> {project.StartDate:dd/MM/yyyy}</li>
-                <li><strong>Ngày kết thúc:</strong> {project.EndDate:dd/MM/yyyy}</li>
-            </ul>
+            <h3 style='color: #00477e;'>Project Phases:</h3>
+            {phasesHtml}
+            <h3 style='color: #00477e;'>Attached Documents:</h3>
+            {documentsHtml}
         </div>
-        
-        <p>Vui lòng truy cập hệ thống để xem thêm chi tiết và bắt đầu công việc của bạn.</p>
-        <p>Trân trọng,<br>Hệ thống LRMS</p>
-        
+        <p>Best regards,<br>LRMS System</p>
         <hr style='border: none; border-top: 1px solid #ddd; margin: 20px 0;'>
         <p style='font-size: 12px; color: #777;'>
-            <em>Lưu ý: Đây là email tự động, vui lòng không phản hồi email này.<br>
-            Nếu có bất kỳ thắc mắc nào, vui lòng liên hệ với trưởng nhóm hoặc quản trị viên để được hỗ trợ.</em>
+            <em>Note: This is an automated email, please do not reply.<br>
+            If you have any questions, please contact the administrator for assistance.</em>
         </p>
     </div>
 </body>
@@ -68,40 +125,36 @@ public class ProjectEmailTemplates
     {
         if (stakeholder == null || project == null || creator == null || group == null || department == null)
         {
-            return "Không thể tạo nội dung email do thiếu thông tin.";
+            return "Unable to create email content due to missing information.";
         }
 
         return $@"<html>
 <body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
     <div style='max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px;'>
-        <h2 style='color: #00477e;'>Thông báo dự án mới cần giám sát</h2>
-        <p>Kính gửi <strong>{stakeholder.FullName}</strong>,</p>
-        <p>Một dự án nghiên cứu mới đã được khởi tạo dưới sự giám sát của bạn. Chi tiết như sau:</p>
-        
+        <h2 style='color: #00477e;'>New Project Supervision Notification</h2>
+        <p>Dear <strong>{stakeholder.FullName}</strong>,</p>
+        <p>A new research project has been created under your supervision. Details are as follows:</p>
         <div style='background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 15px 0;'>
-            <h3 style='margin-top: 0; color: #00477e;'>Thông tin dự án:</h3>
+            <h3 style='margin-top: 0; color: #00477e;'>Project Information:</h3>
             <ul style='padding-left: 20px;'>
-                <li><strong>Tên dự án:</strong> {project.ProjectName}</li>
-                <li><strong>Loại dự án:</strong> {GetProjectTypeName(project.ProjectType)}</li>
-                <li><strong>Người khởi tạo:</strong> {creator.FullName}</li>
-                <li><strong>Khoa/Phòng ban:</strong> {department.DepartmentName}</li>
-                <li><strong>Nhóm nghiên cứu:</strong> {group.GroupName}</li>
+                <li><strong>Project Name:</strong> {project.ProjectName}</li>
+                <li><strong>Project Type:</strong> {GetProjectTypeName(project.ProjectType)}</li>
+                <li><strong>Creator:</strong> {creator.FullName}</li>
+                <li><strong>Department:</strong> {department.DepartmentName}</li>
+                <li><strong>Research Group:</strong> {group.GroupName}</li>
             </ul>
-            
-            <h3 style='color: #00477e;'>Chi tiết thời gian:</h3>
+            <h3 style='color: #00477e;'>Timeline Details:</h3>
             <ul style='padding-left: 20px;'>
-                <li><strong>Ngày bắt đầu:</strong> {project.StartDate:dd/MM/yyyy}</li>
-                <li><strong>Ngày kết thúc:</strong> {project.EndDate:dd/MM/yyyy}</li>
+                <li><strong>Start Date:</strong> {project.StartDate:dd/MM/yyyy}</li>
+                <li><strong>End Date:</strong> {project.EndDate:dd/MM/yyyy}</li>
             </ul>
         </div>
-        
-        <p>Với vai trò stakeholder, bạn sẽ nhận được các cập nhật định kỳ về tiến độ dự án.</p>
-        <p>Trân trọng,<br>Hệ thống LRMS</p>
-        
+        <p>As a stakeholder, you will receive periodic updates about the project's progress.</p>
+        <p>Best regards,<br>LRMS System</p>
         <hr style='border: none; border-top: 1px solid #ddd; margin: 20px 0;'>
         <p style='font-size: 12px; color: #777;'>
-            <em>Lưu ý: Đây là email tự động, vui lòng không phản hồi email này.<br>
-            Nếu có bất kỳ thắc mắc nào, vui lòng liên hệ với quản trị viên để được hỗ trợ.</em>
+            <em>Note: This is an automated email, please do not reply.<br>
+            If you have any questions, please contact the administrator for assistance.</em>
         </p>
     </div>
 </body>
@@ -112,37 +165,34 @@ public class ProjectEmailTemplates
     {
         if (member == null || project == null || approver == null || group == null || department == null)
         {
-            return "Không thể tạo nội dung email do thiếu thông tin.";
+            return "Unable to create email content due to missing information.";
         }
 
         return $@"<html>
 <body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
     <div style='max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px;'>
-        <h2 style='color: #27ae60;'>Thông báo phê duyệt dự án</h2>
-        <p>Kính gửi <strong>{member.FullName}</strong>,</p>
-        <p>Dự án của nhóm bạn đã được hội đồng phê duyệt. Chi tiết như sau:</p>
-        
+        <h2 style='color: #27ae60;'>Project Approval Notification</h2>
+        <p>Dear <strong>{member.FullName}</strong>,</p>
+        <p>Your group's project has been approved by the council. Details are as follows:</p>
         <div style='background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 15px 0;'>
-            <h3 style='margin-top: 0; color: #00477e;'>Thông tin dự án:</h3>
+            <h3 style='margin-top: 0; color: #00477e;'>Project Information:</h3>
             <ul style='padding-left: 20px;'>
-                <li><strong>Tên dự án:</strong> {project.ProjectName}</li>
-                <li><strong>Loại dự án:</strong> {GetProjectTypeName(project.ProjectType)}</li>
-                <li><strong>Khoa/Phòng ban:</strong> {department.DepartmentName}</li>
-                <li><strong>Nhóm nghiên cứu:</strong> {group.GroupName}</li>
-                <li><strong>Người phê duyệt:</strong> {approver.FullName}</li>
-                <li><strong>Ngày phê duyệt:</strong> {DateTime.Now:dd/MM/yyyy}</li>
-                <li><strong>Kinh phí được duyệt:</strong> {project.ApprovedBudget:N0} VNĐ</li>
+                <li><strong>Project Name:</strong> {project.ProjectName}</li>
+                <li><strong>Project Type:</strong> {GetProjectTypeName(project.ProjectType)}</li>
+                <li><strong>Department:</strong> {department.DepartmentName}</li>
+                <li><strong>Research Group:</strong> {group.GroupName}</li>
+                <li><strong>Approver:</strong> {approver.FullName}</li>
+                <li><strong>Approval Date:</strong> {DateTime.Now:dd/MM/yyyy}</li>
+                <li><strong>Approved Budget:</strong> {project.ApprovedBudget:N0} VND</li>
             </ul>
         </div>
-        
-        <p><strong>Biên bản họp hội đồng:</strong> <a href='{documentUrl}' style='color: #00477e;'>Xem tại đây</a></p>
-        <p>Nhóm có thể bắt đầu triển khai dự án theo kế hoạch đã đề xuất.</p>
-        <p>Trân trọng,<br>Hệ thống LRMS</p>
-        
+        <p><strong>Council Meeting Minutes:</strong> <a href='{documentUrl}' style='color: #00477e;'>View here</a></p>
+        <p>Your group can now begin implementing the project as proposed.</p>
+        <p>Best regards,<br>LRMS System</p>
         <hr style='border: none; border-top: 1px solid #ddd; margin: 20px 0;'>
         <p style='font-size: 12px; color: #777;'>
-            <em>Lưu ý: Đây là email tự động, vui lòng không phản hồi email này.<br>
-            Nếu có bất kỳ thắc mắc nào, vui lòng liên hệ với trưởng nhóm hoặc quản trị viên để được hỗ trợ.</em>
+            <em>Note: This is an automated email, please do not reply.<br>
+            If you have any questions, please contact the group leader or administrator for assistance.</em>
         </p>
     </div>
 </body>
@@ -153,37 +203,34 @@ public class ProjectEmailTemplates
     {
         if (stakeholder == null || project == null || approver == null || group == null || department == null)
         {
-            return "Không thể tạo nội dung email do thiếu thông tin.";
+            return "Unable to create email content due to missing information.";
         }
 
         return $@"<html>
 <body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
     <div style='max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px;'>
-        <h2 style='color: #27ae60;'>Thông báo phê duyệt dự án</h2>
-        <p>Kính gửi <strong>{stakeholder.FullName}</strong>,</p>
-        <p>Dự án dưới sự giám sát của bạn đã được hội đồng phê duyệt. Chi tiết như sau:</p>
-        
+        <h2 style='color: #27ae60;'>Project Approval Notification</h2>
+        <p>Dear <strong>{stakeholder.FullName}</strong>,</p>
+        <p>Your group's project has been approved by the council. Details are as follows:</p>
         <div style='background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 15px 0;'>
-            <h3 style='margin-top: 0; color: #00477e;'>Thông tin dự án:</h3>
+            <h3 style='margin-top: 0; color: #00477e;'>Project Information:</h3>
             <ul style='padding-left: 20px;'>
-                <li><strong>Tên dự án:</strong> {project.ProjectName}</li>
-                <li><strong>Loại dự án:</strong> {GetProjectTypeName(project.ProjectType)}</li>
-                <li><strong>Khoa/Phòng ban:</strong> {department.DepartmentName}</li>
-                <li><strong>Nhóm nghiên cứu:</strong> {group.GroupName}</li>
-                <li><strong>Người phê duyệt:</strong> {approver.FullName}</li>
-                <li><strong>Ngày phê duyệt:</strong> {DateTime.Now:dd/MM/yyyy}</li>
-                <li><strong>Kinh phí được duyệt:</strong> {project.ApprovedBudget:N0} VNĐ</li>
+                <li><strong>Project Name:</strong> {project.ProjectName}</li>
+                <li><strong>Project Type:</strong> {GetProjectTypeName(project.ProjectType)}</li>
+                <li><strong>Department:</strong> {department.DepartmentName}</li>
+                <li><strong>Research Group:</strong> {group.GroupName}</li>
+                <li><strong>Approver:</strong> {approver.FullName}</li>
+                <li><strong>Approval Date:</strong> {DateTime.Now:dd/MM/yyyy}</li>
+                <li><strong>Approved Budget:</strong> {project.ApprovedBudget:N0} VND</li>
             </ul>
         </div>
-        
-        <p><strong>Biên bản họp hội đồng:</strong> <a href='{documentUrl}' style='color: #00477e;'>Xem tại đây</a></p>
-        <p>Với vai trò stakeholder, bạn sẽ tiếp tục nhận được các cập nhật về tiến độ triển khai dự án.</p>
-        <p>Trân trọng,<br>Hệ thống LRMS</p>
-        
+        <p><strong>Council Meeting Minutes:</strong> <a href='{documentUrl}' style='color: #00477e;'>View here</a></p>
+        <p>As a stakeholder, you will continue to receive updates about the project's progress.</p>
+        <p>Best regards,<br>LRMS System</p>
         <hr style='border: none; border-top: 1px solid #ddd; margin: 20px 0;'>
         <p style='font-size: 12px; color: #777;'>
-            <em>Lưu ý: Đây là email tự động, vui lòng không phản hồi email này.<br>
-            Nếu có bất kỳ thắc mắc nào, vui lòng liên hệ với quản trị viên để được hỗ trợ.</em>
+            <em>Note: This is an automated email, please do not reply.<br>
+            If you have any questions, please contact the administrator for assistance.</em>
         </p>
     </div>
 </body>
@@ -194,32 +241,32 @@ public class ProjectEmailTemplates
     {
         if (stakeholder == null || project == null || group == null)
         {
-            return "Không thể tạo nội dung email do thiếu thông tin.";
+            return "Unable to create email content due to missing information.";
         }
 
         return $@"<html>
 <body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
     <div style='max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px;'>
-        <h2 style='color: #c94c4c;'>Thông báo từ chối dự án</h2>
-        <p>Kính gửi <strong>{stakeholder.FullName}</strong>,</p>
-        <p>Dự án nghiên cứu của nhóm đã bị từ chối. Chi tiết như sau:</p>
+        <h2 style='color: #c94c4c;'>Project Rejection Notification</h2>
+        <p>Dear <strong>{stakeholder.FullName}</strong>,</p>
+        <p>Your group's project has been rejected. Details are as follows:</p>
         
         <div style='background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 15px 0;'>
-            <h3 style='margin-top: 0; color: #00477e;'>Thông tin dự án:</h3>
+            <h3 style='margin-top: 0; color: #00477e;'>Project Information:</h3>
             <ul style='padding-left: 20px;'>
-                <li><strong>Tên dự án:</strong> {project.ProjectName}</li>
-                <li><strong>Nhóm nghiên cứu:</strong> {group.GroupName}</li>
+                <li><strong>Project Name:</strong> {project.ProjectName}</li>
+                <li><strong>Research Group:</strong> {group.GroupName}</li>
             </ul>
         </div>
         
-        <p><strong>Biên bản họp hội đồng/Lý do từ chối:</strong> <a href='{documentUrl}' style='color: #00477e;'>Xem tại đây</a></p>
-        <p>Vui lòng xem xét lý do từ chối và thực hiện các điều chỉnh cần thiết trước khi nộp lại.</p>
-        <p>Trân trọng,<br>Hệ thống LRMS</p>
+        <p><strong>Council Meeting Minutes/Rejection Reason:</strong> <a href='{documentUrl}' style='color: #00477e;'>View here</a></p>
+        <p>Please review the rejection reason and make necessary adjustments before resubmitting.</p>
+        <p>Best regards,<br>LRMS System</p>
         
         <hr style='border: none; border-top: 1px solid #ddd; margin: 20px 0;'>
         <p style='font-size: 12px; color: #777;'>
-            <em>Lưu ý: Đây là email tự động, vui lòng không phản hồi email này.<br>
-            Nếu có bất kỳ thắc mắc nào, vui lòng liên hệ với quản trị viên để được hỗ trợ.</em>
+            <em>Note: This is an automated email, please do not reply.<br>
+            If you have any questions, please contact the administrator for assistance.</em>
         </p>
     </div>
 </body>
@@ -230,32 +277,32 @@ public class ProjectEmailTemplates
     {
         if (member == null || project == null || group == null)
         {
-            return "Không thể tạo nội dung email do thiếu thông tin.";
+            return "Unable to create email content due to missing information.";
         }
 
         return $@"<html>
 <body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
     <div style='max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px;'>
-        <h2 style='color: #c94c4c;'>Thông báo từ chối dự án</h2>
-        <p>Kính gửi <strong>{member.FullName}</strong>,</p>
-        <p>Dự án nghiên cứu của nhóm đã bị từ chối. Chi tiết như sau:</p>
+        <h2 style='color: #c94c4c;'>Project Rejection Notification</h2>
+        <p>Dear <strong>{member.FullName}</strong>,</p>
+        <p>Your group's project has been rejected. Details are as follows:</p>
         
         <div style='background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 15px 0;'>
-            <h3 style='margin-top: 0; color: #00477e;'>Thông tin dự án:</h3>
+            <h3 style='margin-top: 0; color: #00477e;'>Project Information:</h3>
             <ul style='padding-left: 20px;'>
-                <li><strong>Tên dự án:</strong> {project.ProjectName}</li>
-                <li><strong>Nhóm nghiên cứu:</strong> {group.GroupName}</li>
+                <li><strong>Project Name:</strong> {project.ProjectName}</li>
+                <li><strong>Research Group:</strong> {group.GroupName}</li>
             </ul>
         </div>
         
-        <p><strong>Biên bản họp hội đồng/Lý do từ chối:</strong> <a href='{documentUrl}' style='color: #00477e;'>Xem tại đây</a></p>
-        <p>Vui lòng phối hợp với các thành viên trong nhóm để thực hiện các điều chỉnh cần thiết trước khi nộp lại.</p>
-        <p>Trân trọng,<br>Hệ thống LRMS</p>
+        <p><strong>Council Meeting Minutes/Rejection Reason:</strong> <a href='{documentUrl}' style='color: #00477e;'>View here</a></p>
+        <p>Please coordinate with your group members to make necessary adjustments before resubmitting.</p>
+        <p>Best regards,<br>LRMS System</p>
         
         <hr style='border: none; border-top: 1px solid #ddd; margin: 20px 0;'>
         <p style='font-size: 12px; color: #777;'>
-            <em>Lưu ý: Đây là email tự động, vui lòng không phản hồi email này.<br>
-            Nếu có bất kỳ thắc mắc nào, vui lòng liên hệ với trưởng nhóm hoặc quản trị viên để được hỗ trợ.</em>
+            <em>Note: This is an automated email, please do not reply.<br>
+            If you have any questions, please contact the group leader or administrator for assistance.</em>
         </p>
     </div>
 </body>
@@ -266,39 +313,48 @@ public class ProjectEmailTemplates
     {
         if (stakeholder == null || project == null || uploader == null || group == null)
         {
-            return "Không thể tạo nội dung email do thiếu thông tin.";
+            return "Unable to create email content due to missing information.";
         }
+
+        var phasesHtml = RenderProjectPhases(project.ProjectPhases);
+        var documentsHtml = RenderDocuments(project.Documents);
 
         return $@"<html>
 <body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
     <div style='max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px;'>
-        <h2 style='color: #00477e;'>Thông báo tài liệu mới</h2>
-        <p>Kính gửi <strong>{stakeholder.FullName}</strong>,</p>
-        <p>Một tài liệu mới đã được tải lên trong dự án mà bạn đang giám sát. Chi tiết như sau:</p>
+        <h2 style='color: #00477e;'>New Document Notification</h2>
+        <p>Dear <strong>{stakeholder.FullName}</strong>,</p>
+        <p>A new document has been uploaded to the project you are supervising. Details are as follows:</p>
         
         <div style='background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 15px 0;'>
-            <h3 style='margin-top: 0; color: #00477e;'>Thông tin dự án:</h3>
+            <h3 style='margin-top: 0; color: #00477e;'>Project Information:</h3>
             <ul style='padding-left: 20px;'>
-                <li><strong>Tên dự án:</strong> {project.ProjectName}</li>
-                <li><strong>Nhóm nghiên cứu:</strong> {group.GroupName}</li>
+                <li><strong>Project Name:</strong> {project.ProjectName}</li>
+                <li><strong>Research Group:</strong> {group.GroupName}</li>
             </ul>
             
-            <h3 style='color: #00477e;'>Thông tin tài liệu:</h3>
+            <h3 style='color: #00477e;'>Document Information:</h3>
             <ul style='padding-left: 20px;'>
-                <li><strong>Tên tài liệu:</strong> {fileName}</li>
-                <li><strong>Người tải lên:</strong> {uploader.FullName}</li>
-                <li><strong>Thời gian:</strong> {DateTime.Now:dd/MM/yyyy HH:mm}</li>
+                <li><strong>Document Name:</strong> {fileName}</li>
+                <li><strong>Uploader:</strong> {uploader.FullName}</li>
+                <li><strong>Upload Time:</strong> {DateTime.Now:dd/MM/yyyy HH:mm}</li>
             </ul>
+
+            <h3 style='color: #00477e;'>Project Phases:</h3>
+            {phasesHtml}
+            
+            <h3 style='color: #00477e;'>All Project Documents:</h3>
+            {documentsHtml}
         </div>
         
-        <p><a href='{documentUrl}' style='display: inline-block; background-color: #00477e; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px;'>Xem tài liệu</a></p>
-        <p>Vui lòng truy cập hệ thống để xem chi tiết tài liệu.</p>
-        <p>Trân trọng,<br>Hệ thống LRMS</p>
+        <p><a href='{documentUrl}' style='display: inline-block; background-color: #00477e; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px;'>View New Document</a></p>
+        <p>Please access the system to view the document details.</p>
+        <p>Best regards,<br>LRMS System</p>
         
         <hr style='border: none; border-top: 1px solid #ddd; margin: 20px 0;'>
         <p style='font-size: 12px; color: #777;'>
-            <em>Lưu ý: Đây là email tự động, vui lòng không phản hồi email này.<br>
-            Nếu có bất kỳ thắc mắc nào, vui lòng liên hệ với trưởng nhóm hoặc quản trị viên để được hỗ trợ.</em>
+            <em>Note: This is an automated email, please do not reply.<br>
+            If you have any questions, please contact the group leader or administrator for assistance.</em>
         </p>
     </div>
 </body>
@@ -309,39 +365,48 @@ public class ProjectEmailTemplates
     {
         if (member == null || project == null || uploader == null || group == null)
         {
-            return "Không thể tạo nội dung email do thiếu thông tin.";
+            return "Unable to create email content due to missing information.";
         }
+
+        var phasesHtml = RenderProjectPhases(project.ProjectPhases);
+        var documentsHtml = RenderDocuments(project.Documents);
 
         return $@"<html>
 <body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
     <div style='max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px;'>
-        <h2 style='color: #00477e;'>Thông báo tài liệu mới</h2>
-        <p>Kính gửi <strong>{member.FullName}</strong>,</p>
-        <p>Một tài liệu mới đã được tải lên trong dự án của nhóm bạn. Chi tiết như sau:</p>
+        <h2 style='color: #00477e;'>New Document Notification</h2>
+        <p>Dear <strong>{member.FullName}</strong>,</p>
+        <p>A new document has been uploaded to the project of your group. Details are as follows:</p>
         
         <div style='background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 15px 0;'>
-            <h3 style='margin-top: 0; color: #00477e;'>Thông tin dự án:</h3>
+            <h3 style='margin-top: 0; color: #00477e;'>Project Information:</h3>
             <ul style='padding-left: 20px;'>
-                <li><strong>Tên dự án:</strong> {project.ProjectName}</li>
-                <li><strong>Nhóm nghiên cứu:</strong> {group.GroupName}</li>
+                <li><strong>Project Name:</strong> {project.ProjectName}</li>
+                <li><strong>Research Group:</strong> {group.GroupName}</li>
             </ul>
             
-            <h3 style='color: #00477e;'>Thông tin tài liệu:</h3>
+            <h3 style='color: #00477e;'>Document Information:</h3>
             <ul style='padding-left: 20px;'>
-                <li><strong>Tên tài liệu:</strong> {fileName}</li>
-                <li><strong>Người tải lên:</strong> {uploader.FullName}</li>
-                <li><strong>Thời gian:</strong> {DateTime.Now:dd/MM/yyyy HH:mm}</li>
+                <li><strong>Document Name:</strong> {fileName}</li>
+                <li><strong>Uploader:</strong> {uploader.FullName}</li>
+                <li><strong>Upload Time:</strong> {DateTime.Now:dd/MM/yyyy HH:mm}</li>
             </ul>
+
+            <h3 style='color: #00477e;'>Project Phases:</h3>
+            {phasesHtml}
+            
+            <h3 style='color: #00477e;'>All Project Documents:</h3>
+            {documentsHtml}
         </div>
         
-        <p><a href='{documentUrl}' style='display: inline-block; background-color: #00477e; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px;'>Xem tài liệu</a></p>
-        <p>Vui lòng truy cập hệ thống để xem chi tiết tài liệu.</p>
-        <p>Trân trọng,<br>Hệ thống LRMS</p>
+        <p><a href='{documentUrl}' style='display: inline-block; background-color: #00477e; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px;'>View New Document</a></p>
+        <p>Please access the system to view the document details.</p>
+        <p>Best regards,<br>LRMS System</p>
         
         <hr style='border: none; border-top: 1px solid #ddd; margin: 20px 0;'>
         <p style='font-size: 12px; color: #777;'>
-            <em>Lưu ý: Đây là email tự động, vui lòng không phản hồi email này.<br>
-            Nếu có bất kỳ thắc mắc nào, vui lòng liên hệ với trưởng nhóm hoặc quản trị viên để được hỗ trợ.</em>
+            <em>Note: This is an automated email, please do not reply.<br>
+            If you have any questions, please contact the group leader or administrator for assistance.</em>
         </p>
     </div>
 </body>

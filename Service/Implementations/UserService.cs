@@ -364,5 +364,31 @@ namespace Service.Implementations
             await _userRepository.UpdateAsync(user);
             return true;
         }
+        public async Task<IEnumerable<ResearcherResponse>> GetAllResearchers()
+        {
+            try
+            {
+                var users = await _userRepository.GetAllAsync();
+                var researchers = users.Where(u => u.Role == (int)SystemRoleEnum.Researcher);
+                
+                // Create simplified researcher responses without sensitive data
+                var researcherResponses = researchers.Select(researcher => new ResearcherResponse 
+                {
+                    UserId = researcher.UserId,
+                    FullName = researcher.FullName,
+                    Email = researcher.Email,
+                    Phone = researcher.Phone,
+                    DepartmentId = researcher.DepartmentId,
+                    DepartmentName = researcher.Department?.DepartmentName,
+                    Level = researcher.Level?.ToString()
+                }).ToList();
+                
+                return researcherResponses;
+            }
+            catch (Exception e)
+            {
+                throw new ServiceException(e.Message);
+            }
+        }
     }
 }

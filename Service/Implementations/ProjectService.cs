@@ -756,11 +756,13 @@ public class ProjectService : IProjectService
     {
         try
         {
-            // Get project with proper includes
+            // Get project with proper includes for complete data
             var project = await _context.Projects
                 .Include(p => p.Group)
                     .ThenInclude(g => g.GroupMembers)
                         .ThenInclude(gm => gm.User)
+                .Include(p => p.ProjectPhases)
+                .Include(p => p.Documents)
                 .FirstOrDefaultAsync(p => p.ProjectId == projectId);
 
             if (project == null)
@@ -808,41 +810,49 @@ public class ProjectService : IProjectService
 
                 await _context.SaveChangesAsync();
 
+                // Reload the project to include the newly added document(s)
+                project = await _context.Projects
+                    .Include(p => p.Group)
+                        .ThenInclude(g => g.GroupMembers)
+                            .ThenInclude(gm => gm.User)
+                    .Include(p => p.ProjectPhases)
+                    .Include(p => p.Documents)
+                    .FirstOrDefaultAsync(p => p.ProjectId == projectId);
+
                 var uploader = await _userRepository.GetByIdAsync(userId);
-                var documentUrl = urls[index];
+                // Use the saved URL of the first file for notifications
+                var documentUrl = firstFileUrl;
+                
                 // Only process group member notifications if the project has a group
                 if (project.Group != null)
                 {
-                    // Gửi thông báo cho các thành viên trong nhóm
+                    // Get all group members including stakeholders
                     var groupMembers = project.Group.GroupMembers
-                        .Where(m => m.Status == (int)GroupMemberStatus.Active &&
-                                   m.Role != (int)GroupMemberRoleEnum.Stakeholder);
+                        .Where(m => m.Status == (int)GroupMemberStatus.Active);
                     var group = await _groupRepository.GetByIdAsync(project.GroupId.Value);
-                    //var groupMembers = await _groupRepository.GetMembersByGroupId(project.GroupId.Value);
-                    var activeMembers = groupMembers.Where(m => m.Status == (int)GroupMemberStatus.Active);
-
-                    foreach (var member in activeMembers)
+                    
+                    foreach (var member in groupMembers)
                     {
                         if (member.UserId.HasValue && member.User != null)
                         {
                             // Gửi email
                             var emailSubject = $"[LRMS] Notification: New Document in Project - {project.ProjectName}";
                             var emailContent = member.Role == (int)GroupMemberRoleEnum.Stakeholder
-                                ? ProjectEmailTemplates.GetStakeholderDocumentUploadEmail(member.User, project, uploader, group, documentFiles.First().FileName, documentUrl)
-                                : ProjectEmailTemplates.GetMemberDocumentUploadEmail(member.User, project, uploader, group, documentFiles.First().FileName, documentUrl);
+                                ? ProjectEmailTemplates.GetStakeholderDocumentUploadEmail(member.User, project, uploader, group, firstFileName, documentUrl)
+                                : ProjectEmailTemplates.GetMemberDocumentUploadEmail(member.User, project, uploader, group, firstFileName, documentUrl);
 
                             await _emailService.SendEmailAsync(member.User.Email, emailSubject, emailContent);
 
                             // Tạo notification
                             string title = member.UserId.Value == userId
-                                ? "You Have Uploaded New Document" // Đã thay đổi
-                                : "New Document in Project"; // Đã thay đổi
+                                ? "You Have Uploaded New Document"
+                                : "New Document in Project";
 
                             var notificationRequest = new CreateNotificationRequest
                             {
                                 UserId = member.UserId.Value,
                                 Title = title,
-                                Message = $"Project: {project.ProjectName}\nDocument: {documentFiles.First().FileName}\nUploaded by: {uploader?.FullName}", // Đã thay đổi
+                                Message = $"Project: {project.ProjectName}\nDocument: {firstFileName}\nUploaded by: {uploader?.FullName}",
                                 ProjectId = projectId,
                                 Status = 0,
                                 IsRead = false

@@ -21,19 +21,28 @@ public class FundDisbursementService : IFundDisbursementService
     private readonly IS3Service _s3Service;
     private readonly IMapper _mapper;
     private readonly LRMSDbContext _context;
+    private readonly INotificationService _notificationService;
+    private readonly IGroupRepository _groupRepository;
+    private readonly IEmailService _emailService;
     
     public FundDisbursementService(
         IFundDisbursementRepository fundDisbursementRepository,
         IProjectRepository projectRepository,
         IS3Service s3Service,
         IMapper mapper,
-        LRMSDbContext context)
+        LRMSDbContext context,
+        INotificationService notificationService,
+        IGroupRepository groupRepository,
+        IEmailService emailService)
     {
         _fundDisbursementRepository = fundDisbursementRepository;
         _projectRepository = projectRepository;
         _s3Service = s3Service;
         _mapper = mapper;
         _context = context;
+        _notificationService = notificationService;
+        _groupRepository = groupRepository;
+        _emailService = emailService;
     }
     
     public async Task<int> CreateFundDisbursementRequest(CreateFundDisbursementRequest request, int userId)
@@ -545,9 +554,37 @@ public class FundDisbursementService : IFundDisbursementService
                     Status = 0,
                     IsRead = false
                 };
-                
-                // If you have a notification service
-                // await _notificationService.CreateNotification(notificationRequest);
+                await _notificationService.CreateNotification(notificationRequest);
+
+                // Send approval email
+                var recipient = await _context.Users.FirstOrDefaultAsync(u => u.UserId == fundDisbursement.UserRequest.Value);
+                if (recipient != null && !string.IsNullOrEmpty(recipient.Email))
+                {
+                    var approver = await _context.Users.FirstOrDefaultAsync(u => u.UserId == approverId);
+                    var emailBody = Service.Settings.FundDisbursementEmailTemplate.GetApprovalEmail(recipient, project, fundDisbursement, approver);
+                    await _emailService.SendEmailAsync(recipient.Email, "Fund Disbursement Approved", emailBody);
+                }
+            }
+            // Notify all group members
+            if (project.GroupId.HasValue)
+            {
+                var groupMembers = await _groupRepository.GetMembersByGroupId(project.GroupId.Value);
+                foreach (var member in groupMembers)
+                {
+                    if (member.UserId.HasValue && member.Status == (int)GroupMemberStatus.Active)
+                    {
+                        var notificationRequest = new CreateNotificationRequest
+                        {
+                            UserId = member.UserId.Value,
+                            Title = "Fund Disbursement Approved",
+                            Message = $"A fund disbursement of {fundDisbursement.FundRequest:C} for project '{project.ProjectName}' has been approved.",
+                            ProjectId = fundDisbursement.ProjectId,
+                            Status = 0,
+                            IsRead = false
+                        };
+                        await _notificationService.CreateNotification(notificationRequest);
+                    }
+                }
             }
             
             return true;
@@ -668,15 +705,45 @@ public class FundDisbursementService : IFundDisbursementService
                 var notificationRequest = new CreateNotificationRequest
                 {
                     UserId = fundDisbursement.UserRequest.Value,
-                    Title = "Fund Disbursement Rejected",
-                    Message = $"Your fund disbursement request of {fundDisbursement.FundRequest:C} has been rejected. Reason: {rejectionReason}",
+                    Title = "Fund Disbursement Request Rejected",
+                    Message = $"Your fund disbursement request has been rejected. Reason: {rejectionReason}. You can submit a new request if needed.",
                     ProjectId = fundDisbursement.ProjectId,
                     Status = 0,
                     IsRead = false
                 };
-                
-                // You'll need to inject INotificationService if you want to use this
-                // await _notificationService.CreateNotification(notificationRequest);
+                await _notificationService.CreateNotification(notificationRequest);
+
+                // Send rejection email
+                var recipient = await _context.Users.FirstOrDefaultAsync(u => u.UserId == fundDisbursement.UserRequest.Value);
+                if (recipient != null && !string.IsNullOrEmpty(recipient.Email))
+                {
+                    var rejector = await _context.Users.FirstOrDefaultAsync(u => u.UserId == rejectorId);
+                    var project = await _projectRepository.GetByIdAsync(fundDisbursement.ProjectId.Value);
+                    var emailBody = Service.Settings.FundDisbursementEmailTemplate.GetRejectionEmail(recipient, project, fundDisbursement, rejector, rejectionReason);
+                    await _emailService.SendEmailAsync(recipient.Email, "Fund Disbursement Rejected", emailBody);
+                }
+            }
+            // Notify all group members
+            if (fundDisbursement.Project != null && fundDisbursement.Project.GroupId.HasValue)
+            {
+                var groupMembers = await _groupRepository.GetMembersByGroupId(fundDisbursement.Project.GroupId.Value);
+                var projectName = fundDisbursement.Project.ProjectName;
+                foreach (var member in groupMembers)
+                {
+                    if (member.UserId.HasValue && member.Status == (int)GroupMemberStatus.Active)
+                    {
+                        var notificationRequest = new CreateNotificationRequest
+                        {
+                            UserId = member.UserId.Value,
+                            Title = "Fund Disbursement Rejected",
+                            Message = $"A fund disbursement of {fundDisbursement.FundRequest:C} for project '{projectName}' has been rejected. Reason: {rejectionReason}",
+                            ProjectId = fundDisbursement.ProjectId,
+                            Status = 0,
+                            IsRead = false
+                        };
+                        await _notificationService.CreateNotification(notificationRequest);
+                    }
+                }
             }
             
             return true;
