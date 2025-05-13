@@ -20,4 +20,10 @@ public partial class Author
     public virtual Project Project { get; set; } = null!;
 
     public virtual User? User { get; set; }
+
+    // N-N relationship with Conference
+    public virtual ICollection<AuthorConference> AuthorConferences { get; set; } = new List<AuthorConference>();
+
+    // N-N relationship with Journal
+    public virtual ICollection<AuthorJournal> AuthorJournals { get; set; } = new List<AuthorJournal>();
 }

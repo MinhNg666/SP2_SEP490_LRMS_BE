@@ -74,4 +74,7 @@ public partial class Project
     public virtual ICollection<Quota> Quota { get; set; } = new List<Quota>();
 
     public virtual ICollection<ProjectPhase> ProjectPhases { get; set; } = new List<ProjectPhase>();
+
+    // Navigation property to Inspections (1-N)
+    public virtual ICollection<Inspection> Inspections { get; set; } = new List<Inspection>();
 }

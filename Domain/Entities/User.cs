@@ -58,4 +58,10 @@ public partial class User
     public virtual ICollection<Timeline> Timelines { get; set; } = new List<Timeline>();
 
     public virtual ICollection<FundDisbursement> FundDisbursementsAsRequester { get; set; } = new List<FundDisbursement>();
+
+    // Navigation to AssignReviews (where User is AssignedBy)
+    public virtual ICollection<AssignReview> AssignReviewsMade { get; set; } = new List<AssignReview>();
+
+    // Navigation to Expertises (1-N)
+    public virtual ICollection<Expertise> Expertises { get; set; } = new List<Expertise>();
 }

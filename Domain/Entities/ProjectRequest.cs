@@ -2,6 +2,7 @@ using Domain.Constants;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Collections.Generic;
 
 namespace LRMS_API; // Or your appropriate namespace for Entities
 
@@ -73,4 +74,13 @@ public partial class ProjectRequest
     // --- NEW NAVIGATION PROPERTY ---
     [ForeignKey("FundDisbursementId")]
     public virtual FundDisbursement? FundDisbursement { get; set; }
+
+    // Navigation to CouncilVotes (1-N)
+    public virtual ICollection<CouncilVote> CouncilVotes { get; set; } = new List<CouncilVote>();
+
+    // Navigation to VoteResults (1-N)
+    public virtual ICollection<VoteResult> VoteResults { get; set; } = new List<VoteResult>();
+
+    // Navigation to AssignReviews (1-N)
+    public virtual ICollection<AssignReview> AssignReviews { get; set; } = new List<AssignReview>();
 }

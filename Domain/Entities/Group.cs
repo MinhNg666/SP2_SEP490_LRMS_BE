@@ -34,4 +34,10 @@ public partial class Group
     public virtual ICollection<Invitation> Invitations { get; set; } = new List<Invitation>();
 
     public virtual ICollection<Project> Projects { get; set; } = new List<Project>();
+
+    // Navigation to CouncilVotes (1-N)
+    public virtual ICollection<CouncilVote> CouncilVotes { get; set; } = new List<CouncilVote>();
+
+    // Navigation to VoteResults (1-N)
+    public virtual ICollection<VoteResult> VoteResults { get; set; } = new List<VoteResult>();
 }

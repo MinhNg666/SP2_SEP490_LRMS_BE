@@ -9,4 +9,4 @@ public enum SystemRoleEnum
     Office = 4,
     Researcher = 5,
     Stakeholder = 6
-}
+} 

@@ -90,41 +90,36 @@ namespace Domain.Migrations
             //             onDelete: ReferentialAction.Cascade);
             //     });
 
-            migrationBuilder.CreateIndex(
-                name: "IX_CompletionRequestDetails_request_id",
-                table: "CompletionRequestDetails",
-                column: "request_id",
-                unique: true);
+            // migrationBuilder.CreateIndex(
+            //     name: "IX_CompletionRequestDetails_request_id",
+            //     table: "CompletionRequestDetails",
+            //     column: "request_id",
+            //     unique: true);
 
-            migrationBuilder.CreateIndex(
-                name: "IX_ProjectRequests_approved_by",
-                table: "ProjectRequests",
-                column: "approved_by");
+            // migrationBuilder.CreateIndex(
+            //     name: "IX_ProjectRequests_approved_by",
+            //     table: "ProjectRequests",
+            //     column: "approved_by");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_ProjectRequests_assigned_council",
-                table: "ProjectRequests",
-                column: "assigned_council");
+            // migrationBuilder.CreateIndex(
+            //     name: "IX_ProjectRequests_assigned_council",
+            //     table: "ProjectRequests",
+            //     column: "assigned_council");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_ProjectRequests_phase_id",
-                table: "ProjectRequests",
-                column: "phase_id");
+            // migrationBuilder.CreateIndex(
+            //     name: "IX_ProjectRequests_project_id",
+            //     table: "ProjectRequests",
+            //     column: "project_id");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_ProjectRequests_project_id",
-                table: "ProjectRequests",
-                column: "project_id");
+            // migrationBuilder.CreateIndex(
+            //     name: "IX_ProjectRequests_requested_by",
+            //     table: "ProjectRequests",
+            //     column: "requested_by");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_ProjectRequests_requested_by",
-                table: "ProjectRequests",
-                column: "requested_by");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ProjectRequests_timeline_id",
-                table: "ProjectRequests",
-                column: "timeline_id");
+            // migrationBuilder.CreateIndex(
+            //     name: "IX_ProjectRequests_timeline_id",
+            //     table: "ProjectRequests",
+            //     column: "timeline_id");
         }
 
         /// <inheritdoc />

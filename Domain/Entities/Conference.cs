@@ -37,4 +37,7 @@ public partial class Conference
     public virtual ICollection<ConferenceExpense> ConferenceExpenses { get; set; } = new List<ConferenceExpense>();
 
     public virtual Project? Project { get; set; }
+
+    // N-N relationship with Author
+    public virtual ICollection<AuthorConference> AuthorConferences { get; set; } = new List<AuthorConference>();
 }

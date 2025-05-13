@@ -54,4 +54,13 @@ public partial class FundDisbursement
 
     public virtual Conference? Conference { get; set; }
     public virtual Journal? Journal { get; set; }
+
+    // Navigation to CouncilVotes (1-N)
+    public virtual ICollection<CouncilVote> CouncilVotes { get; set; } = new List<CouncilVote>();
+
+    // Navigation to VoteResults (1-N)
+    public virtual ICollection<VoteResult> VoteResults { get; set; } = new List<VoteResult>();
+
+    // Navigation to AssignReviews (1-N)
+    public virtual ICollection<AssignReview> AssignReviews { get; set; } = new List<AssignReview>();
 }
