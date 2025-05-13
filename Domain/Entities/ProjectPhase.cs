@@ -22,4 +22,7 @@ public partial class ProjectPhase
     public virtual Project? Project { get; set; }
 
     public virtual ICollection<FundDisbursement> FundDisbursements { get; set; } = new List<FundDisbursement>();
+
+    // Navigation property to ProjectResources
+    public virtual ICollection<ProjectResource> ProjectResources { get; set; } = new List<ProjectResource>();
 }

@@ -10,11 +10,11 @@ namespace Domain.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<string>(
-                name: "RejectionReason",
-                table: "Projects",
-                type: "nvarchar(500)",
-                nullable: true);
+            // migrationBuilder.AddColumn<string>(
+            //     name: "RejectionReason",
+            //     table: "Projects",
+            //     type: "nvarchar(500)",
+            //     nullable: true);
         }
 
         /// <inheritdoc />

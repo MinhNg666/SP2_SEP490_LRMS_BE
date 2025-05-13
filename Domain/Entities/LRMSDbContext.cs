@@ -56,6 +56,20 @@ public partial class LRMSDbContext : DbContext
 
     public virtual DbSet<CompletionRequestDetail> CompletionRequestDetails { get; set; }
 
+    public virtual DbSet<Inspection> Inspections { get; set; }
+
+    public virtual DbSet<Expertise> Expertises { get; set; }
+
+    public virtual DbSet<AuthorConference> AuthorConferences { get; set; }
+
+    public virtual DbSet<AuthorJournal> AuthorJournals { get; set; }
+
+    public virtual DbSet<CouncilVote> CouncilVotes { get; set; }
+
+    public virtual DbSet<VoteResult> VoteResults { get; set; }
+
+    public virtual DbSet<AssignReview> AssignReviews { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -481,6 +495,7 @@ public partial class LRMSDbContext : DbContext
                 .HasMaxLength(255)
                 .HasColumnName("title");
             entity.Property(e => e.UserId).HasColumnName("user_id");
+            entity.Property(e => e.NotificationType).HasColumnName("notification_type");
 
             entity.HasOne(d => d.Invitation).WithMany(p => p.Notifications)
                 .HasForeignKey(d => d.InvitationId)
@@ -572,10 +587,17 @@ public partial class LRMSDbContext : DbContext
                 .HasMaxLength(200)
                 .HasColumnName("resource_name");
             entity.Property(e => e.ResourceType).HasColumnName("resource_type");
+            entity.Property(e => e.ProjectPhaseId).HasColumnName("project_phase_id");
 
             entity.HasOne(d => d.Project).WithMany(p => p.ProjectResources)
                 .HasForeignKey(d => d.ProjectId)
                 .HasConstraintName("FK_ProjectResources_Projects");
+
+            entity.HasOne(d => d.ProjectPhase)
+                .WithMany(p => p.ProjectResources)
+                .HasForeignKey(d => d.ProjectPhaseId)
+                .IsRequired(false)
+                .HasConstraintName("FK_ProjectResource_ProjectPhase");
         });
 
         modelBuilder.Entity<Quota>(entity =>
@@ -595,6 +617,9 @@ public partial class LRMSDbContext : DbContext
             entity.Property(e => e.UpdateAt)
                 .HasColumnType("datetime")
                 .HasColumnName("update_at");
+            entity.Property(e => e.NumProjects).HasColumnName("num_projects");
+            entity.Property(e => e.QuotaYear).HasColumnName("quota_year");
+            entity.Property(e => e.DepartmentId).HasColumnName("department_id");
 
             entity.HasOne(d => d.AllocatedByNavigation).WithMany(p => p.Quota)
                 .HasForeignKey(d => d.AllocatedBy)
@@ -603,6 +628,12 @@ public partial class LRMSDbContext : DbContext
             entity.HasOne(d => d.Project).WithMany(p => p.Quota)
                 .HasForeignKey(d => d.ProjectId)
                 .HasConstraintName("FK_Quotas_Projects");
+
+            entity.HasOne(d => d.Department)
+                .WithMany(p => p.Quotas)
+                .HasForeignKey(d => d.DepartmentId)
+                .IsRequired(false)
+                .HasConstraintName("FK_Quota_Department");
         });
 
         modelBuilder.Entity<Timeline>(entity =>
@@ -690,6 +721,218 @@ public partial class LRMSDbContext : DbContext
             entity.HasOne(d => d.Department).WithMany(p => p.Users)
                 .HasForeignKey(d => d.DepartmentId)
                 .HasConstraintName("FK_Users_Department");
+        });
+
+        modelBuilder.Entity<Inspection>(entity =>
+        {
+            entity.HasKey(e => e.InspectionId);
+
+            entity.ToTable("Inspection");
+
+            entity.Property(e => e.InspectionId).HasColumnName("inspection_id");
+            entity.Property(e => e.Result).HasColumnName("result");
+            entity.Property(e => e.ResultRating).HasColumnName("result_rating");
+            entity.Property(e => e.CreatedAt)
+                .HasColumnType("datetime")
+                .HasColumnName("created_at");
+            entity.Property(e => e.UpdatedAt)
+                .HasColumnType("datetime")
+                .HasColumnName("updated_at");
+            entity.Property(e => e.ProjectId).HasColumnName("project_id");
+
+            entity.HasOne(d => d.Project)
+                .WithMany(p => p.Inspections)
+                .HasForeignKey(d => d.ProjectId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Inspection_Project");
+
+            entity.HasMany(i => i.CouncilVotes)
+                .WithOne(cv => cv.Inspection)
+                .HasForeignKey(cv => cv.InspectionId)
+                .OnDelete(DeleteBehavior.ClientSetNull);
+
+            entity.HasMany(i => i.VoteResults)
+                .WithOne(vr => vr.Inspection)
+                .HasForeignKey(vr => vr.InspectionId)
+                .OnDelete(DeleteBehavior.ClientSetNull);
+
+            entity.HasMany(i => i.AssignReviews)
+                .WithOne(ar => ar.Inspection)
+                .HasForeignKey(ar => ar.InspectionId)
+                .OnDelete(DeleteBehavior.ClientSetNull);
+        });
+
+        modelBuilder.Entity<Expertise>(entity =>
+        {
+            entity.HasKey(e => e.ExpertiseId);
+
+            entity.ToTable("Expertise");
+
+            entity.Property(e => e.ExpertiseId).HasColumnName("expertise_id");
+            entity.Property(e => e.ExpertiseName)
+                .HasMaxLength(255)
+                .HasColumnName("expertise_name");
+            entity.Property(e => e.ExpertiseStatus).HasColumnName("expertise_status");
+            entity.Property(e => e.UserId).HasColumnName("user_id");
+
+            entity.HasOne(d => d.User)
+                .WithMany(p => p.Expertises)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Expertise_User");
+        });
+
+        modelBuilder.Entity<AuthorConference>(entity =>
+        {
+            entity.HasKey(e => e.AuthorConferenceId);
+            entity.ToTable("AuthorConference");
+
+            entity.Property(e => e.AuthorConferenceId).HasColumnName("author_conference_id");
+            entity.Property(e => e.AuthorId).HasColumnName("author_id");
+            entity.Property(e => e.ConferenceId).HasColumnName("conference_id");
+
+            entity.HasOne(d => d.Author)
+                .WithMany(p => p.AuthorConferences)
+                .HasForeignKey(d => d.AuthorId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_AuthorConference_Author");
+
+            entity.HasOne(d => d.Conference)
+                .WithMany(p => p.AuthorConferences)
+                .HasForeignKey(d => d.ConferenceId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_AuthorConference_Conference");
+        });
+
+        modelBuilder.Entity<AuthorJournal>(entity =>
+        {
+            entity.HasKey(e => e.AuthorJournalId);
+            entity.ToTable("AuthorJournal");
+
+            entity.Property(e => e.AuthorJournalId).HasColumnName("author_journal_id");
+            entity.Property(e => e.AuthorId).HasColumnName("author_id");
+            entity.Property(e => e.JournalId).HasColumnName("journal_id");
+
+            entity.HasOne(d => d.Author)
+                .WithMany(p => p.AuthorJournals)
+                .HasForeignKey(d => d.AuthorId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_AuthorJournal_Author");
+
+            entity.HasOne(d => d.Journal)
+                .WithMany(p => p.AuthorJournals)
+                .HasForeignKey(d => d.JournalId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_AuthorJournal_Journal");
+        });
+
+        modelBuilder.Entity<CouncilVote>(entity =>
+        {
+            entity.HasKey(e => e.VoteId);
+            entity.ToTable("CouncilVote");
+
+            entity.Property(e => e.VoteId).HasColumnName("vote_id");
+            entity.Property(e => e.VoteStatus).HasColumnName("vote_status");
+            entity.Property(e => e.Comment).HasColumnName("comment");
+            entity.Property(e => e.ProjectRequestId).HasColumnName("project_request_id");
+            entity.Property(e => e.GroupMemberId).HasColumnName("group_member_id");
+            entity.Property(e => e.GroupId).HasColumnName("group_id");
+            entity.Property(e => e.FundDisbursementId).HasColumnName("fund_disbursement_id");
+            entity.Property(e => e.InspectionId).HasColumnName("inspection_id");
+            entity.Property(e => e.VoteResultId).HasColumnName("vote_result_id");
+
+            entity.HasOne(d => d.ProjectRequest)
+                .WithMany(p => p.CouncilVotes)
+                .HasForeignKey(d => d.ProjectRequestId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_CouncilVote_ProjectRequest");
+
+            entity.HasOne(d => d.GroupMember)
+                .WithMany(p => p.CouncilVotes)
+                .HasForeignKey(d => d.GroupMemberId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_CouncilVote_GroupMember");
+
+            entity.HasOne(d => d.Group)
+                .WithMany(p => p.CouncilVotes)
+                .HasForeignKey(d => d.GroupId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_CouncilVote_Group");
+
+            entity.HasOne(d => d.FundDisbursement)
+                .WithMany(p => p.CouncilVotes)
+                .HasForeignKey(d => d.FundDisbursementId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_CouncilVote_FundDisbursement");
+        });
+
+        modelBuilder.Entity<VoteResult>(entity =>
+        {
+            entity.HasKey(e => e.ResultId);
+            entity.ToTable("VoteResult");
+
+            entity.Property(e => e.ResultId).HasColumnName("result_id");
+            entity.Property(e => e.ResultStatus).HasColumnName("result_status");
+            entity.Property(e => e.GroupId).HasColumnName("group_id");
+            entity.Property(e => e.ProjectRequestId).HasColumnName("project_request_id");
+            entity.Property(e => e.InspectionId).HasColumnName("inspection_id");
+            entity.Property(e => e.FundDisbursementId).HasColumnName("fund_disbursement_id");
+
+            entity.HasOne(d => d.Group)
+                .WithMany(p => p.VoteResults)
+                .HasForeignKey(d => d.GroupId)
+                .IsRequired(false)
+                .HasConstraintName("FK_VoteResult_Group");
+
+            entity.HasOne(d => d.ProjectRequest)
+                .WithMany(p => p.VoteResults)
+                .HasForeignKey(d => d.ProjectRequestId)
+                .IsRequired(false)
+                .HasConstraintName("FK_VoteResult_ProjectRequest");
+
+            entity.HasOne(d => d.FundDisbursement)
+                .WithMany(p => p.VoteResults)
+                .HasForeignKey(d => d.FundDisbursementId)
+                .IsRequired(false)
+                .HasConstraintName("FK_VoteResult_FundDisbursement");
+        });
+
+        modelBuilder.Entity<AssignReview>(entity =>
+        {
+            entity.HasKey(e => e.AssignId);
+            entity.ToTable("AssignReview");
+
+            entity.Property(e => e.AssignId).HasColumnName("assign_id");
+            entity.Property(e => e.ScheduledDate)
+                .HasColumnType("datetime")
+                .HasColumnName("scheduled_date");
+            entity.Property(e => e.ScheduledTime).HasColumnName("scheduled_time");
+            entity.Property(e => e.ReviewType).HasColumnName("review_type");
+            entity.Property(e => e.Notes).HasColumnName("notes");
+            entity.Property(e => e.Status).HasColumnName("status");
+            entity.Property(e => e.AssignedByUserId).HasColumnName("assigned_by_user_id");
+            entity.Property(e => e.ProjectRequestId).HasColumnName("project_request_id");
+            entity.Property(e => e.InspectionId).HasColumnName("inspection_id");
+            entity.Property(e => e.FundDisbursementId).HasColumnName("fund_disbursement_id");
+
+            entity.HasOne(d => d.AssignedByUser)
+                .WithMany(p => p.AssignReviewsMade)
+                .HasForeignKey(d => d.AssignedByUserId)
+                .IsRequired(false)
+                .HasConstraintName("FK_AssignReview_User_AssignedBy");
+
+            entity.HasOne(d => d.ProjectRequest)
+                .WithMany(p => p.AssignReviews)
+                .HasForeignKey(d => d.ProjectRequestId)
+                .IsRequired(false)
+                .HasConstraintName("FK_AssignReview_ProjectRequest");
+
+            entity.HasOne(d => d.FundDisbursement)
+                .WithMany(p => p.AssignReviews)
+                .HasForeignKey(d => d.FundDisbursementId)
+                .IsRequired(false)
+                .HasConstraintName("FK_AssignReview_FundDisbursement");
         });
 
         OnModelCreatingPartial(modelBuilder);

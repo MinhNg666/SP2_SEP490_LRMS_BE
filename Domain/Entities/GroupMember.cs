@@ -28,4 +28,7 @@ public partial class GroupMember
     public virtual ICollection<Project> Projects { get; set; } = new List<Project>();
 
     public virtual User? User { get; set; }
+
+    // Navigation to CouncilVotes (1-N)
+    public virtual ICollection<CouncilVote> CouncilVotes { get; set; } = new List<CouncilVote>();
 }

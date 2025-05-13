@@ -14,4 +14,7 @@ public partial class Department
     public virtual ICollection<Project> Projects { get; set; } = new List<Project>();
 
     public virtual ICollection<User> Users { get; set; } = new List<User>();
+
+    // Navigation property to Quotas
+    public virtual ICollection<Quota> Quotas { get; set; } = new List<Quota>();
 }

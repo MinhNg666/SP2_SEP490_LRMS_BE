@@ -33,4 +33,7 @@ public partial class Journal
     public decimal? JournalFunding { get; set; }
 
     public virtual Project? Project { get; set; }
+
+    // N-N relationship with Author
+    public virtual ICollection<AuthorJournal> AuthorJournals { get; set; } = new List<AuthorJournal>();
 }

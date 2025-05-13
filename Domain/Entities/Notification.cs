@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace LRMS_API;
 
@@ -22,6 +23,9 @@ public partial class Notification
     public int? InvitationId { get; set; }
 
     public int? UserId { get; set; }
+
+    [Column("notification_type")]
+    public int? NotificationType { get; set; }
 
     public virtual Invitation? Invitation { get; set; }
 
