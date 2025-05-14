@@ -15,6 +15,7 @@ using Service.Exceptions;
 using Service.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Service.Settings;
+using System.ComponentModel.DataAnnotations;
 
 namespace Service.Implementations;
 public class GroupService : IGroupService
@@ -158,7 +159,7 @@ public class GroupService : IGroupService
             throw new ServiceException(e.Message);
         }
     }
-    public async Task CreateStudentGroup(CreateStudentGroupRequest request, int currentUserId)
+    public async Task CreateResearchGroup(CreateStudentGroupRequest request, int currentUserId)
     {
         // Validate group name
         if (string.IsNullOrEmpty(request.GroupName))
@@ -426,7 +427,7 @@ public class GroupService : IGroupService
         
         await CheckAndActivateGroupIfAllMembersJoined(group.GroupId);
     }
-    public async Task CreateCouncilGroup(CreateCouncilGroupRequest request, int currentUserId)
+    public async Task CreateReviewCouncilGroup(CreateReviewCouncilGroupRequest request, int currentUserId)
     {
         if (string.IsNullOrEmpty(request.GroupName))
         {
@@ -445,7 +446,7 @@ public class GroupService : IGroupService
             var user = await _userRepository.GetUserByEmail(member.MemberEmail);
             if (user.Role != (int)SystemRoleEnum.Lecturer)
             {
-                throw new ServiceException($"Council member {member.MemberName} must be a lecturer.");
+                throw new ServiceException($"Review_Council member {member.MemberName} must be a lecturer.");
             }
         }
 
@@ -456,17 +457,17 @@ public class GroupService : IGroupService
 
         if (chairmanCount != 1)
         {
-            throw new ServiceException("Council must have one chairman.");
+            throw new ServiceException("Review_Council must have one chairman.");
         }
 
         if (secretaryCount != 1)
         {
-            throw new ServiceException("Council must have one secretary.");
+            throw new ServiceException("Review_Council must have one secretary.");
         }
 
         if (councilMemberCount != 3)
         {
-            throw new ServiceException("Council must have three council members.");
+            throw new ServiceException("Review_Council must have three council members.");
         }
 
         var group = new LRMS_API.Group
@@ -489,7 +490,7 @@ public class GroupService : IGroupService
         // Gửi email cho người tạo
         await _emailService.SendEmailAsync(
             creator.Email,
-            $"[LRMS] Notification: Council Group Created Successfully - {group.GroupName}",
+            $"[LRMS] Notification: Review_Council Group Created Successfully - {group.GroupName}",
             GroupEmailTemplates.GetCreatorGroupCreationEmail(creator, group)
         );
 
@@ -497,7 +498,7 @@ public class GroupService : IGroupService
         var creatorNotification = new CreateNotificationRequest
         {
             UserId = currentUserId,
-            Title = "Council Group Created Successfully", // Đã thay đổi
+            Title = "Review_Council Group Created Successfully", // Đã thay đổi
             Message = $"You have successfully created the council '{group.GroupName}'", // Đã thay đổi
             ProjectId = null,
             Status = 0,
@@ -543,7 +544,7 @@ public class GroupService : IGroupService
                     // Gửi email thông báo
                     await _emailService.SendEmailAsync(
                         user.Email,
-                        $"[LRMS] Notification: Council Membership Invitation - {group.GroupName}",
+                        $"[LRMS] Notification: Review_Council Membership Invitation - {group.GroupName}",
                         GroupEmailTemplates.GetMemberInvitationEmail(user, group, creator, member.Role)
                     );
 
@@ -551,7 +552,7 @@ public class GroupService : IGroupService
                     var memberNotification = new CreateNotificationRequest
                     {
                         UserId = user.UserId,
-                        Title = "Council Membership Invitation", // Đã thay đổi
+                        Title = "Review_Council Membership Invitation", // Đã thay đổi
                         Message = $"You have been invited by {creator.FullName} to join the council '{group.GroupName}' as a {GroupEmailTemplates.GetRoleName(member.Role)}", // Đã thay đổi
                         ProjectId = null,
                         Status = 0,
@@ -563,6 +564,254 @@ public class GroupService : IGroupService
         }
     }
 
+    public async Task<GroupResponse> CreateAssessmentCouncil(CreateAssessmentCouncilRequest request, int currentUserId)
+    {
+        if (string.IsNullOrEmpty(request.GroupName))
+        {
+            throw new ServiceException("Group name cannot be null or empty.");
+        }
+
+        if (request.Members == null || !request.Members.Any())
+        {
+            throw new ServiceException("Members cannot be null or empty.");
+        }
+
+        foreach (var member in request.Members)
+        {
+            await ValidateMemberInfo(member.MemberEmail, member.MemberName, member.Role);
+
+            // Validate council members must be lecturer
+            var user = await _userRepository.GetUserByEmail(member.MemberEmail);
+            if (user.Role != (int)SystemRoleEnum.Lecturer)
+            {
+                throw new ServiceException($"Assessment Council member {member.MemberName} must be a lecturer.");
+            }
+        }
+
+        // Kiểm tra số lượng và vai trò của các thành viên
+        var chairmanCount = request.Members.Count(m => m.Role == (int)GroupMemberRoleEnum.Council_Chairman);
+        var secretaryCount = request.Members.Count(m => m.Role == (int)GroupMemberRoleEnum.Secretary);
+        var councilMemberCount = request.Members.Count(m => m.Role == (int)GroupMemberRoleEnum.Council_Member);
+
+        if (chairmanCount != 1)
+        {
+            throw new ServiceException("Assessment Council must have one chairman.");
+        }
+
+        if (secretaryCount != 1)
+        {
+            throw new ServiceException("Assessment Council must have one secretary.");
+        }
+
+        if (councilMemberCount != 3)
+        {
+            throw new ServiceException("Assessment Council must have three council members.");
+        }
+
+        var group = new LRMS_API.Group
+        {
+            GroupName = request.GroupName,
+            GroupDepartment = request.GroupDepartment,
+            CreatedBy = currentUserId,
+            MaxMember = 5,
+            CurrentMember = 0,
+            Status = (int)GroupStatusEnum.Active, // Khác với Council Group - set Active ngay
+            CreatedAt = DateTime.Now,
+            GroupType = (int)GroupTypeEnum.Assessment_Council
+        };
+
+        await _groupRepository.AddAsync(group);
+
+        // Lấy thông tin người tạo
+        var creator = await _userRepository.GetByIdAsync(currentUserId);
+
+        // Gửi email cho người tạo
+        await _emailService.SendEmailAsync(
+            creator.Email,
+            $"[LRMS] Notification: Assessment Council Group Created Successfully - {group.GroupName}",
+            GroupEmailTemplates.GetCreatorGroupCreationEmail(creator, group)
+        );
+
+        // Tạo thông báo cho người tạo
+        var creatorNotification = new CreateNotificationRequest
+        {
+            UserId = currentUserId,
+            Title = "Assessment Council Group Created Successfully",
+            Message = $"You have successfully created the assessment council '{group.GroupName}'",
+            ProjectId = request.ProjectId, // Thêm ProjectId
+            Status = 0,
+            IsRead = false
+        };
+        await _notificationService.CreateNotification(creatorNotification);
+
+        // Thêm các thành viên vào nhóm
+        foreach (var member in request.Members)
+        {
+            var user = await _userRepository.GetUserByEmail(member.MemberEmail);
+            if (user != null)
+            {
+                // Tạo GroupMember với status Active ngay
+                var groupMember = new GroupMember
+                {
+                    GroupId = group.GroupId,
+                    Role = member.Role,
+                    UserId = user.UserId,
+                    Status = (int)GroupMemberStatus.Active, // Set Active ngay
+                    JoinDate = DateTime.Now
+                };
+
+                await _groupRepository.AddMemberAsync(groupMember);
+
+                if (user.UserId != currentUserId) // Gửi thông báo cho các thành viên khác
+                {
+                    // Gửi email thông báo
+                    await _emailService.SendEmailAsync(
+                        user.Email,
+                        $"[LRMS] Notification: Assessment Council Membership Assignment - {group.GroupName}",
+                        GroupEmailTemplates.GetMemberAssignmentEmail(user, group, creator, member.Role)
+                    );
+
+                    // Tạo thông báo trong hệ thống
+                    var memberNotification = new CreateNotificationRequest
+                    {
+                        UserId = user.UserId,
+                        Title = "Assessment Council Membership Assignment",
+                        Message = $"You have been assigned by {creator.FullName} to the assessment council '{group.GroupName}' as a {GroupEmailTemplates.GetRoleName(member.Role)}",
+                        ProjectId = request.ProjectId,
+                        Status = 0,
+                        IsRead = false
+                    };
+                    await _notificationService.CreateNotification(memberNotification);
+                }
+            }
+        }
+        var groupResponse = _mapper.Map<GroupResponse>(group);
+        return groupResponse;
+    }
+
+    public async Task<GroupResponse> CreateDisbursementCouncil(CreateDisbursementCouncilRequest request, int currentUserId)
+    {
+        if (string.IsNullOrEmpty(request.GroupName))
+        {
+            throw new ServiceException("Group name cannot be null or empty.");
+        }
+
+        if (request.Members == null || !request.Members.Any())
+        {
+            throw new ServiceException("Members cannot be null or empty.");
+        }
+
+        foreach (var member in request.Members)
+        {
+            await ValidateMemberInfo(member.MemberEmail, member.MemberName, member.Role);
+
+            // Validate council members must be lecturer
+            var user = await _userRepository.GetUserByEmail(member.MemberEmail);
+            if (user.Role != (int)SystemRoleEnum.Lecturer)
+            {
+                throw new ServiceException($"Disbursement Council member {member.MemberName} must be a lecturer.");
+            }
+        }
+
+    // Kiểm tra số lượng và vai trò của các thành viên
+        var chairmanCount = request.Members.Count(m => m.Role == (int)GroupMemberRoleEnum.Council_Chairman);
+        var secretaryCount = request.Members.Count(m => m.Role == (int)GroupMemberRoleEnum.Secretary);
+        var councilMemberCount = request.Members.Count(m => m.Role == (int)GroupMemberRoleEnum.Council_Member);
+
+        if (chairmanCount != 1)
+        {
+            throw new ServiceException("Disbursement Council must have one chairman.");
+        }
+
+        if (secretaryCount != 1)
+        {
+            throw new ServiceException("Disbursement Council must have one secretary.");
+        }
+
+        if (councilMemberCount != 3)
+        {
+            throw new ServiceException("Disbursement Council must have three council members.");
+        }
+
+        var group = new LRMS_API.Group
+        {
+            GroupName = request.GroupName,
+            GroupDepartment = request.GroupDepartment,
+            CreatedBy = currentUserId,
+            MaxMember = 5,
+            CurrentMember = 5, // Set ngay vì tất cả thành viên đều active
+            Status = (int)GroupStatusEnum.Active,
+            CreatedAt = DateTime.Now,
+            GroupType = (int)GroupTypeEnum.Disbursement_Council
+        };
+
+        await _groupRepository.AddAsync(group);
+
+        // Lấy thông tin người tạo
+        var creator = await _userRepository.GetByIdAsync(currentUserId);
+
+        // Gửi email cho người tạo
+        await _emailService.SendEmailAsync(
+            creator.Email,
+            $"[LRMS] Notification: Disbursement Council Group Created Successfully - {group.GroupName}",
+            GroupEmailTemplates.GetCreatorGroupCreationEmail(creator, group)
+        );
+
+        // Tạo thông báo cho người tạo
+        var creatorNotification = new CreateNotificationRequest
+        {
+            UserId = currentUserId,
+            Title = "Disbursement Council Group Created Successfully",
+            Message = $"You have successfully created the disbursement council '{group.GroupName}'",
+            ProjectId = request.ProjectId,
+            Status = 0,
+            IsRead = false
+        };
+        await _notificationService.CreateNotification(creatorNotification);
+
+        // Thêm các thành viên vào nhóm
+        foreach (var member in request.Members)
+        {
+            var user = await _userRepository.GetUserByEmail(member.MemberEmail);
+            if (user != null)
+            {
+                var groupMember = new GroupMember
+                {
+                    GroupId = group.GroupId,
+                    Role = member.Role,
+                    UserId = user.UserId,
+                    Status = (int)GroupMemberStatus.Active,
+                    JoinDate = DateTime.Now
+                };
+
+                await _groupRepository.AddMemberAsync(groupMember);
+
+                if (user.UserId != currentUserId)
+                {
+                    // Gửi email thông báo
+                    await _emailService.SendEmailAsync(
+                        user.Email,
+                        $"[LRMS] Notification: Disbursement Council Membership Assignment - {group.GroupName}",
+                        GroupEmailTemplates.GetMemberAssignmentEmail(user, group, creator, member.Role)
+                    );
+
+                    // Tạo thông báo trong hệ thống
+                    var memberNotification = new CreateNotificationRequest
+                    {
+                        UserId = user.UserId,
+                        Title = "Disbursement Council Membership Assignment",
+                        Message = $"You have been assigned by {creator.FullName} to the disbursement council '{group.GroupName}' as a {GroupEmailTemplates.GetRoleName(member.Role)}",
+                        ProjectId = request.ProjectId,
+                        Status = 0,
+                        IsRead = false
+                    };
+                    await _notificationService.CreateNotification(memberNotification);
+                }
+            }
+        }
+        var groupResponse = _mapper.Map<GroupResponse>(group);
+        return groupResponse;
+    }
     private async Task UpdateGroupMemberCount(int groupId)
     {
         var group = await _groupRepository.GetByIdAsync(groupId);
@@ -581,7 +830,7 @@ public class GroupService : IGroupService
             var groups = await _groupRepository.GetAllAsync();
             
             // Filter out only council groups (GroupType = 1)
-            var councilGroups = groups.Where(g => g.GroupType == (int)GroupTypeEnum.Council).ToList();
+            var councilGroups = groups.Where(g => g.GroupType == (int)GroupTypeEnum.Review_Council).ToList();
             
             if (!councilGroups.Any())
             {
@@ -646,7 +895,7 @@ public class GroupService : IGroupService
             var groupMembers = await _groupRepository.GetMembersByGroupId(request.GroupId);
             var pendingInvitations = await _invitationRepository.GetPendingInvitationsByGroupId(request.GroupId);
 
-            if (group.GroupType == (int)GroupTypeEnum.Council)
+            if (group.GroupType == (int)GroupTypeEnum.Review_Council)
             {
                 // Count current active members for each role
                 int activeChairmanCount = groupMembers.Count(m => 
@@ -702,7 +951,7 @@ public class GroupService : IGroupService
                 // Validate that invited user is a lecturer
                 if (invitedUser.Role != (int)SystemRoleEnum.Lecturer)
                 {
-                    throw new ServiceException("Council members must be lecturers.");
+                    throw new ServiceException("Review_Council members must be lecturers.");
                 }
             }
             else if (group.GroupType == (int)GroupTypeEnum.Student) 

@@ -39,8 +39,8 @@ public class UserRepository : GenericRepository<User>, IUserRepository
                 GroupName = gm.Group.GroupName,
                 Role = gm.Role,
                 GroupType = gm.Group.GroupType,
-                DepartmentId = gm.Group.GroupType == (int)GroupTypeEnum.Council ? gm.Group.GroupDepartment : null,
-                DepartmentName = gm.Group.GroupType == (int)GroupTypeEnum.Council && gm.Group.GroupDepartmentNavigation != null 
+                DepartmentId = gm.Group.GroupType == (int)GroupTypeEnum.Review_Council ? gm.Group.GroupDepartment : null,
+                DepartmentName = gm.Group.GroupType == (int)GroupTypeEnum.Review_Council && gm.Group.GroupDepartmentNavigation != null 
                     ? gm.Group.GroupDepartmentNavigation.DepartmentName 
                     : null,
                 Status = gm.Group.Status

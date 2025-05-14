@@ -427,7 +427,7 @@ public class ProjectService : IProjectService
 
         var councilGroup = await _groupRepository.GetByIdAsync(request.CouncilGroupId);
         if (councilGroup == null)
-            throw new ServiceException("Council group not found");
+            throw new ServiceException("Review_Council group not found");
 
         // Gửi thông báo cho tất cả thành viên trong council group
         var councilMembers = await _groupRepository.GetMembersByGroupId(request.CouncilGroupId);
@@ -489,7 +489,7 @@ public class ProjectService : IProjectService
             if (approver == null)
                 throw new ServiceException("Approver information not found");
 
-            // Check if approver is either a Secretary or Council Chairman
+            // Check if approver is either a Secretary or Review_Council Chairman
             if (approver.Role != (int)GroupMemberRoleEnum.Secretary && 
                 approver.Role != (int)GroupMemberRoleEnum.Council_Chairman)
                 throw new ServiceException("You don't have permission to approve this project. Only the council secretary or chairman can approve projects.");
@@ -647,7 +647,7 @@ public class ProjectService : IProjectService
             if (approver == null)
                 throw new ServiceException("Approver information not found");
 
-            // Check if approver is either a Secretary or Council Chairman
+            // Check if approver is either a Secretary or Review_Council Chairman
             if (approver.Role != (int)GroupMemberRoleEnum.Secretary && 
                 approver.Role != (int)GroupMemberRoleEnum.Council_Chairman)
                 throw new ServiceException("You don't have permission to reject this project. Only the council secretary or chairman can reject projects.");
@@ -1673,7 +1673,7 @@ public class ProjectService : IProjectService
             var approverGroups = await _groupRepository.GetGroupsByUserId(approverId);
             bool isCouncilMember = await _context.GroupMembers
                 .AnyAsync(gm => gm.UserId == approverId && 
-                         gm.Group.GroupType == (int)GroupTypeEnum.Council &&
+                         gm.Group.GroupType == (int)GroupTypeEnum.Review_Council &&
                          gm.Status == (int)GroupMemberStatus.Active);
                          
             if (!isCouncilMember)
@@ -1781,7 +1781,7 @@ public class ProjectService : IProjectService
             var rejecterGroups = await _groupRepository.GetGroupsByUserId(rejecterId);
             bool isCouncilMember = await _context.GroupMembers
                 .AnyAsync(gm => gm.UserId == rejecterId && 
-                         gm.Group.GroupType == (int)GroupTypeEnum.Council &&
+                         gm.Group.GroupType == (int)GroupTypeEnum.Review_Council &&
                          gm.Status == (int)GroupMemberStatus.Active);
                          
             if (!isCouncilMember)
@@ -1997,7 +1997,7 @@ public class ProjectService : IProjectService
                 .Include(gm => gm.Group)
                 .Where(gm => gm.UserId == secretaryId &&
                            gm.Status == (int)GroupMemberStatus.Active &&
-                           gm.Group.GroupType == (int)GroupTypeEnum.Council &&
+                           gm.Group.GroupType == (int)GroupTypeEnum.Review_Council &&
                            (gm.Role == (int)GroupMemberRoleEnum.Secretary || 
                             gm.Role == (int)GroupMemberRoleEnum.Council_Chairman))
                 .ToListAsync();
@@ -2256,7 +2256,7 @@ public class ProjectService : IProjectService
                 .Include(gm => gm.Group)
                 .Where(gm => gm.UserId == secretaryId &&
                            gm.Status == (int)GroupMemberStatus.Active &&
-                           gm.Group.GroupType == (int)GroupTypeEnum.Council &&
+                           gm.Group.GroupType == (int)GroupTypeEnum.Review_Council &&
                            (gm.Role == (int)GroupMemberRoleEnum.Secretary || 
                             gm.Role == (int)GroupMemberRoleEnum.Council_Chairman))
                 .ToListAsync();

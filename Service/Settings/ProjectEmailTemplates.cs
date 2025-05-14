@@ -186,7 +186,7 @@ public class ProjectEmailTemplates
                 <li><strong>Approved Budget:</strong> {project.ApprovedBudget:N0} VND</li>
             </ul>
         </div>
-        <p><strong>Council Meeting Minutes:</strong> <a href='{documentUrl}' style='color: #00477e;'>View here</a></p>
+        <p><strong>Review_Council Meeting Minutes:</strong> <a href='{documentUrl}' style='color: #00477e;'>View here</a></p>
         <p>Your group can now begin implementing the project as proposed.</p>
         <p>Best regards,<br>LRMS System</p>
         <hr style='border: none; border-top: 1px solid #ddd; margin: 20px 0;'>
@@ -224,7 +224,7 @@ public class ProjectEmailTemplates
                 <li><strong>Approved Budget:</strong> {project.ApprovedBudget:N0} VND</li>
             </ul>
         </div>
-        <p><strong>Council Meeting Minutes:</strong> <a href='{documentUrl}' style='color: #00477e;'>View here</a></p>
+        <p><strong>Review_Council Meeting Minutes:</strong> <a href='{documentUrl}' style='color: #00477e;'>View here</a></p>
         <p>As a stakeholder, you will continue to receive updates about the project's progress.</p>
         <p>Best regards,<br>LRMS System</p>
         <hr style='border: none; border-top: 1px solid #ddd; margin: 20px 0;'>
@@ -259,7 +259,7 @@ public class ProjectEmailTemplates
             </ul>
         </div>
         
-        <p><strong>Council Meeting Minutes/Rejection Reason:</strong> <a href='{documentUrl}' style='color: #00477e;'>View here</a></p>
+        <p><strong>Review_Council Meeting Minutes/Rejection Reason:</strong> <a href='{documentUrl}' style='color: #00477e;'>View here</a></p>
         <p>Please review the rejection reason and make necessary adjustments before resubmitting.</p>
         <p>Best regards,<br>LRMS System</p>
         
@@ -295,7 +295,7 @@ public class ProjectEmailTemplates
             </ul>
         </div>
         
-        <p><strong>Council Meeting Minutes/Rejection Reason:</strong> <a href='{documentUrl}' style='color: #00477e;'>View here</a></p>
+        <p><strong>Review_Council Meeting Minutes/Rejection Reason:</strong> <a href='{documentUrl}' style='color: #00477e;'>View here</a></p>
         <p>Please coordinate with your group members to make necessary adjustments before resubmitting.</p>
         <p>Best regards,<br>LRMS System</p>
         

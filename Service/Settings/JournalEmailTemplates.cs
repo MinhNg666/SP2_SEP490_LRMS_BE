@@ -96,7 +96,7 @@ public static class JournalEmailTemplates
                 <li><strong>Approver:</strong> {approver.FullName}</li>
             </ul>
             <div style='padding: 10px; background-color: #f5f5f5; margin: 15px 0;'>
-                <p><strong>Council Meeting Minutes:</strong> <a href='{documentUrl}' style='color: #00477e;'>View Minutes</a></p>
+                <p><strong>Review_Council Meeting Minutes:</strong> <a href='{documentUrl}' style='color: #00477e;'>View Minutes</a></p>
             </div>
         </div>
         <p>Please access the system to view more details.</p>
@@ -129,7 +129,7 @@ public static class JournalEmailTemplates
                 <li><strong>Approver:</strong> {approver.FullName}</li>
             </ul>
             <div style='padding: 10px; background-color: #f5f5f5; margin: 15px 0;'>
-                <p><strong>Council Meeting Minutes:</strong> <a href='{documentUrl}' style='color: #00477e;'>View Minutes</a></p>
+                <p><strong>Review_Council Meeting Minutes:</strong> <a href='{documentUrl}' style='color: #00477e;'>View Minutes</a></p>
             </div>
         </div>
         <p>Please access the system to view more details.</p>
@@ -161,7 +161,7 @@ public static class JournalEmailTemplates
                 <li><strong>Submission Date:</strong> {journal.SubmissionDate:dd/MM/yyyy}</li>
             </ul>
             <div style='padding: 10px; background-color: #f5f5f5; margin: 15px 0;'>
-                <p><strong>Council Meeting Minutes (including rejection reasons):</strong> <a href='{documentUrl}' style='color: #00477e;'>View Minutes</a></p>
+                <p><strong>Review_Council Meeting Minutes (including rejection reasons):</strong> <a href='{documentUrl}' style='color: #00477e;'>View Minutes</a></p>
             </div>
         </div>
         <p>Please review the council's comments and make necessary adjustments before resubmitting.</p>
@@ -193,7 +193,7 @@ public static class JournalEmailTemplates
                 <li><strong>Submission Date:</strong> {journal.SubmissionDate:dd/MM/yyyy}</li>
             </ul>
             <div style='padding: 10px; background-color: #f5f5f5; margin: 15px 0;'>
-                <p><strong>Council Meeting Minutes (including rejection reasons):</strong> <a href='{documentUrl}' style='color: #00477e;'>View Minutes</a></p>
+                <p><strong>Review_Council Meeting Minutes (including rejection reasons):</strong> <a href='{documentUrl}' style='color: #00477e;'>View Minutes</a></p>
             </div>
         </div>
         <p>Please collaborate with group members to review the council's comments and make necessary adjustments before resubmitting.</p>

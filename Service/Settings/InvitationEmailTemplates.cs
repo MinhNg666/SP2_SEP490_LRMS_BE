@@ -29,7 +29,7 @@ public static class InvitationEmailTemplates
             <h3 style='margin-top: 0; color: #00477e;'>Group Information:</h3>
             <ul style='padding-left: 20px;'>
                 <li><strong>Group Name:</strong> {group.GroupName}</li>
-                <li><strong>Group Type:</strong> {(group.GroupType == 1 ? "Student Research Group" : "Council")}</li>
+                <li><strong>Group Type:</strong> {(group.GroupType == 1 ? "Student Research Group" : "Review_Council")}</li>
                 <li><strong>Group Leader:</strong> {sender.FullName}</li>
                 <li><strong>Department/Unit:</strong> {departmentName}</li>
             </ul>

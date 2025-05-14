@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Domain.DTO.Requests;
 
-public class CreateCouncilGroupRequest
+public class CreateReviewCouncilGroupRequest
 {
     public string GroupName { get; set; }
     public List<MemberRequest> Members { get; set; }

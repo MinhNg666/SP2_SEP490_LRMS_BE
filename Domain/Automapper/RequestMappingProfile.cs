@@ -13,7 +13,7 @@ namespace Domain.Automapper
     {
         public RequestMappingProfile() 
         {
-            CreateMap<CreateCouncilGroupRequest, Group>();
+            CreateMap<CreateReviewCouncilGroupRequest, Group>();
             CreateMap<CreateNotificationRequest, Notification>();
             CreateMap<CreateStudentGroupRequest, Group>();
             CreateMap<SendInvitationRequest, Invitation>();

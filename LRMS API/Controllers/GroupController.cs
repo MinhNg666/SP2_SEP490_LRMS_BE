@@ -65,7 +65,7 @@ public class GroupController : ApiBaseController
         }      
     }
     [HttpPost("council-groups")]
-    public async Task<IActionResult> CreateCouncilGroup(CreateCouncilGroupRequest request) 
+    public async Task<IActionResult> CreateResearchCouncilGroup(CreateReviewCouncilGroupRequest request) 
     {
         try
         {
@@ -75,7 +75,7 @@ public class GroupController : ApiBaseController
             return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "User ID is missing from claims."));
         }
             var currentUserId = int.Parse(userIdClaim); // Lấy ID người dùng từ Claims
-            await _groupService.CreateCouncilGroup(request, currentUserId);
+            await _groupService.CreateReviewCouncilGroup(request, currentUserId);
             return Ok(new ApiResponse(StatusCodes.Status200OK, MessageConstants.SUCCESSFUL));
         }
         catch (ServiceException e)
@@ -83,13 +83,52 @@ public class GroupController : ApiBaseController
             return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, e.Message));
         }
     }
+    [HttpPost("assessment-council")]
+    public async Task<ActionResult<GroupResponse>> CreateAssessmentCouncil(CreateAssessmentCouncilRequest request)
+    {
+        try
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim))
+            {
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "User ID is missing from claims."));
+            }
+            var currentUserId = int.Parse(userIdClaim); // Lấy ID người dùng từ Claims
+            var result = await _groupService.CreateAssessmentCouncil(request, currentUserId);
+            return Ok(new ApiResponse(StatusCodes.Status200OK, MessageConstants.SUCCESSFUL, result));
+        }
+        catch (ServiceException e)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, e.Message));
+        }
+    }
+    [HttpPost("disbursement-council")]
+    public async Task<ActionResult<ApiResponse>> CreateDisbursementCouncil(CreateDisbursementCouncilRequest request)
+    {
+        try
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim))
+            {
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, "User ID is missing from claims."));
+            }
+            var currentUserId = int.Parse(userIdClaim);
+            var result = await _groupService.CreateDisbursementCouncil(request, currentUserId);
+            return Ok(new ApiResponse(StatusCodes.Status200OK, MessageConstants.SUCCESSFUL, result));
+        }
+        catch (ServiceException e)
+        {
+            return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, e.Message));
+        }
+    }
+
     [HttpPost("research-groups")]
-    public async Task<IActionResult> CreateStudentGroup(CreateStudentGroupRequest request) 
+    public async Task<IActionResult> CreateResearchGroup(CreateStudentGroupRequest request) 
     {
         try 
         {
             var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-            await _groupService.CreateStudentGroup(request, currentUserId);
+            await _groupService.CreateResearchGroup(request, currentUserId);
             return Ok(new ApiResponse(StatusCodes.Status200OK, MessageConstants.SUCCESSFUL));
         }
         catch (ServiceException e)

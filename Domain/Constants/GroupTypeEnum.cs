@@ -9,6 +9,8 @@ namespace Domain.Constants;
 public enum GroupTypeEnum
 {
     Student = 0,
-    Council = 1,
+    Review_Council = 1,
     Research = 2, 
+    Assessment_Council = 3,
+    Disbursement_Council = 4
 }

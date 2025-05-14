@@ -13,8 +13,10 @@ public interface IGroupService
     Task<GroupResponse> GetGroupById(int groupId);
     Task<IEnumerable<GroupResponse>> GetGroupsByUserId(int userId);
     // Task<List<string>> GetStakeholderEmails(int groupId);
-    Task CreateStudentGroup(CreateStudentGroupRequest request, int currentUserId);
-    Task CreateCouncilGroup(CreateCouncilGroupRequest request, int currentUserId);
+    Task CreateResearchGroup(CreateStudentGroupRequest request, int currentUserId);
+    Task CreateReviewCouncilGroup(CreateReviewCouncilGroupRequest request, int currentUserId);
+    Task<GroupResponse> CreateAssessmentCouncil(CreateAssessmentCouncilRequest request, int currentUserId);
+    Task<GroupResponse> CreateDisbursementCouncil(CreateDisbursementCouncilRequest request, int currentUserId);
     Task<IEnumerable<GroupResponse>> GetAllCouncilGroups();
     Task ReInviteMember(ReInviteMemberRequest request, int currentUserId);
     Task<IEnumerable<UserGroupResponse>> GetUserGroupsBasicInfo(int userId);

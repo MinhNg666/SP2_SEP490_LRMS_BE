@@ -160,7 +160,7 @@ public static class ConferenceEmailTemplates
             {GetExpenseInfo(conference)}
             
             <div class=""document-link"">
-                <p><strong>Council Meeting Minutes:</strong><br/>
+                <p><strong>Review_Council Meeting Minutes:</strong><br/>
                 <a href=""{documentUrl}"">View Minutes</a></p>
             </div>
             
@@ -214,7 +214,7 @@ public static class ConferenceEmailTemplates
             {GetExpenseInfo(conference)}
             
             <div class=""document-link"">
-                <p><strong>Council Meeting Minutes:</strong><br/>
+                <p><strong>Review_Council Meeting Minutes:</strong><br/>
                 <a href=""{documentUrl}"">View Minutes</a></p>
             </div>
             
@@ -268,7 +268,7 @@ public static class ConferenceEmailTemplates
             {GetExpenseInfo(conference)}
             
             <div class=""document-link"">
-                <p><strong>Council Meeting Minutes (including rejection reasons):</strong><br/>
+                <p><strong>Review_Council Meeting Minutes (including rejection reasons):</strong><br/>
                 <a href=""{documentUrl}"">View Minutes</a></p>
             </div>
             
@@ -322,7 +322,7 @@ public static class ConferenceEmailTemplates
             {GetExpenseInfo(conference)}
             
             <div class=""document-link"">
-                <p><strong>Council Meeting Minutes (including rejection reasons):</strong><br/>
+                <p><strong>Review_Council Meeting Minutes (including rejection reasons):</strong><br/>
                 <a href=""{documentUrl}"">View Minutes</a></p>
             </div>
             
