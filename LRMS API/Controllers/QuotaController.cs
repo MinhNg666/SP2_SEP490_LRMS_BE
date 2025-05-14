@@ -5,6 +5,7 @@ using Service.Exceptions;
 using Service.Interfaces;
 using System.Threading.Tasks;
 using System.Security.Claims;
+using Domain.DTO.Requests;
 
 namespace LRMS_API.Controllers
 {
@@ -19,7 +20,7 @@ namespace LRMS_API.Controllers
         }
 
         [HttpGet("quotas")]
-        [Authorize(Roles = "Admin,Lecturer")]
+        [Authorize]
         public async Task<IActionResult> GetAllQuotas()
         {
             try
@@ -57,6 +58,67 @@ namespace LRMS_API.Controllers
             {
                 var quotaDetail = await _quotaService.GetQuotaDetailById(quotaId);
                 return Ok(new ApiResponse(StatusCodes.Status200OK, "Quota details retrieved successfully", quotaDetail));
+            }
+            catch (ServiceException ex)
+            {
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
+            }
+        }
+
+        [HttpPost("allocate-department-quotas")]
+        [Authorize]
+        public async Task<IActionResult> AllocateQuotaToDepartment([FromBody] AllocateDepartmentQuotaRequest request)
+        {
+            try
+            {
+                var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+                var quotaId = await _quotaService.AllocateQuotaToDepartment(request, userId);
+                return Ok(new ApiResponse(StatusCodes.Status200OK, "Quota allocated to department successfully", quotaId));
+            }
+            catch (ServiceException ex)
+            {
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
+            }
+        }
+
+        [HttpGet("department-quotas")]
+        [Authorize]
+        public async Task<IActionResult> GetDepartmentQuotas()
+        {
+            try
+            {
+                var quotas = await _quotaService.GetDepartmentQuotas();
+                return Ok(new ApiResponse(StatusCodes.Status200OK, "Department quotas retrieved successfully", quotas));
+            }
+            catch (ServiceException ex)
+            {
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
+            }
+        }
+
+        [HttpGet("department-quotas/{departmentId}")]
+        [Authorize]
+        public async Task<IActionResult> GetQuotasByDepartment(int departmentId)
+        {
+            try
+            {
+                var quotas = await _quotaService.GetQuotasByDepartmentId(departmentId);
+                return Ok(new ApiResponse(StatusCodes.Status200OK, "Department quotas retrieved successfully", quotas));
+            }
+            catch (ServiceException ex)
+            {
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
+            }
+        }
+
+        [HttpGet("departments/{departmentId}/project-quotas")]
+        [Authorize]
+        public async Task<IActionResult> GetDepartmentProjectQuotas(int departmentId)
+        {
+            try
+            {
+                var projectQuotas = await _quotaService.GetDepartmentProjectQuotas(departmentId);
+                return Ok(new ApiResponse(StatusCodes.Status200OK, "Department project quotas retrieved successfully", projectQuotas));
             }
             catch (ServiceException ex)
             {

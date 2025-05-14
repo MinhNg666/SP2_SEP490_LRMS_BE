@@ -33,5 +33,9 @@ namespace Domain.DTO.Responses
         public string ProjectTypeName { get; set; }
         
         public decimal DisbursedAmount { get; set; }
+        
+        // Department quota fields
+        public int? NumProjects { get; set; }
+        public int? QuotaYear { get; set; }
     }
 }
