@@ -15,5 +15,6 @@ namespace Service.Interfaces
         Task<IEnumerable<QuotaResponse>> GetQuotasByDepartmentId(int departmentId);
         Task<decimal> GetAvailableDepartmentBudget(int departmentId);
         Task<int> CreateProjectQuota(int projectId, decimal amount, int departmentId, int allocatedBy);
+        Task<IEnumerable<QuotaResponse>> GetDepartmentProjectQuotas(int departmentId);
     }
 }

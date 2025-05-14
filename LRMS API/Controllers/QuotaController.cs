@@ -20,7 +20,7 @@ namespace LRMS_API.Controllers
         }
 
         [HttpGet("quotas")]
-        [Authorize(Roles = "Admin,Lecturer")]
+        [Authorize]
         public async Task<IActionResult> GetAllQuotas()
         {
             try
@@ -65,7 +65,7 @@ namespace LRMS_API.Controllers
             }
         }
 
-        [HttpPost("department-quotas")]
+        [HttpPost("allocate-department-quotas")]
         [Authorize]
         public async Task<IActionResult> AllocateQuotaToDepartment([FromBody] AllocateDepartmentQuotaRequest request)
         {
@@ -82,7 +82,7 @@ namespace LRMS_API.Controllers
         }
 
         [HttpGet("department-quotas")]
-        [Authorize(Roles = "Admin,Office,Lecturer")]
+        [Authorize]
         public async Task<IActionResult> GetDepartmentQuotas()
         {
             try
@@ -97,13 +97,28 @@ namespace LRMS_API.Controllers
         }
 
         [HttpGet("department-quotas/{departmentId}")]
-        [Authorize(Roles = "Admin,Office,Lecturer")]
+        [Authorize]
         public async Task<IActionResult> GetQuotasByDepartment(int departmentId)
         {
             try
             {
                 var quotas = await _quotaService.GetQuotasByDepartmentId(departmentId);
                 return Ok(new ApiResponse(StatusCodes.Status200OK, "Department quotas retrieved successfully", quotas));
+            }
+            catch (ServiceException ex)
+            {
+                return BadRequest(new ApiResponse(StatusCodes.Status400BadRequest, ex.Message));
+            }
+        }
+
+        [HttpGet("departments/{departmentId}/project-quotas")]
+        [Authorize]
+        public async Task<IActionResult> GetDepartmentProjectQuotas(int departmentId)
+        {
+            try
+            {
+                var projectQuotas = await _quotaService.GetDepartmentProjectQuotas(departmentId);
+                return Ok(new ApiResponse(StatusCodes.Status200OK, "Department project quotas retrieved successfully", projectQuotas));
             }
             catch (ServiceException ex)
             {

@@ -549,5 +549,76 @@ namespace Service.Implementations
                 throw new ServiceException($"Error creating project quota: {ex.Message}");
             }
         }
+
+        public async Task<IEnumerable<QuotaResponse>> GetDepartmentProjectQuotas(int departmentId)
+        {
+            try
+            {
+                var projectQuotas = await _context.Quotas
+                    .Include(q => q.Department)
+                    .Include(q => q.Project)
+                        .ThenInclude(p => p.Group)
+                    .Include(q => q.AllocatedByNavigation)
+                    .Include(q => q.FundDisbursements)
+                    .Where(q => q.DepartmentId == departmentId && q.ProjectId.HasValue)
+                    .ToListAsync();
+
+                var responses = new List<QuotaResponse>();
+                
+                foreach (var quota in projectQuotas)
+                {
+                    decimal disbursedAmount = quota.FundDisbursements
+                        .Where(fd => fd.Status == (int)FundDisbursementStatusEnum.Approved || 
+                                    fd.Status == (int)FundDisbursementStatusEnum.Disbursed)
+                        .Sum(fd => fd.FundRequest ?? 0);
+                    
+                    var response = new QuotaResponse
+                    {
+                        QuotaId = quota.QuotaId,
+                        AllocatedBudget = quota.AllocatedBudget,
+                        Status = quota.Status,
+                        CreatedAt = quota.CreatedAt,
+                        UpdateAt = quota.UpdateAt,
+                        ProjectId = quota.ProjectId,
+                        ProjectName = quota.Project?.ProjectName,
+                        
+                        // Additional project information
+                        ProjectApprovedBudget = quota.Project?.ApprovedBudget,
+                        ProjectSpentBudget = quota.Project?.SpentBudget ?? 0,
+                        
+                        // Department information
+                        DepartmentId = quota.DepartmentId,
+                        DepartmentName = quota.Department?.DepartmentName,
+                        
+                        // Group information
+                        GroupId = quota.Project?.GroupId,
+                        GroupName = quota.Project?.Group?.GroupName,
+                        
+                        // Allocator information
+                        AllocatedBy = quota.AllocatedBy,
+                        AllocatorName = quota.AllocatedByNavigation?.FullName,
+
+                        ProjectType = quota.Project?.ProjectType,
+                        ProjectTypeName = quota.Project?.ProjectType.HasValue == true
+                            ? Enum.GetName(typeof(ProjectTypeEnum), quota.Project.ProjectType) 
+                            : null,
+                            
+                        DisbursedAmount = disbursedAmount,
+                        
+                        // Department quota fields
+                        NumProjects = quota.NumProjects,
+                        QuotaYear = quota.QuotaYear
+                    };
+                    
+                    responses.Add(response);
+                }
+
+                return responses;
+            }
+            catch (Exception ex)
+            {
+                throw new ServiceException($"Error getting project quotas for department: {ex.Message}");
+            }
+        }
     }
 }
