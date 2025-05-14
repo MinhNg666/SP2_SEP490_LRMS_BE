@@ -6,6 +6,7 @@ using LRMS_API;
 using Microsoft.EntityFrameworkCore;
 using Service.Exceptions;
 using Service.Interfaces;
+using Service.Settings;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,12 +19,14 @@ namespace Service.Implementations
         private readonly LRMSDbContext _context;
         private readonly IMapper _mapper;
         private readonly INotificationService _notificationService;
+        private readonly IEmailService _emailService;
 
-        public QuotaService(LRMSDbContext context, IMapper mapper, INotificationService notificationService)
+        public QuotaService(LRMSDbContext context, IMapper mapper, INotificationService notificationService, IEmailService emailService)
         {
             _context = context;
             _mapper = mapper;
             _notificationService = notificationService;
+            _emailService = emailService;
         }
 
         public async Task<IEnumerable<QuotaResponse>> GetAllQuotas()
@@ -370,6 +373,20 @@ namespace Service.Implementations
                         };
 
                         await _notificationService.CreateNotification(notificationRequest);
+
+                        // Send email notification
+                        if (!string.IsNullOrEmpty(member.User.Email))
+                        {
+                            var emailSubject = $"[LRMS] Notification: Department Quota Allocation - {department.DepartmentName}";
+                            var emailContent = DepartmentQuotaAllocationEmailTemplates.GetCouncilMemberQuotaAllocationEmail(
+                                member.User,
+                                department,
+                                allocator,
+                                quota
+                            );
+
+                            await _emailService.SendEmailAsync(member.User.Email, emailSubject, emailContent);
+                        }
                     }
                 }
 
