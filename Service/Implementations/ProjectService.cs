@@ -580,21 +580,7 @@ public class ProjectService : IProjectService
                 }
             }
 
-            // Create a new quota with the same budget as the project
-            var quota = new Quota
-            {
-                AllocatedBudget = project.ApprovedBudget,
-                Status = (int)QuotaStatusEnum.Active,
-                CreatedAt = DateTime.Now,
-                ProjectId = projectId,
-                AllocatedBy = secretaryId
-            };
-
-            await _context.Quotas.AddAsync(quota);
-            await _context.SaveChangesAsync();
-
-            // debug
-            Console.WriteLine($"Created quota {quota.QuotaId} for project {projectId} with budget {quota.AllocatedBudget}");
+                    // Check if there is sufficient department budget available        decimal projectBudget = project.ApprovedBudget ?? 0;        if (projectBudget <= 0)            throw new ServiceException("Project approved budget must be greater than 0");        var availableDepartmentBudget = await _context.Quotas            .Where(q => q.DepartmentId == project.DepartmentId &&                   q.Status == (int)QuotaStatusEnum.Active &&                  !q.ProjectId.HasValue)            .SumAsync(q => q.AllocatedBudget ?? 0);        if (availableDepartmentBudget < projectBudget)            throw new ServiceException($"Insufficient department budget. Available: {availableDepartmentBudget}, Required: {projectBudget}");        // Create a project quota from the department quota        var quotaService = new QuotaService(_context, _mapper);        var quotaId = await quotaService.CreateProjectQuota(projectId, projectBudget, project.DepartmentId.Value, secretaryId);        // Debug        Console.WriteLine($"Created project quota {quotaId} for project {projectId} with budget {projectBudget}");
 
             await transaction.CommitAsync();
             return true;
@@ -2124,31 +2110,7 @@ public class ProjectService : IProjectService
                 project.UpdatedAt = DateTime.Now;
                 _context.Projects.Update(project);
                 
-                // Create a new quota with the same budget as the project
-                // First check if a quota already exists for this project
-                var existingQuota = await _context.Quotas
-                    .FirstOrDefaultAsync(q => q.ProjectId == project.ProjectId);
-                
-                if (existingQuota == null)
-                {
-                    var quota = new Quota
-                    {
-                        AllocatedBudget = project.ApprovedBudget,
-                        Status = (int)QuotaStatusEnum.Active,
-                        CreatedAt = DateTime.Now,
-                        ProjectId = project.ProjectId,
-                        AllocatedBy = secretaryId
-                    };
-
-                    await _context.Quotas.AddAsync(quota);
-                    await _context.SaveChangesAsync();
-                    
-                    Console.WriteLine($"Created quota {quota.QuotaId} for project {project.ProjectId} with budget {quota.AllocatedBudget}");
-                }
-                else
-                {
-                    Console.WriteLine($"Quota {existingQuota.QuotaId} already exists for project {project.ProjectId}");
-                }
+                                // Check if there is sufficient department budget available                decimal projectBudget = project.ApprovedBudget ?? 0;                if (projectBudget <= 0)                    throw new ServiceException("Project approved budget must be greater than 0");                var availableDepartmentBudget = await _context.Quotas                    .Where(q => q.DepartmentId == project.DepartmentId &&                           q.Status == (int)QuotaStatusEnum.Active &&                          !q.ProjectId.HasValue)                    .SumAsync(q => q.AllocatedBudget ?? 0);                if (availableDepartmentBudget < projectBudget)                    throw new ServiceException($"Insufficient department budget. Available: {availableDepartmentBudget}, Required: {projectBudget}");                                // Check if a project quota already exists                var existingQuota = await _context.Quotas                    .FirstOrDefaultAsync(q => q.ProjectId == project.ProjectId);                                if (existingQuota == null)                {                    // Create a project quota from the department quota                    var quotaService = new QuotaService(_context, _mapper);                    var quotaId = await quotaService.CreateProjectQuota(project.ProjectId, projectBudget, project.DepartmentId.Value, secretaryId);                                        Console.WriteLine($"Created project quota {quotaId} for project {project.ProjectId} with budget {projectBudget}");                }                else                {                    Console.WriteLine($"Quota {existingQuota.QuotaId} already exists for project {project.ProjectId}");                }
                 
                 // Send notifications to research group members if the group exists
                 if (project.GroupId.HasValue)
