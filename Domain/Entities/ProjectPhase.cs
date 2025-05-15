@@ -25,4 +25,7 @@ public partial class ProjectPhase
 
     // Navigation property to ProjectResources
     public virtual ICollection<ProjectResource> ProjectResources { get; set; } = new List<ProjectResource>();
+
+    // Navigation property to ProgressReports (1-N)
+    public virtual ICollection<ProgressReport> ProgressReports { get; set; } = new List<ProgressReport>();
 }

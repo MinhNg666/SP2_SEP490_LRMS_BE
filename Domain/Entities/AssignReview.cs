@@ -49,4 +49,10 @@ public partial class AssignReview // Changed class name to singular
     [Column("fund_disbursement_id")]
     public int? FundDisbursementId { get; set; }
     public virtual FundDisbursement? FundDisbursement { get; set; }
+
+    // Foreign key to ProgressReport
+    [ForeignKey("ProgressReport")]
+    [Column("progress_report_id")]
+    public int? ProgressReportId { get; set; }
+    public virtual ProgressReport? ProgressReport { get; set; }
 } 

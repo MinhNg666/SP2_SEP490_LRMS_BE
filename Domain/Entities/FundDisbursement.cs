@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace LRMS_API;
 
@@ -63,4 +64,10 @@ public partial class FundDisbursement
 
     // Navigation to AssignReviews (1-N)
     public virtual ICollection<AssignReview> AssignReviews { get; set; } = new List<AssignReview>();
+
+    // Foreign key to ProgressReport
+    [ForeignKey("ProgressReport")]
+    [Column("progress_report_id")]
+    public int? ProgressReportId { get; set; }
+    public virtual ProgressReport? ProgressReport { get; set; }
 }

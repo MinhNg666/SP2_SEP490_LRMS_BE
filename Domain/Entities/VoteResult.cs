@@ -40,4 +40,10 @@ public partial class VoteResult
 
     // Navigation property to CouncilVotes (1-N)
     public virtual ICollection<CouncilVote> CouncilVotes { get; set; } = new List<CouncilVote>();
+
+    // Foreign key to ProgressReport (N-1 from VoteResult's perspective)
+    [ForeignKey("ProgressReport")]
+    [Column("progress_report_id")]
+    public int? ProgressReportId { get; set; }
+    public virtual ProgressReport? ProgressReport { get; set; }
 } 

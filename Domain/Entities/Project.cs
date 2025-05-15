@@ -77,4 +77,7 @@ public partial class Project
 
     // Navigation property to Inspections (1-N)
     public virtual ICollection<Inspection> Inspections { get; set; } = new List<Inspection>();
+
+    // Navigation property to ProgressReports (1-N)
+    public virtual ICollection<ProgressReport> ProgressReports { get; set; } = new List<ProgressReport>();
 }

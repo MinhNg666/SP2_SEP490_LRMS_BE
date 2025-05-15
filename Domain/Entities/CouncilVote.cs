@@ -52,4 +52,10 @@ public partial class CouncilVote
     [Column("vote_result_id")]
     public int VoteResultId { get; set; }
     public virtual VoteResult VoteResult { get; set; }
+
+    // Foreign key to ProgressReport (N-1 from CouncilVote's perspective)
+    [ForeignKey("ProgressReport")]
+    [Column("progress_report_id")]
+    public int? ProgressReportId { get; set; }
+    public virtual ProgressReport? ProgressReport { get; set; }
 } 

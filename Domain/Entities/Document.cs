@@ -56,4 +56,10 @@ public partial class Document
 
     [ForeignKey("ConferenceId")]
     public virtual Conference? Conference { get; set; }
+
+    // Foreign key to ProgressReport
+    [ForeignKey("ProgressReport")]
+    [Column("progress_report_id")]
+    public int? ProgressReportId { get; set; }
+    public virtual ProgressReport? ProgressReport { get; set; }
 }
