@@ -28,4 +28,12 @@ public partial class ProjectPhase
 
     // Navigation property to ProgressReports (1-N)
     public virtual ICollection<ProgressReport> ProgressReports { get; set; } = new List<ProgressReport>();
+
+    // Navigation property to Conferences (1-N)
+    public virtual ICollection<Conference> Conferences { get; set; } = new List<Conference>();
+
+    // Navigation property to Journals (1-N)
+    public virtual ICollection<Journal> Journals { get; set; } = new List<Journal>();
+
+    public virtual ICollection<ProjectRequest> ProjectRequests { get; set; } = new List<ProjectRequest>();
 }

@@ -80,4 +80,10 @@ public partial class Project
 
     // Navigation property to ProgressReports (1-N)
     public virtual ICollection<ProgressReport> ProgressReports { get; set; } = new List<ProgressReport>();
+
+    // Navigation property to ProjectRequests (1-N)
+    public virtual ICollection<ProjectRequest> ProjectRequests { get; set; } = new List<ProjectRequest>();
+
+    // Navigation property to ResearchResources (1-N)
+    public virtual ICollection<ResearchResource> ResearchResources { get; set; } = new List<ResearchResource>();
 }

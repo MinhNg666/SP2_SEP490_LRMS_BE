@@ -34,9 +34,24 @@ public partial class Conference
     [Column("reviewer_comment")]
     public string? ReviewerComment { get; set; }
 
+    [Column("conference_link")]
+    public string? ConferenceLink { get; set; }
+
+    [Column("conference_DOI")]
+    public string? ConferenceDOI { get; set; }
+
+    [Column("conference_abstract")]
+    public string? ConferenceAbstract { get; set; }
+
     public virtual ICollection<ConferenceExpense> ConferenceExpenses { get; set; } = new List<ConferenceExpense>();
 
     public virtual Project? Project { get; set; }
+
+    // Foreign key to ProjectPhase
+    [ForeignKey("ProjectPhase")]
+    [Column("project_phase_id")]
+    public int? ProjectPhaseId { get; set; }
+    public virtual ProjectPhase? ProjectPhase { get; set; }
 
     // N-N relationship with Author
     public virtual ICollection<AuthorConference> AuthorConferences { get; set; } = new List<AuthorConference>();

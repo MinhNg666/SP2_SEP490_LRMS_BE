@@ -32,7 +32,16 @@ public partial class Journal
     [Column("journal_funding")]
     public decimal? JournalFunding { get; set; }
 
+    [Column("journal_abstract")]
+    public string? JournalAbstract { get; set; }
+
     public virtual Project? Project { get; set; }
+
+    // Foreign key to ProjectPhase
+    [ForeignKey("ProjectPhase")]
+    [Column("project_phase_id")]
+    public int? ProjectPhaseId { get; set; }
+    public virtual ProjectPhase? ProjectPhase { get; set; }
 
     // N-N relationship with Author
     public virtual ICollection<AuthorJournal> AuthorJournals { get; set; } = new List<AuthorJournal>();

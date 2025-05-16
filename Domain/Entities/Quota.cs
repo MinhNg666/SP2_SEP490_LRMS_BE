@@ -26,6 +26,12 @@ public partial class Quota
     [Column("quota_year")]
     public int? QuotaYear { get; set; }
 
+    [Column("number_conference")]
+    public int? NumberConference { get; set; }
+
+    [Column("number_paper")]
+    public int? NumberPaper { get; set; }
+
     [ForeignKey("Department")]
     public int? DepartmentId { get; set; }
 

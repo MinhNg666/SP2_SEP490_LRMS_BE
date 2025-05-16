@@ -23,10 +23,6 @@ public partial class ProgressReport
 
     public DateTime? UpdatedAt { get; set; }
 
-    // Foreign key to User (who created the report) - Assuming you have a User entity
-    // public int? CreatedByUserId { get; set; }
-    // public virtual User? CreatedByUser { get; set; }
-
     // N-1 Relationship with Project
     [ForeignKey("Project")]
     public int ProjectId { get; set; }
@@ -51,4 +47,7 @@ public partial class ProgressReport
 
     // 1-N Relationship with FundDisbursement
     public virtual ICollection<FundDisbursement> FundDisbursements { get; set; } = new List<FundDisbursement>();
+
+    // 1-N Relationship with ProjectRequest
+    public virtual ICollection<ProjectRequest> ProjectRequests { get; set; } = new List<ProjectRequest>();
 } 

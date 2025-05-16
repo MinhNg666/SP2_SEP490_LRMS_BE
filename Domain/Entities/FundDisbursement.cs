@@ -70,4 +70,7 @@ public partial class FundDisbursement
     [Column("progress_report_id")]
     public int? ProgressReportId { get; set; }
     public virtual ProgressReport? ProgressReport { get; set; }
+
+    // Navigation to ProjectRequests (1-N)
+    public virtual ICollection<ProjectRequest> ProjectRequests { get; set; } = new List<ProjectRequest>();
 }

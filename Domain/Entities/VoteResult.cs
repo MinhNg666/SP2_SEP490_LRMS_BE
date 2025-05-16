@@ -14,6 +14,12 @@ public partial class VoteResult
     [Column("result_status")]
     public int? ResultStatus { get; set; }
 
+    [Column("final_comment")]
+    public string? FinalComment { get; set; }
+
+    [Column("decided_at")]
+    public DateTime? DecidedAt { get; set; }
+
     // Foreign key to Group (N-1 from VoteResult's perspective)
     [ForeignKey("Group")]
     [Column("group_id")]
@@ -38,12 +44,17 @@ public partial class VoteResult
     public int? FundDisbursementId { get; set; }
     public virtual FundDisbursement? FundDisbursement { get; set; }
 
-    // Navigation property to CouncilVotes (1-N)
-    public virtual ICollection<CouncilVote> CouncilVotes { get; set; } = new List<CouncilVote>();
-
     // Foreign key to ProgressReport (N-1 from VoteResult's perspective)
     [ForeignKey("ProgressReport")]
     [Column("progress_report_id")]
     public int? ProgressReportId { get; set; }
     public virtual ProgressReport? ProgressReport { get; set; }
+
+    // Foreign key to AssignReview
+    [Column("assign_review_id")]
+    public int? AssignReviewId { get; set; }
+    public virtual AssignReview? AssignReview { get; set; }
+
+    // Navigation property to CouncilVotes (1-N)
+    public virtual ICollection<CouncilVote> CouncilVotes { get; set; } = new List<CouncilVote>();
 } 

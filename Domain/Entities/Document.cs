@@ -62,4 +62,16 @@ public partial class Document
     [Column("progress_report_id")]
     public int? ProgressReportId { get; set; }
     public virtual ProgressReport? ProgressReport { get; set; }
+
+    // Foreign key to ResearchResource
+    [ForeignKey("ResearchResource")]
+    [Column("research_resource_id")]
+    public int? ResearchResourceId { get; set; }
+    public virtual ResearchResource? ResearchResource { get; set; }
+
+    // Foreign key to ProposedResearchResource
+    [ForeignKey("ProposedResearchResource")]
+    [Column("proposed_research_resource_id")]
+    public int? ProposedResearchResourceId { get; set; }
+    public virtual ProposedResearchResource? ProposedResearchResource { get; set; }
 }
