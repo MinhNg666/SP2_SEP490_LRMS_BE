@@ -6,6 +6,7 @@ using LRMS_API;
 using Microsoft.EntityFrameworkCore;
 using Service.Exceptions;
 using Service.Interfaces;
+using Service.Settings;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,11 +18,15 @@ namespace Service.Implementations
     {
         private readonly LRMSDbContext _context;
         private readonly IMapper _mapper;
+        private readonly INotificationService _notificationService;
+        private readonly IEmailService _emailService;
 
-        public QuotaService(LRMSDbContext context, IMapper mapper)
+        public QuotaService(LRMSDbContext context, IMapper mapper, INotificationService notificationService, IEmailService emailService)
         {
             _context = context;
             _mapper = mapper;
+            _notificationService = notificationService;
+            _emailService = emailService;
         }
 
         public async Task<IEnumerable<QuotaResponse>> GetAllQuotas()
@@ -332,6 +337,58 @@ namespace Service.Implementations
 
                 await _context.Quotas.AddAsync(quota);
                 await _context.SaveChangesAsync();
+
+                // Get all council groups for this department
+                var councilGroups = await _context.Groups
+                    .Where(g => g.GroupType == (int)GroupTypeEnum.Council &&
+                               g.GroupDepartment == request.DepartmentId &&
+                               g.Status == (int)GroupStatusEnum.Active)
+                    .Include(g => g.GroupMembers)
+                        .ThenInclude(gm => gm.User)
+                    .ToListAsync();
+
+                // Get the allocator's name for the notification
+                var allocator = await _context.Users.FirstOrDefaultAsync(u => u.UserId == allocatedBy);
+                string allocatorName = allocator?.FullName ?? "System";
+
+                foreach (var group in councilGroups)
+                {
+                    // Get all active council members
+                    var activeMembers = group.GroupMembers
+                        .Where(gm => gm.Status == (int)GroupMemberStatus.Active &&
+                                    gm.UserId.HasValue &&
+                                    gm.User != null);
+
+                    foreach (var member in activeMembers)
+                    {
+                        // Create notification for each council member
+                        var notificationRequest = new CreateNotificationRequest
+                        {
+                            UserId = member.UserId.Value,
+                            Title = "New Department Quota Allocation",
+                            Message = $"A new quota of {request.AllocatedBudget:N0} VND has been allocated to {department.DepartmentName} department by {allocatorName} for year {quota.QuotaYear}.",
+                            Status = 0,
+                            IsRead = false,
+                            NotificationType = (int)NotificationTypeEnum.Department_Quota_Allocation
+                        };
+
+                        await _notificationService.CreateNotification(notificationRequest);
+
+                        // Send email notification
+                        if (!string.IsNullOrEmpty(member.User.Email))
+                        {
+                            var emailSubject = $"[LRMS] Notification: Department Quota Allocation - {department.DepartmentName}";
+                            var emailContent = DepartmentQuotaAllocationEmailTemplates.GetCouncilMemberQuotaAllocationEmail(
+                                member.User,
+                                department,
+                                allocator,
+                                quota
+                            );
+
+                            await _emailService.SendEmailAsync(member.User.Email, emailSubject, emailContent);
+                        }
+                    }
+                }
 
                 return quota.QuotaId;
             }

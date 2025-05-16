@@ -161,3 +161,166 @@ D:\Programming\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\zh-Hant\Micr
 D:\Programming\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\runtimes\unix\lib\net8.0\Microsoft.Data.SqlClient.dll
 D:\Programming\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\runtimes\win\lib\net8.0\Microsoft.Data.SqlClient.dll
 D:\Programming\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\runtimes\win\lib\net8.0\System.Runtime.Caching.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\appsettings.Development.json
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\LRMS API.staticwebassets.endpoints.json
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\LRMS API.exe
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\appsettings.json
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\LRMS API.deps.json
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\LRMS API.runtimeconfig.json
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\LRMS API.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\LRMS API.pdb
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\AutoMapper.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\AWSSDK.Core.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\AWSSDK.Extensions.NETCore.Setup.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\AWSSDK.S3.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Azure.Core.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Azure.Identity.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\BCrypt.Net-Next.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\CloudinaryDotNet.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Humanizer.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Microsoft.AspNetCore.OpenApi.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Microsoft.Bcl.AsyncInterfaces.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Microsoft.CodeAnalysis.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Microsoft.CodeAnalysis.CSharp.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Microsoft.CodeAnalysis.CSharp.Workspaces.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Microsoft.CodeAnalysis.Workspaces.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Microsoft.Data.SqlClient.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.Abstractions.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.Design.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.Relational.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.SqlServer.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Microsoft.Extensions.Caching.Memory.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Microsoft.Extensions.DependencyInjection.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Microsoft.Extensions.DependencyModel.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Microsoft.Extensions.Logging.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Microsoft.Extensions.Logging.Abstractions.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Microsoft.Extensions.Options.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Microsoft.Identity.Client.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Microsoft.Identity.Client.Extensions.Msal.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Microsoft.IdentityModel.Abstractions.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Microsoft.IdentityModel.JsonWebTokens.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Microsoft.IdentityModel.Logging.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Microsoft.IdentityModel.Tokens.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Microsoft.OpenApi.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Microsoft.SqlServer.Server.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Mono.TextTemplating.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Newtonsoft.Json.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Swashbuckle.AspNetCore.Swagger.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerGen.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerUI.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\System.CodeDom.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\System.Composition.AttributedModel.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\System.Composition.Convention.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\System.Composition.Hosting.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\System.Composition.Runtime.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\System.Composition.TypedParts.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\System.Configuration.ConfigurationManager.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\System.IdentityModel.Tokens.Jwt.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\System.Memory.Data.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\System.Runtime.Caching.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\System.Security.Cryptography.ProtectedData.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\cs\Microsoft.CodeAnalysis.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\de\Microsoft.CodeAnalysis.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\es\Microsoft.CodeAnalysis.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\fr\Microsoft.CodeAnalysis.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\it\Microsoft.CodeAnalysis.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\ja\Microsoft.CodeAnalysis.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\ko\Microsoft.CodeAnalysis.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\pl\Microsoft.CodeAnalysis.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\pt-BR\Microsoft.CodeAnalysis.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\ru\Microsoft.CodeAnalysis.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\tr\Microsoft.CodeAnalysis.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\zh-Hans\Microsoft.CodeAnalysis.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\zh-Hant\Microsoft.CodeAnalysis.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\cs\Microsoft.CodeAnalysis.CSharp.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\de\Microsoft.CodeAnalysis.CSharp.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\es\Microsoft.CodeAnalysis.CSharp.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\fr\Microsoft.CodeAnalysis.CSharp.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\it\Microsoft.CodeAnalysis.CSharp.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\ja\Microsoft.CodeAnalysis.CSharp.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\ko\Microsoft.CodeAnalysis.CSharp.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\pl\Microsoft.CodeAnalysis.CSharp.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\pt-BR\Microsoft.CodeAnalysis.CSharp.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\ru\Microsoft.CodeAnalysis.CSharp.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\tr\Microsoft.CodeAnalysis.CSharp.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\zh-Hans\Microsoft.CodeAnalysis.CSharp.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\zh-Hant\Microsoft.CodeAnalysis.CSharp.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\cs\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\de\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\es\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\fr\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\it\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\ja\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\ko\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\pl\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\pt-BR\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\ru\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\tr\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\zh-Hans\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\zh-Hant\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\cs\Microsoft.CodeAnalysis.Workspaces.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\de\Microsoft.CodeAnalysis.Workspaces.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\es\Microsoft.CodeAnalysis.Workspaces.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\fr\Microsoft.CodeAnalysis.Workspaces.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\it\Microsoft.CodeAnalysis.Workspaces.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\ja\Microsoft.CodeAnalysis.Workspaces.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\ko\Microsoft.CodeAnalysis.Workspaces.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\pl\Microsoft.CodeAnalysis.Workspaces.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\pt-BR\Microsoft.CodeAnalysis.Workspaces.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\ru\Microsoft.CodeAnalysis.Workspaces.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\tr\Microsoft.CodeAnalysis.Workspaces.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\zh-Hans\Microsoft.CodeAnalysis.Workspaces.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\zh-Hant\Microsoft.CodeAnalysis.Workspaces.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\de\Microsoft.Data.SqlClient.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\es\Microsoft.Data.SqlClient.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\fr\Microsoft.Data.SqlClient.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\it\Microsoft.Data.SqlClient.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\ja\Microsoft.Data.SqlClient.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\ko\Microsoft.Data.SqlClient.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\pt-BR\Microsoft.Data.SqlClient.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\ru\Microsoft.Data.SqlClient.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\zh-Hans\Microsoft.Data.SqlClient.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\zh-Hant\Microsoft.Data.SqlClient.resources.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\runtimes\unix\lib\net8.0\Microsoft.Data.SqlClient.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\runtimes\win\lib\net8.0\Microsoft.Data.SqlClient.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\runtimes\win-arm\native\Microsoft.Data.SqlClient.SNI.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\runtimes\win-arm64\native\Microsoft.Data.SqlClient.SNI.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\runtimes\win-x64\native\Microsoft.Data.SqlClient.SNI.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\runtimes\win-x86\native\Microsoft.Data.SqlClient.SNI.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\runtimes\win\lib\net8.0\System.Runtime.Caching.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Domain.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Repository.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Service.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Service.pdb
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Domain.pdb
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\bin\Debug\net8.0\Repository.pdb
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\LRMS API.csproj.AssemblyReference.cache
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\LRMS API.GeneratedMSBuildEditorConfig.editorconfig
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\LRMS API.AssemblyInfoInputs.cache
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\LRMS API.AssemblyInfo.cs
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\LRMS API.csproj.CoreCompileInputs.cache
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\LRMS API.MvcApplicationPartsAssemblyInfo.cs
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\LRMS API.MvcApplicationPartsAssemblyInfo.cache
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\LRMS API.sourcelink.json
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\scopedcss\bundle\LRMS API.styles.css
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\staticwebassets.build.json
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\staticwebassets.development.json
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\staticwebassets.build.endpoints.json
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\staticwebassets\msbuild.LRMS API.Microsoft.AspNetCore.StaticWebAssets.props
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\staticwebassets\msbuild.LRMS API.Microsoft.AspNetCore.StaticWebAssetEndpoints.props
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\staticwebassets\msbuild.build.LRMS API.props
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\staticwebassets\msbuild.buildMultiTargeting.LRMS API.props
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\staticwebassets\msbuild.buildTransitive.LRMS API.props
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\staticwebassets.pack.json
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\LRMS API.csproj.Up2Date
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\LRMS API.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\refint\LRMS API.dll
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\LRMS API.pdb
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\LRMS API.genruntimeconfig.cache
+C:\Study\LRMS_BE\SP2_SEP490_LRMS_BE\LRMS API\obj\Debug\net8.0\ref\LRMS API.dll

@@ -14,4 +14,5 @@ public class CreateNotificationRequest
     public int? Status { get; set; }
     public bool? IsRead { get; set; }
     public int? InvitationId { get; set; }
+    public int? NotificationType { get; set; }
 }

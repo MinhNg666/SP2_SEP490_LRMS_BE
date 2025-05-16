@@ -40,4 +40,10 @@ public partial class Group
 
     // Navigation to VoteResults (1-N)
     public virtual ICollection<VoteResult> VoteResults { get; set; } = new List<VoteResult>();
+
+    // Navigation to AssignReviews (1-N)
+    public virtual ICollection<AssignReview> AssignReviews { get; set; } = new List<AssignReview>();
+
+    // Navigation to ProjectRequests (where Group is AssignedCouncil)
+    public virtual ICollection<ProjectRequest> ProjectRequestsAssigned { get; set; } = new List<ProjectRequest>();
 }

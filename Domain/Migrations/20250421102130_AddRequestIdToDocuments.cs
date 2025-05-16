@@ -10,16 +10,16 @@ namespace Domain.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<int>(
-                name: "RequestId",
-                table: "Documents",
-                type: "int",
-                nullable: true);
+            // migrationBuilder.AddColumn<int>(
+            //     name: "RequestId",
+            //     table: "Documents",
+            //     type: "int",
+            //     nullable: true);
 
-            migrationBuilder.CreateIndex(
-                name: "IX_Documents_RequestId",
-                table: "Documents",
-                column: "RequestId");
+            // migrationBuilder.CreateIndex(
+            //     name: "IX_Documents_RequestId",
+            //     table: "Documents",
+            //     column: "RequestId");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_Documents_ProjectRequests_RequestId",
@@ -36,9 +36,9 @@ namespace Domain.Migrations
                 name: "FK_Documents_ProjectRequests_RequestId",
                 table: "Documents");
 
-            migrationBuilder.DropIndex(
-                name: "IX_Documents_RequestId",
-                table: "Documents");
+            // migrationBuilder.DropIndex(
+            //     name: "IX_Documents_RequestId",
+            //     table: "Documents");
 
             migrationBuilder.DropColumn(
                 name: "RequestId",

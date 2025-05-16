@@ -4,6 +4,7 @@ using LRMS_API;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Domain.Migrations
 {
     [DbContext(typeof(LRMSDbContext))]
-    partial class LRMSDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250515073408_AddProgressReportTableAndRelationships")]
+    partial class AddProgressReportTableAndRelationships
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -38,10 +41,6 @@ namespace Domain.Migrations
                     b.Property<int?>("FundDisbursementId")
                         .HasColumnType("int")
                         .HasColumnName("fund_disbursement_id");
-
-                    b.Property<int?>("GroupId")
-                        .HasColumnType("int")
-                        .HasColumnName("group_id");
 
                     b.Property<int?>("InspectionId")
                         .HasColumnType("int")
@@ -80,8 +79,6 @@ namespace Domain.Migrations
                     b.HasIndex("AssignedByUserId");
 
                     b.HasIndex("FundDisbursementId");
-
-                    b.HasIndex("GroupId");
 
                     b.HasIndex("InspectionId");
 
@@ -255,22 +252,10 @@ namespace Domain.Migrations
                         .HasColumnType("datetime")
                         .HasColumnName("acceptance_date");
 
-                    b.Property<string>("ConferenceAbstract")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("conference_abstract");
-
-                    b.Property<string>("ConferenceDOI")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("conference_DOI");
-
                     b.Property<decimal?>("ConferenceFunding")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)")
                         .HasColumnName("conference_funding");
-
-                    b.Property<string>("ConferenceLink")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("conference_link");
 
                     b.Property<string>("ConferenceName")
                         .HasMaxLength(255)
@@ -306,10 +291,6 @@ namespace Domain.Migrations
                         .HasColumnType("int")
                         .HasColumnName("project_id");
 
-                    b.Property<int?>("ProjectPhaseId")
-                        .HasColumnType("int")
-                        .HasColumnName("project_phase_id");
-
                     b.Property<string>("ReviewerComment")
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("reviewer_comment");
@@ -318,8 +299,6 @@ namespace Domain.Migrations
                         .HasName("PK__Conferen__DC92030881F39E56");
 
                     b.HasIndex("ProjectId");
-
-                    b.HasIndex("ProjectPhaseId");
 
                     b.ToTable("Conference", (string)null);
                 });
@@ -506,17 +485,9 @@ namespace Domain.Migrations
                         .HasColumnType("int")
                         .HasColumnName("project_resource_id");
 
-                    b.Property<int?>("ProposedResearchResourceId")
-                        .HasColumnType("int")
-                        .HasColumnName("proposed_research_resource_id");
-
                     b.Property<int?>("RequestId")
                         .HasColumnType("int")
                         .HasColumnName("request_id");
-
-                    b.Property<int?>("ResearchResourceId")
-                        .HasColumnType("int")
-                        .HasColumnName("research_resource_id");
 
                     b.Property<DateTime?>("UploadAt")
                         .HasColumnType("datetime")
@@ -545,11 +516,7 @@ namespace Domain.Migrations
 
                     b.HasIndex("ProjectResourceId");
 
-                    b.HasIndex("ProposedResearchResourceId");
-
                     b.HasIndex("RequestId");
-
-                    b.HasIndex("ResearchResourceId");
 
                     b.HasIndex("UploadedBy");
 
@@ -795,10 +762,6 @@ namespace Domain.Migrations
                         .HasColumnType("datetime")
                         .HasColumnName("created_at");
 
-                    b.Property<int?>("InspectionStatus")
-                        .HasColumnType("int")
-                        .HasColumnName("inspection_status");
-
                     b.Property<int>("ProjectId")
                         .HasColumnType("int")
                         .HasColumnName("project_id");
@@ -897,10 +860,6 @@ namespace Domain.Migrations
                         .HasColumnType("nvarchar(100)")
                         .HasColumnName("doi_number");
 
-                    b.Property<string>("JournalAbstract")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("journal_abstract");
-
                     b.Property<decimal?>("JournalFunding")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)")
@@ -918,10 +877,6 @@ namespace Domain.Migrations
                     b.Property<int?>("ProjectId")
                         .HasColumnType("int")
                         .HasColumnName("project_id");
-
-                    b.Property<int?>("ProjectPhaseId")
-                        .HasColumnType("int")
-                        .HasColumnName("project_phase_id");
 
                     b.Property<DateTime?>("PublicationDate")
                         .HasColumnType("datetime")
@@ -948,8 +903,6 @@ namespace Domain.Migrations
                         .HasName("PK__Journal__9894D298AFDA5EC3");
 
                     b.HasIndex("ProjectId");
-
-                    b.HasIndex("ProjectPhaseId");
 
                     b.ToTable("Journal", (string)null);
                 });
@@ -1050,7 +1003,7 @@ namespace Domain.Migrations
 
                     b.HasIndex("ProjectPhaseId");
 
-                    b.ToTable("ProgressReport", (string)null);
+                    b.ToTable("ProgressReport");
                 });
 
             modelBuilder.Entity("LRMS_API.Project", b =>
@@ -1238,17 +1191,9 @@ namespace Domain.Migrations
                         .HasColumnType("int")
                         .HasColumnName("fund_disbursement_id");
 
-                    b.Property<int?>("InspectionId")
-                        .HasColumnType("int")
-                        .HasColumnName("inspection_id");
-
                     b.Property<int?>("PhaseId")
                         .HasColumnType("int")
                         .HasColumnName("phase_id");
-
-                    b.Property<int?>("ProgressReportId")
-                        .HasColumnType("int")
-                        .HasColumnName("progress_report_id");
 
                     b.Property<int>("ProjectId")
                         .HasColumnType("int")
@@ -1282,11 +1227,7 @@ namespace Domain.Migrations
 
                     b.HasIndex("FundDisbursementId");
 
-                    b.HasIndex("InspectionId");
-
                     b.HasIndex("PhaseId");
-
-                    b.HasIndex("ProgressReportId");
 
                     b.HasIndex("ProjectId");
 
@@ -1346,47 +1287,6 @@ namespace Domain.Migrations
                     b.ToTable("Project_resources", (string)null);
                 });
 
-            modelBuilder.Entity("LRMS_API.ProposedResearchResource", b =>
-                {
-                    b.Property<int>("ProposedResourceId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("proposed_resource_id");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProposedResourceId"));
-
-                    b.Property<int?>("ProjectRequestId")
-                        .HasColumnType("int")
-                        .HasColumnName("project_request_id");
-
-                    b.Property<decimal?>("ProposedResourceCost")
-                        .HasColumnType("decimal(18, 2)")
-                        .HasColumnName("proposed_resource_cost");
-
-                    b.Property<string>("ProposedResourceName")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
-                        .HasColumnName("proposed_resource_name");
-
-                    b.Property<int?>("ProposedResourceQuantity")
-                        .HasColumnType("int")
-                        .HasColumnName("proposed_resource_quantity");
-
-                    b.Property<int?>("ProposedResourceStatus")
-                        .HasColumnType("int")
-                        .HasColumnName("proposed_resource_status");
-
-                    b.Property<int?>("ProposedResourceType")
-                        .HasColumnType("int")
-                        .HasColumnName("proposed_resource_type");
-
-                    b.HasKey("ProposedResourceId");
-
-                    b.HasIndex("ProjectRequestId");
-
-                    b.ToTable("ProposedResearchResource", (string)null);
-                });
-
             modelBuilder.Entity("LRMS_API.Quota", b =>
                 {
                     b.Property<int>("QuotaId")
@@ -1416,14 +1316,6 @@ namespace Domain.Migrations
                         .HasColumnType("int")
                         .HasColumnName("num_projects");
 
-                    b.Property<int?>("NumberConference")
-                        .HasColumnType("int")
-                        .HasColumnName("number_conference");
-
-                    b.Property<int?>("NumberPaper")
-                        .HasColumnType("int")
-                        .HasColumnName("number_paper");
-
                     b.Property<int?>("ProjectId")
                         .HasColumnType("int")
                         .HasColumnName("project_id");
@@ -1450,53 +1342,6 @@ namespace Domain.Migrations
                     b.HasIndex("ProjectId");
 
                     b.ToTable("Quotas");
-                });
-
-            modelBuilder.Entity("LRMS_API.ResearchResource", b =>
-                {
-                    b.Property<int>("ResourceId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("resource_id");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ResourceId"));
-
-                    b.Property<int?>("ProjectId")
-                        .HasColumnType("int")
-                        .HasColumnName("project_id");
-
-                    b.Property<int?>("ProjectPhaseId")
-                        .HasColumnType("int")
-                        .HasColumnName("project_phase_id");
-
-                    b.Property<decimal?>("ResourceCost")
-                        .HasColumnType("decimal(18, 2)")
-                        .HasColumnName("resource_cost");
-
-                    b.Property<string>("ResourceName")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
-                        .HasColumnName("resource_name");
-
-                    b.Property<int?>("ResourceQuantity")
-                        .HasColumnType("int")
-                        .HasColumnName("resource_quantity");
-
-                    b.Property<int?>("ResourceStatus")
-                        .HasColumnType("int")
-                        .HasColumnName("resource_status");
-
-                    b.Property<int?>("ResourceType")
-                        .HasColumnType("int")
-                        .HasColumnName("resource_type");
-
-                    b.HasKey("ResourceId");
-
-                    b.HasIndex("ProjectId");
-
-                    b.HasIndex("ProjectPhaseId");
-
-                    b.ToTable("ResearchResource", (string)null);
                 });
 
             modelBuilder.Entity("LRMS_API.Timeline", b =>
@@ -1686,18 +1531,6 @@ namespace Domain.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ResultId"));
 
-                    b.Property<int?>("AssignReviewId")
-                        .HasColumnType("int")
-                        .HasColumnName("assign_review_id");
-
-                    b.Property<DateTime?>("DecidedAt")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("decided_at");
-
-                    b.Property<string>("FinalComment")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("final_comment");
-
                     b.Property<int?>("FundDisbursementId")
                         .HasColumnType("int")
                         .HasColumnName("fund_disbursement_id");
@@ -1724,10 +1557,6 @@ namespace Domain.Migrations
 
                     b.HasKey("ResultId");
 
-                    b.HasIndex("AssignReviewId")
-                        .IsUnique()
-                        .HasFilter("[assign_review_id] IS NOT NULL");
-
                     b.HasIndex("FundDisbursementId");
 
                     b.HasIndex("GroupId");
@@ -1753,19 +1582,13 @@ namespace Domain.Migrations
                         .HasForeignKey("FundDisbursementId")
                         .HasConstraintName("FK_AssignReview_FundDisbursement");
 
-                    b.HasOne("LRMS_API.Group", "Group")
-                        .WithMany("AssignReviews")
-                        .HasForeignKey("GroupId")
-                        .HasConstraintName("FK_AssignReview_Group");
-
                     b.HasOne("LRMS_API.Inspection", "Inspection")
                         .WithMany("AssignReviews")
                         .HasForeignKey("InspectionId");
 
                     b.HasOne("LRMS_API.ProgressReport", "ProgressReport")
                         .WithMany("AssignReviews")
-                        .HasForeignKey("ProgressReportId")
-                        .HasConstraintName("FK_AssignReview_ProgressReport");
+                        .HasForeignKey("ProgressReportId");
 
                     b.HasOne("LRMS_API.ProjectRequest", "ProjectRequest")
                         .WithMany("AssignReviews")
@@ -1775,8 +1598,6 @@ namespace Domain.Migrations
                     b.Navigation("AssignedByUser");
 
                     b.Navigation("FundDisbursement");
-
-                    b.Navigation("Group");
 
                     b.Navigation("Inspection");
 
@@ -1855,7 +1676,9 @@ namespace Domain.Migrations
                 {
                     b.HasOne("LRMS_API.ProjectRequest", "ProjectRequest")
                         .WithOne("CompletionRequestDetail")
-                        .HasForeignKey("LRMS_API.CompletionRequestDetail", "RequestId");
+                        .HasForeignKey("LRMS_API.CompletionRequestDetail", "RequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("ProjectRequest");
                 });
@@ -1867,14 +1690,7 @@ namespace Domain.Migrations
                         .HasForeignKey("ProjectId")
                         .HasConstraintName("FK_Conference_Projects");
 
-                    b.HasOne("LRMS_API.ProjectPhase", "ProjectPhase")
-                        .WithMany("Conferences")
-                        .HasForeignKey("ProjectPhaseId")
-                        .HasConstraintName("FK_Conference_ProjectPhase");
-
                     b.Navigation("Project");
-
-                    b.Navigation("ProjectPhase");
                 });
 
             modelBuilder.Entity("LRMS_API.ConferenceExpense", b =>
@@ -1912,8 +1728,7 @@ namespace Domain.Migrations
 
                     b.HasOne("LRMS_API.ProgressReport", "ProgressReport")
                         .WithMany("CouncilVotes")
-                        .HasForeignKey("ProgressReportId")
-                        .HasConstraintName("FK_CouncilVote_ProgressReport");
+                        .HasForeignKey("ProgressReportId");
 
                     b.HasOne("LRMS_API.ProjectRequest", "ProjectRequest")
                         .WithMany("CouncilVotes")
@@ -1966,8 +1781,7 @@ namespace Domain.Migrations
 
                     b.HasOne("LRMS_API.ProgressReport", "ProgressReport")
                         .WithMany("Documents")
-                        .HasForeignKey("ProgressReportId")
-                        .HasConstraintName("FK_Document_ProgressReport");
+                        .HasForeignKey("ProgressReportId");
 
                     b.HasOne("LRMS_API.Project", "Project")
                         .WithMany("Documents")
@@ -1984,20 +1798,10 @@ namespace Domain.Migrations
                         .HasForeignKey("ProjectResourceId")
                         .HasConstraintName("FK_Documents_ProjectResources");
 
-                    b.HasOne("LRMS_API.ProposedResearchResource", "ProposedResearchResource")
-                        .WithMany("Documents")
-                        .HasForeignKey("ProposedResearchResourceId")
-                        .HasConstraintName("FK_Document_ProposedResearchResource");
-
                     b.HasOne("LRMS_API.ProjectRequest", "ProjectRequest")
                         .WithMany()
                         .HasForeignKey("RequestId")
                         .HasConstraintName("FK_Documents_ProjectRequests");
-
-                    b.HasOne("LRMS_API.ResearchResource", "ResearchResource")
-                        .WithMany("Documents")
-                        .HasForeignKey("ResearchResourceId")
-                        .HasConstraintName("FK_Document_ResearchResource");
 
                     b.HasOne("LRMS_API.User", "UploadedByNavigation")
                         .WithMany("Documents")
@@ -2021,10 +1825,6 @@ namespace Domain.Migrations
                     b.Navigation("ProjectRequest");
 
                     b.Navigation("ProjectResource");
-
-                    b.Navigation("ProposedResearchResource");
-
-                    b.Navigation("ResearchResource");
 
                     b.Navigation("UploadedByNavigation");
                 });
@@ -2066,8 +1866,7 @@ namespace Domain.Migrations
 
                     b.HasOne("LRMS_API.ProgressReport", "ProgressReport")
                         .WithMany("FundDisbursements")
-                        .HasForeignKey("ProgressReportId")
-                        .HasConstraintName("FK_FundDisbursement_ProgressReport");
+                        .HasForeignKey("ProgressReportId");
 
                     b.HasOne("LRMS_API.Project", "Project")
                         .WithMany("FundDisbursements")
@@ -2186,14 +1985,7 @@ namespace Domain.Migrations
                         .HasForeignKey("ProjectId")
                         .HasConstraintName("FK_Journal_Projects");
 
-                    b.HasOne("LRMS_API.ProjectPhase", "ProjectPhase")
-                        .WithMany("Journals")
-                        .HasForeignKey("ProjectPhaseId")
-                        .HasConstraintName("FK_Journal_ProjectPhase");
-
                     b.Navigation("Project");
-
-                    b.Navigation("ProjectPhase");
                 });
 
             modelBuilder.Entity("LRMS_API.Notification", b =>
@@ -2225,13 +2017,12 @@ namespace Domain.Migrations
                     b.HasOne("LRMS_API.Project", "Project")
                         .WithMany("ProgressReports")
                         .HasForeignKey("ProjectId")
-                        .IsRequired()
-                        .HasConstraintName("FK_ProgressReport_Project");
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("LRMS_API.ProjectPhase", "ProjectPhase")
                         .WithMany("ProgressReports")
-                        .HasForeignKey("ProjectPhaseId")
-                        .HasConstraintName("FK_ProgressReport_ProjectPhase");
+                        .HasForeignKey("ProjectPhaseId");
 
                     b.Navigation("Project");
 
@@ -2303,61 +2094,42 @@ namespace Domain.Migrations
             modelBuilder.Entity("LRMS_API.ProjectRequest", b =>
                 {
                     b.HasOne("LRMS_API.User", "ApprovedBy")
-                        .WithMany("ProjectRequestsApproved")
-                        .HasForeignKey("ApprovedById")
-                        .HasConstraintName("FK_ProjectRequest_User_ApprovedBy");
+                        .WithMany()
+                        .HasForeignKey("ApprovedById");
 
                     b.HasOne("LRMS_API.Group", "AssignedCouncil")
-                        .WithMany("ProjectRequestsAssigned")
-                        .HasForeignKey("AssignedCouncilId")
-                        .HasConstraintName("FK_ProjectRequest_Group_AssignedCouncil");
+                        .WithMany()
+                        .HasForeignKey("AssignedCouncilId");
 
                     b.HasOne("LRMS_API.FundDisbursement", "FundDisbursement")
-                        .WithMany("ProjectRequests")
-                        .HasForeignKey("FundDisbursementId")
-                        .HasConstraintName("FK_ProjectRequest_FundDisbursement");
-
-                    b.HasOne("LRMS_API.Inspection", "Inspection")
-                        .WithMany("ProjectRequests")
-                        .HasForeignKey("InspectionId")
-                        .HasConstraintName("FK_ProjectRequest_Inspection");
+                        .WithMany()
+                        .HasForeignKey("FundDisbursementId");
 
                     b.HasOne("LRMS_API.ProjectPhase", "ProjectPhase")
-                        .WithMany("ProjectRequests")
-                        .HasForeignKey("PhaseId")
-                        .HasConstraintName("FK_ProjectRequest_ProjectPhase");
-
-                    b.HasOne("LRMS_API.ProgressReport", "ProgressReport")
-                        .WithMany("ProjectRequests")
-                        .HasForeignKey("ProgressReportId")
-                        .HasConstraintName("FK_ProjectRequest_ProgressReport");
+                        .WithMany()
+                        .HasForeignKey("PhaseId");
 
                     b.HasOne("LRMS_API.Project", "Project")
-                        .WithMany("ProjectRequests")
+                        .WithMany()
                         .HasForeignKey("ProjectId")
-                        .IsRequired()
-                        .HasConstraintName("FK_ProjectRequest_Project");
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("LRMS_API.User", "RequestedBy")
-                        .WithMany("ProjectRequestsMade")
+                        .WithMany()
                         .HasForeignKey("RequestedById")
-                        .IsRequired()
-                        .HasConstraintName("FK_ProjectRequest_User_RequestedBy");
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("LRMS_API.Timeline", "Timeline")
-                        .WithMany("ProjectRequests")
-                        .HasForeignKey("TimelineId")
-                        .HasConstraintName("FK_ProjectRequest_Timeline");
+                        .WithMany()
+                        .HasForeignKey("TimelineId");
 
                     b.Navigation("ApprovedBy");
 
                     b.Navigation("AssignedCouncil");
 
                     b.Navigation("FundDisbursement");
-
-                    b.Navigation("Inspection");
-
-                    b.Navigation("ProgressReport");
 
                     b.Navigation("Project");
 
@@ -2385,16 +2157,6 @@ namespace Domain.Migrations
                     b.Navigation("ProjectPhase");
                 });
 
-            modelBuilder.Entity("LRMS_API.ProposedResearchResource", b =>
-                {
-                    b.HasOne("LRMS_API.ProjectRequest", "ProjectRequest")
-                        .WithMany("ProposedResearchResources")
-                        .HasForeignKey("ProjectRequestId")
-                        .HasConstraintName("FK_ProposedResearchResource_ProjectRequest");
-
-                    b.Navigation("ProjectRequest");
-                });
-
             modelBuilder.Entity("LRMS_API.Quota", b =>
                 {
                     b.HasOne("LRMS_API.User", "AllocatedByNavigation")
@@ -2417,23 +2179,6 @@ namespace Domain.Migrations
                     b.Navigation("Department");
 
                     b.Navigation("Project");
-                });
-
-            modelBuilder.Entity("LRMS_API.ResearchResource", b =>
-                {
-                    b.HasOne("LRMS_API.Project", "Project")
-                        .WithMany("ResearchResources")
-                        .HasForeignKey("ProjectId")
-                        .HasConstraintName("FK_ResearchResource_Project");
-
-                    b.HasOne("LRMS_API.ProjectPhase", "ProjectPhase")
-                        .WithMany()
-                        .HasForeignKey("ProjectPhaseId")
-                        .HasConstraintName("FK_ResearchResource_ProjectPhase");
-
-                    b.Navigation("Project");
-
-                    b.Navigation("ProjectPhase");
                 });
 
             modelBuilder.Entity("LRMS_API.Timeline", b =>
@@ -2475,10 +2220,6 @@ namespace Domain.Migrations
 
             modelBuilder.Entity("LRMS_API.VoteResult", b =>
                 {
-                    b.HasOne("LRMS_API.AssignReview", "AssignReview")
-                        .WithOne("VoteResult")
-                        .HasForeignKey("LRMS_API.VoteResult", "AssignReviewId");
-
                     b.HasOne("LRMS_API.FundDisbursement", "FundDisbursement")
                         .WithMany("VoteResults")
                         .HasForeignKey("FundDisbursementId")
@@ -2495,15 +2236,12 @@ namespace Domain.Migrations
 
                     b.HasOne("LRMS_API.ProgressReport", "ProgressReport")
                         .WithMany("VoteResults")
-                        .HasForeignKey("ProgressReportId")
-                        .HasConstraintName("FK_VoteResult_ProgressReport");
+                        .HasForeignKey("ProgressReportId");
 
                     b.HasOne("LRMS_API.ProjectRequest", "ProjectRequest")
                         .WithMany("VoteResults")
                         .HasForeignKey("ProjectRequestId")
                         .HasConstraintName("FK_VoteResult_ProjectRequest");
-
-                    b.Navigation("AssignReview");
 
                     b.Navigation("FundDisbursement");
 
@@ -2514,11 +2252,6 @@ namespace Domain.Migrations
                     b.Navigation("ProgressReport");
 
                     b.Navigation("ProjectRequest");
-                });
-
-            modelBuilder.Entity("LRMS_API.AssignReview", b =>
-                {
-                    b.Navigation("VoteResult");
                 });
 
             modelBuilder.Entity("LRMS_API.Author", b =>
@@ -2561,22 +2294,16 @@ namespace Domain.Migrations
 
                     b.Navigation("Documents");
 
-                    b.Navigation("ProjectRequests");
-
                     b.Navigation("VoteResults");
                 });
 
             modelBuilder.Entity("LRMS_API.Group", b =>
                 {
-                    b.Navigation("AssignReviews");
-
                     b.Navigation("CouncilVotes");
 
                     b.Navigation("GroupMembers");
 
                     b.Navigation("Invitations");
-
-                    b.Navigation("ProjectRequestsAssigned");
 
                     b.Navigation("Projects");
 
@@ -2602,8 +2329,6 @@ namespace Domain.Migrations
 
                     b.Navigation("CouncilVotes");
 
-                    b.Navigation("ProjectRequests");
-
                     b.Navigation("VoteResults");
                 });
 
@@ -2626,8 +2351,6 @@ namespace Domain.Migrations
                     b.Navigation("Documents");
 
                     b.Navigation("FundDisbursements");
-
-                    b.Navigation("ProjectRequests");
 
                     b.Navigation("VoteResults");
                 });
@@ -2654,28 +2377,18 @@ namespace Domain.Migrations
 
                     b.Navigation("ProjectPhases");
 
-                    b.Navigation("ProjectRequests");
-
                     b.Navigation("ProjectResources");
 
                     b.Navigation("Quota");
-
-                    b.Navigation("ResearchResources");
                 });
 
             modelBuilder.Entity("LRMS_API.ProjectPhase", b =>
                 {
-                    b.Navigation("Conferences");
-
                     b.Navigation("Documents");
 
                     b.Navigation("FundDisbursements");
 
-                    b.Navigation("Journals");
-
                     b.Navigation("ProgressReports");
-
-                    b.Navigation("ProjectRequests");
 
                     b.Navigation("ProjectResources");
                 });
@@ -2688,8 +2401,6 @@ namespace Domain.Migrations
 
                     b.Navigation("CouncilVotes");
 
-                    b.Navigation("ProposedResearchResources");
-
                     b.Navigation("VoteResults");
                 });
 
@@ -2698,24 +2409,9 @@ namespace Domain.Migrations
                     b.Navigation("Documents");
                 });
 
-            modelBuilder.Entity("LRMS_API.ProposedResearchResource", b =>
-                {
-                    b.Navigation("Documents");
-                });
-
             modelBuilder.Entity("LRMS_API.Quota", b =>
                 {
                     b.Navigation("FundDisbursements");
-                });
-
-            modelBuilder.Entity("LRMS_API.ResearchResource", b =>
-                {
-                    b.Navigation("Documents");
-                });
-
-            modelBuilder.Entity("LRMS_API.Timeline", b =>
-                {
-                    b.Navigation("ProjectRequests");
                 });
 
             modelBuilder.Entity("LRMS_API.TimelineSequence", b =>
@@ -2748,10 +2444,6 @@ namespace Domain.Migrations
                     b.Navigation("InvitationSentByNavigations");
 
                     b.Navigation("Notifications");
-
-                    b.Navigation("ProjectRequestsApproved");
-
-                    b.Navigation("ProjectRequestsMade");
 
                     b.Navigation("Projects");
 

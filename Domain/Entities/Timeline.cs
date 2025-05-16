@@ -32,4 +32,6 @@ public partial class Timeline
     public virtual User? CreatedByNavigation { get; set; }
 
     public virtual TimelineSequence? Sequence { get; set; }
+
+    public virtual ICollection<ProjectRequest> ProjectRequests { get; set; } = new List<ProjectRequest>();
 }

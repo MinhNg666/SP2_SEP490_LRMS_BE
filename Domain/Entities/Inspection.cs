@@ -24,6 +24,9 @@ public partial class Inspection
     [Column("updated_at")]
     public DateTime? UpdatedAt { get; set; }
 
+    [Column("inspection_status")]
+    public int? InspectionStatus { get; set; }
+
     // Foreign key to Project (N-1)
     [ForeignKey("Project")]
     [Column("project_id")]
@@ -34,4 +37,7 @@ public partial class Inspection
     public virtual ICollection<CouncilVote> CouncilVotes { get; set; } = new List<CouncilVote>();
     public virtual ICollection<VoteResult> VoteResults { get; set; } = new List<VoteResult>();
     public virtual ICollection<AssignReview> AssignReviews { get; set; } = new List<AssignReview>();
+
+    // Navigation to ProjectRequests (1-N)
+    public virtual ICollection<ProjectRequest> ProjectRequests { get; set; } = new List<ProjectRequest>();
 } 

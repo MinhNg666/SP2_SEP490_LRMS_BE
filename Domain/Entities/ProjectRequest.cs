@@ -45,7 +45,6 @@ public partial class ProjectRequest
     [Column("rejection_reason")]
     public string? RejectionReason { get; set; } // Nullable
 
-    // 
     [Column("fund_disbursement_id")]
     public int? FundDisbursementId { get; set; } // Nullable Foreign Key
 
@@ -75,6 +74,18 @@ public partial class ProjectRequest
     [ForeignKey("FundDisbursementId")]
     public virtual FundDisbursement? FundDisbursement { get; set; }
 
+    // Foreign key to Inspection
+    [ForeignKey("Inspection")]
+    [Column("inspection_id")]
+    public int? InspectionId { get; set; }
+    public virtual Inspection? Inspection { get; set; }
+
+    // Foreign key to ProgressReport
+    [ForeignKey("ProgressReport")]
+    [Column("progress_report_id")]
+    public int? ProgressReportId { get; set; }
+    public virtual ProgressReport? ProgressReport { get; set; }
+
     // Navigation to CouncilVotes (1-N)
     public virtual ICollection<CouncilVote> CouncilVotes { get; set; } = new List<CouncilVote>();
 
@@ -83,4 +94,7 @@ public partial class ProjectRequest
 
     // Navigation to AssignReviews (1-N)
     public virtual ICollection<AssignReview> AssignReviews { get; set; } = new List<AssignReview>();
+
+    // Navigation to ProposedResearchResources (1-N)
+    public virtual ICollection<ProposedResearchResource> ProposedResearchResources { get; set; } = new List<ProposedResearchResource>();
 }

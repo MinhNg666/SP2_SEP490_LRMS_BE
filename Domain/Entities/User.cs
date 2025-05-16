@@ -64,4 +64,10 @@ public partial class User
 
     // Navigation to Expertises (1-N)
     public virtual ICollection<Expertise> Expertises { get; set; } = new List<Expertise>();
+
+    // Navigation to ProjectRequests (where User is RequestedBy)
+    public virtual ICollection<ProjectRequest> ProjectRequestsMade { get; set; } = new List<ProjectRequest>();
+
+    // Navigation to ProjectRequests (where User is ApprovedBy)
+    public virtual ICollection<ProjectRequest> ProjectRequestsApproved { get; set; } = new List<ProjectRequest>();
 }

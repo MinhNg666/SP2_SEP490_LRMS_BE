@@ -26,6 +26,12 @@ public partial class AssignReview // Changed class name to singular
     [Column("status")]
     public int? Status { get; set; }
 
+    // Foreign key to Group
+    [ForeignKey("Group")]
+    [Column("group_id")]
+    public int? GroupId { get; set; }
+    public virtual Group? Group { get; set; }
+
     // Foreign key to User (Assign_By)
     [ForeignKey("AssignedByUser")]
     [Column("assigned_by_user_id")]
@@ -41,12 +47,21 @@ public partial class AssignReview // Changed class name to singular
     // Foreign key to Inspection
     [ForeignKey("Inspection")]
     [Column("inspection_id")]
-    public int? InspectionId { get; set; } // Requires Inspection entity
-    public virtual Inspection? Inspection { get; set; } // Requires Inspection entity
+    public int? InspectionId { get; set; } 
+    public virtual Inspection? Inspection { get; set; } 
 
     // Foreign key to FundDisbursement
     [ForeignKey("FundDisbursement")]
     [Column("fund_disbursement_id")]
     public int? FundDisbursementId { get; set; }
     public virtual FundDisbursement? FundDisbursement { get; set; }
+
+    // Foreign key to ProgressReport
+    [ForeignKey("ProgressReport")]
+    [Column("progress_report_id")]
+    public int? ProgressReportId { get; set; }
+    public virtual ProgressReport? ProgressReport { get; set; }
+
+    // Navigation property to VoteResult
+    public virtual VoteResult? VoteResult { get; set; } 
 } 
