@@ -14,6 +14,7 @@ public class NotificationService : INotificationService
     private readonly IInvitationRepository _invitationRepository;
     private readonly IGroupRepository _groupRepository;
     private readonly IUserRepository _userRepository;
+    private readonly IEmailService _emailService;
     private readonly IMapper _mapper;
 
     public NotificationService(
@@ -21,22 +22,34 @@ public class NotificationService : INotificationService
         IInvitationRepository invitationRepository,
         IGroupRepository groupRepository,
         IUserRepository userRepository,
+        IEmailService emailService,
         IMapper mapper)
     {
         _notificationRepository = notificationRepository;
         _invitationRepository = invitationRepository;
         _groupRepository = groupRepository;
         _userRepository = userRepository;
+        _emailService = emailService;
         _mapper = mapper;
     }
 
     public async Task CreateNotification(CreateNotificationRequest request)
     {
-        try 
-        { 
+        try
+        {
             var notification = _mapper.Map<Notification>(request);
             notification.CreatedAt = DateTime.Now; // Set creation timestamp
             await _notificationRepository.AddAsync(notification);
+
+            var user = await _userRepository.GetByIdAsync(request.UserId);
+            if (user != null && !string.IsNullOrEmpty(user.Email))
+            {
+                await _emailService.SendEmailAsync(
+                    user.Email,
+                    request.Title,
+                    request.Message
+                );
+            }
         }
         catch (Exception ex)
         {

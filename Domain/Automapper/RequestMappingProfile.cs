@@ -22,6 +22,8 @@ namespace Domain.Automapper
             CreateMap<CreateProjectRequest, Project>();
             CreateMap<UpdateStudentRequest, User>();
             CreateMap<UpdateUserRequest, User>();
+            CreateMap<CreateConferenceFromProjectRequest, Conference>();
+            CreateMap<CreateJournalFromProjectRequest, Journal>();
         }
     }
 }

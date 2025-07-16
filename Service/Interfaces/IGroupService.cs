@@ -1,4 +1,4 @@
-﻿using System;
+﻿ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,6 +12,7 @@ public interface IGroupService
     Task<IEnumerable<GroupResponse>> GetAllGroups();
     Task<GroupResponse> GetGroupById(int groupId);
     Task<IEnumerable<GroupResponse>> GetGroupsByUserId(int userId);
+    // Task<List<string>> GetStakeholderEmails(int groupId);
     Task CreateStudentGroup(CreateStudentGroupRequest request, int currentUserId);
     Task CreateCouncilGroup(CreateCouncilGroupRequest request, int currentUserId);
     Task<IEnumerable<GroupResponse>> GetAllCouncilGroups();

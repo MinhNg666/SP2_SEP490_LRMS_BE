@@ -47,5 +47,7 @@ public class ResponseMappingProfile : Profile
             
         CreateMap<Document, DocumentResponse>();
         CreateMap<Milestone, MilestoneResponse>();
+        CreateMap<Conference, ConferenceResponse>();
+        CreateMap<Journal, JournalResponse>();
     } 
 }

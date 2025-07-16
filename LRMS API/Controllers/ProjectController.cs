@@ -160,7 +160,7 @@ public class ProjectController : ApiBaseController
         try
         {
             var secretaryId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-            var result = await _projectService.ApproveProjectBySecretary(projectId, secretaryId, documentFile);
+            await _projectService.ApproveProjectBySecretary(projectId, secretaryId, documentFile);
             return Ok(new ApiResponse(StatusCodes.Status200OK, "Phê duyệt project thành công"));
         }
         catch (ServiceException ex)
@@ -176,7 +176,7 @@ public class ProjectController : ApiBaseController
         try
         {
             var secretaryId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-            var result = await _projectService.RejectProjectBySecretary(projectId, secretaryId, documentFile);
+            await _projectService.RejectProjectBySecretary(projectId, secretaryId, documentFile);
             return Ok(new ApiResponse(StatusCodes.Status200OK, "Từ chối project thành công"));
         }
         catch (ServiceException ex)
